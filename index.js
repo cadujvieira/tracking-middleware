@@ -9,16 +9,12 @@ const { v4: uuidv4 } = require("uuid");
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 const PORT = process.env.PORT || 3000;
 const FINAL_DESTINATION_URL = process.env.FINAL_DESTINATION_URL || "https://seudestino.com";
 const DATABASE_URL = process.env.DATABASE_URL;
-
-if (!DATABASE_URL) {
-  console.warn("DATABASE_URL não configurada. Configure o Postgres no Render.");
-}
 
 const pool = new Pool({
   connectionString: DATABASE_URL,
@@ -45,6 +41,45 @@ function buildUrlWithParams(baseUrl, params) {
     }
   });
   return url.toString();
+}
+
+function normalizeEvent(body) {
+  // 1) Formato interno/teste manual
+  if (body.click_id && body.event_name) {
+    return {
+      click_id: body.click_id,
+      event_name: body.event_name,
+      event_id: body.event_id || `evt_${body.event_name}_${body.click_id}_${Date.now()}`,
+      value: Number(body.value || 0),
+      currency: body.currency || "BRL",
+      raw: body,
+    };
+  }
+
+  // 2) Formato padrão da plataforma: Depósito pago
+  if (body.action === "invoice_paid" && body.invoice) {
+    const invoice = body.invoice || {};
+    const user = body.user || {};
+
+    return {
+      // Provisório: enquanto a plataforma não devolver click_id real
+      click_id:
+        body.click_id ||
+        body.subid ||
+        body.sub_id ||
+        body.utm_content ||
+        body.utm_campaign ||
+        `user_${user.id || "unknown"}`,
+
+      event_name: "purchase",
+      event_id: `invoice_${invoice.id || Date.now()}`,
+      value: Number(invoice.value || 0),
+      currency: "BRL",
+      raw: body,
+    };
+  }
+
+  return null;
 }
 
 async function initDb() {
@@ -190,17 +225,19 @@ app.get("/redirect", async (req, res) => {
 app.post("/event", async (req, res) => {
   try {
     const body = req.body || {};
-    const click_id = body.click_id;
-    const event_name = body.event_name;
-    const value = Number(body.value || 0);
-    const currency = body.currency || "BRL";
-    const event_id = body.event_id || `evt_${event_name}_${click_id}_${Date.now()}`;
 
-    if (!click_id || !event_name) {
+    console.log("Webhook recebido:", JSON.stringify(body));
+
+    const normalized = normalizeEvent(body);
+
+    if (!normalized) {
       return res.status(400).json({
-        error: "click_id e event_name são obrigatórios",
+        error: "payload não reconhecido",
+        received: body,
       });
     }
+
+    const { click_id, event_name, event_id, value, currency } = normalized;
 
     const existing = await pool.query(
       "SELECT id FROM events WHERE event_id = $1 LIMIT 1",
@@ -212,26 +249,17 @@ app.post("/event", async (req, res) => {
     if (!is_duplicate) {
       await pool.query(
         `INSERT INTO events 
-        (click_id, event_id, event_name, value, currency, utm_source, utm_medium, utm_campaign, utm_content, utm_term, campaign_id, adset_id, ad_id, creative_id, page_url, referrer, user_agent, ip_hash, is_duplicate, raw_payload)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)`,
+        (click_id, event_id, event_name, value, currency, page_url, referrer, user_agent, ip_hash, is_duplicate, raw_payload)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
         [
           click_id,
           event_id,
           event_name,
           value,
           currency,
-          body.utm_source || "",
-          body.utm_medium || "",
-          body.utm_campaign || "",
-          body.utm_content || "",
-          body.utm_term || "",
-          body.campaign_id || "",
-          body.adset_id || "",
-          body.ad_id || "",
-          body.creative_id || "",
           body.page_url || "",
           body.referrer || "",
-          req.headers["user-agent"] || body.user_agent || "",
+          req.headers["user-agent"] || "",
           hashIp(getClientIp(req)),
           false,
           body,
@@ -251,6 +279,8 @@ app.post("/event", async (req, res) => {
       click_id,
       event_id,
       event_name,
+      value,
+      currency,
       is_duplicate,
     });
   } catch (error) {
