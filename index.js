@@ -844,6 +844,93 @@ app.get("/dashboard-view", async (req, res) => {
   }
 });
 
+app.get("/dashboard-daily", async (req, res) => {
+  try {
+    const response = await fetch("https://tracking-middleware.onrender.com/sheets/daily");
+    const json = await response.json();
+
+    const data = json.daily;
+
+    let grouped = {};
+
+    data.forEach(item => {
+      if (!grouped[item.data]) {
+        grouped[item.data] = [];
+      }
+      grouped[item.data].push(item);
+    });
+
+    let html = "";
+
+    Object.keys(grouped).forEach(date => {
+      html += `
+        <h2 style="margin-top:30px;">📅 ${date}</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Campanha</th>
+              <th>Leads</th>
+              <th>Depósitos</th>
+              <th>FTD</th>
+              <th>Receita</th>
+              <th>EPL</th>
+              <th>Taxa FTD</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${grouped[date].map(c => `
+              <tr>
+                <td>${c.campaign}</td>
+                <td>${c.leads}</td>
+                <td>${c.depositos}</td>
+                <td>${c.ftd}</td>
+                <td>R$ ${c.receita.toFixed(2)}</td>
+                <td>R$ ${c.epl.toFixed(2)}</td>
+                <td>${(c.taxaFTD * 100).toFixed(2)}%</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    });
+
+    res.send(`
+      <html>
+      <head>
+        <style>
+          body {
+            font-family: Arial;
+            background: #0f172a;
+            color: #e5e7eb;
+            padding: 20px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background: #111827;
+          }
+          th, td {
+            padding: 10px;
+            border-bottom: 1px solid #1f2937;
+          }
+          th {
+            background: #1e293b;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>📊 Dashboard por Data</h1>
+        ${html}
+      </body>
+      </html>
+    `);
+
+  } catch (err) {
+    res.send(err.message);
+  }
+});
+
 app.get("/redirect", async (req, res) => {
   try {
     const click_id = `clk_${Date.now()}_${uuidv4().slice(0, 8)}`;
