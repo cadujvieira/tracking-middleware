@@ -852,15 +852,27 @@ app.get("/dashboard-daily", async (req, res) => {
   return `${dia}/${mes}/${ano}`;
       };
 
-    const filtroData = formatarData(req.query.data);
+    const dataInicio = formatarData(req.query.dataInicio);
+    const dataFim = formatarData(req.query.dataFim);
     const response = await fetch("https://tracking-middleware.onrender.com/sheets/daily");
     const json = await response.json();
 
     let data = json.daily;
 
-      if (filtroData) {
-    data = data.filter(item => item.data === filtroData);
-      }
+      if (dataInicio && dataFim) {
+  data = data.filter(item => {
+    const [d, m, a] = item.data.split("/");
+    const dataItem = new Date(`${a}-${m}-${d}`);
+
+    const [di, mi, ai] = dataInicio.split("/");
+    const inicio = new Date(`${ai}-${mi}-${di}`);
+
+    const [df, mf, af] = dataFim.split("/");
+    const fim = new Date(`${af}-${mf}-${df}`);
+
+    return dataItem >= inicio && dataItem <= fim;
+  });
+    }
 
     let grouped = {};
 
@@ -906,29 +918,44 @@ app.get("/dashboard-daily", async (req, res) => {
     });
 
     const filtroUI = `
-  <form method="GET" style="margin-bottom:20px;">
-    <input
-      type="date"
-      name="data"
-      value="${filtroData ? filtroData.split('/').reverse().join('-') : ''}"
-      style="
-        padding:10px;
-        border-radius:6px;
-        border:none;
-        margin-right:10px;
-     "
-    />
-    <button style="
-      padding:10px 15px;
-      background:#2563eb;
-      border:none;
-      color:white;
+<form method="GET" style="margin-bottom:20px; display:flex; gap:10px; align-items:center;">
+
+  <input
+    type="date"
+    name="dataInicio"
+    value="${dataInicio ? dataInicio.split('/').reverse().join('-') : ''}"
+    style="
+      padding:10px;
       border-radius:6px;
-      cursor:pointer;
-    ">
-      Filtrar
-    </button>
-  </form>
+      border:none;
+    "
+  />
+
+  <span style="color:#93c5fd;">até</span>
+
+  <input
+    type="date"
+    name="dataFim"
+    value="${dataFim ? dataFim.split('/').reverse().join('-') : ''}"
+    style="
+      padding:10px;
+      border-radius:6px;
+      border:none;
+    "
+  />
+
+  <button style="
+    padding:10px 15px;
+    background:#2563eb;
+    border:none;
+    color:white;
+    border-radius:6px;
+    cursor:pointer;
+  ">
+    Filtrar
+  </button>
+
+</form>
 `;
 
     res.send(`
