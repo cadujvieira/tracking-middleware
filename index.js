@@ -189,6 +189,73 @@ app.get("/test-sheet", async (req, res) => {
   }
 });
 
+app.get("/sheets/events", async (req, res) => {
+  try {
+    const data = await getSheetData();
+
+    const headers = data[0];
+    const rows = data.slice(1);
+
+    const idx = (name) => headers.indexOf(name);
+
+    const filterEvent = req.query.evento;
+    const filterCampaign = req.query.utm_campaign;
+    const filterSource = req.query.utm_source;
+    const filterMedium = req.query.utm_medium;
+
+    const summary = {};
+    const events = [];
+
+    rows.forEach((row) => {
+      const item = {
+        hora: row[idx("hora")] || "",
+        data: row[idx("data")] || "",
+        email: row[idx("email")] || "",
+        phone: row[idx("phone")] || "",
+        evento: row[idx("evento")] || "",
+        valor: Number(row[idx("valor")] || 0),
+        utm_campaign: row[idx("utm_campaign")] || "",
+        utm_medium: row[idx("utm_medium")] || "",
+        utm_source: row[idx("utm_source")] || "",
+        referral_code: row[idx("referral_code")] || "",
+        utm_campaign_atual: row[idx("utm_campaign_atual")] || "",
+        utm_medium_atual: row[idx("utm_medium_atual")] || "",
+        utm_source_atual: row[idx("utm_source_atual")] || "",
+      };
+
+      if (filterEvent && item.evento !== filterEvent) return;
+      if (filterCampaign && item.utm_campaign !== filterCampaign) return;
+      if (filterSource && item.utm_source !== filterSource) return;
+      if (filterMedium && item.utm_medium !== filterMedium) return;
+
+      events.push(item);
+
+      if (!summary[item.evento]) {
+        summary[item.evento] = {
+          total: 0,
+          valor: 0,
+        };
+      }
+
+      summary[item.evento].total += 1;
+      summary[item.evento].valor += item.valor;
+    });
+
+    res.json({
+      ok: true,
+      totalRows: events.length,
+      summary,
+      events: events.slice(0, 100),
+    });
+  } catch (error) {
+    console.error("Erro no /sheets/events:", error);
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
+  }
+});
+
 app.get("/redirect", async (req, res) => {
   try {
     const click_id = `clk_${Date.now()}_${uuidv4().slice(0, 8)}`;
