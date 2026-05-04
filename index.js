@@ -588,7 +588,7 @@ app.get("/dashboard/creatives", async (req, res) => {
       LEFT JOIN events e ON e.click_id = c.click_id AND e.is_duplicate = false
       GROUP BY creative
       ORDER BY revenue DESC
-    );
+    `);
 
     res.json(result.rows);
   } catch (error) {
