@@ -394,6 +394,59 @@ app.get("/sheets/campaigns", async (req, res) => {
   }
 });
 
+app.get("/sheets/top", async (req, res) => {
+  try {
+    const data = await getSheetData();
+
+    const headers = data[0];
+    const rows = data.slice(1);
+    const idx = (name) => headers.indexOf(name);
+
+    const campaigns = {};
+
+    rows.forEach((row) => {
+      const campaign = row[idx("utm_campaign")] || "sem_campanha";
+      const evento = row[idx("evento")];
+      const valor = parseFloat(row[idx("valor")]) || 0;
+
+      if (!campaigns[campaign]) {
+        campaigns[campaign] = {
+          campaign,
+          leads: 0,
+          depositos: 0,
+          receita: 0,
+          ftd: 0
+        };
+      }
+
+      if (evento === "lead") campaigns[campaign].leads++;
+
+      if (evento === "DEPOSITO_WH") {
+        campaigns[campaign].depositos++;
+        campaigns[campaign].receita += valor;
+      }
+
+      if (evento === "FTD_WH") campaigns[campaign].ftd++;
+    });
+
+    const result = Object.values(campaigns)
+      .filter(c => c.leads >= 10)
+      .sort((a, b) => b.receita - a.receita)
+      .slice(0, 10);
+
+    res.json({
+      ok: true,
+      top: result
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
 app.get("/redirect", async (req, res) => {
   try {
     const click_id = `clk_${Date.now()}_${uuidv4().slice(0, 8)}`;
