@@ -265,35 +265,64 @@ app.get("/sheets/dashboard", async (req, res) => {
 
     const idx = (name) => headers.indexOf(name);
 
-    let totalRevenue = 0;
+    let receita = 0;
     let leads = 0;
     let pixGerado = 0;
     let depositos = 0;
     let ftd = 0;
 
+    const leadsUnicos = new Set();
+    const depositantesUnicos = new Set();
+    const ftdUnicos = new Set();
+
     rows.forEach((row) => {
       const evento = row[idx("evento")];
       const valor = parseFloat(row[idx("valor")]) || 0;
+      const email = row[idx("email")] || "";
+      const phone = row[idx("phone")] || "";
+      const userKey = email || phone;
 
-      if (evento === "lead") leads++;
-      if (evento === "pix_gerado") pixGerado++;
+      if (evento === "lead") {
+        leads++;
+        if (userKey) leadsUnicos.add(userKey);
+      }
+
+      if (evento === "pix_gerado") {
+        pixGerado++;
+      }
+
       if (evento === "DEPOSITO_WH") {
         depositos++;
-        totalRevenue += valor;
+        receita += valor;
+        if (userKey) depositantesUnicos.add(userKey);
       }
-      if (evento === "FTD_WH") ftd++;
+
+      if (evento === "FTD_WH") {
+        ftd++;
+        if (userKey) ftdUnicos.add(userKey);
+      }
     });
 
     res.json({
       ok: true,
-      receita: totalRevenue,
+
+      receita,
       leads,
+      leadsUnicos: leadsUnicos.size,
       pixGerado,
       depositos,
+      depositantesUnicos: depositantesUnicos.size,
       ftd,
-      ticketMedio: depositos ? totalRevenue / depositos : 0,
-      conversaoLeadDeposito: leads ? depositos / leads : 0,
-      conversaoLeadFTD: leads ? ftd / leads : 0
+      ftdUnicos: ftdUnicos.size,
+
+      ticketMedioDeposito: depositos ? receita / depositos : 0,
+      depositoPorLead: leads ? depositos / leads : 0,
+      depositoPorLeadUnico: leadsUnicos.size ? depositos / leadsUnicos.size : 0,
+      conversaoLeadFTD: leads ? ftd / leads : 0,
+      conversaoLeadUnicoFTD: leadsUnicos.size ? ftdUnicos.size / leadsUnicos.size : 0,
+      conversaoLeadDepositanteUnico: leadsUnicos.size
+        ? depositantesUnicos.size / leadsUnicos.size
+        : 0
     });
 
   } catch (error) {
