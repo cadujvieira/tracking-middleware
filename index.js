@@ -430,9 +430,15 @@ app.get("/sheets/top", async (req, res) => {
     });
 
     const result = Object.values(campaigns)
-      .filter(c => c.leads >= 10)
-      .sort((a, b) => b.receita - a.receita)
-      .slice(0, 10);
+  .filter(c => c.leads >= 10)
+  .map(c => ({
+    ...c,
+    epl: c.leads ? c.receita / c.leads : 0,
+    valorPorFTD: c.ftd ? c.receita / c.ftd : 0,
+    taxaFTD: c.leads ? c.ftd / c.leads : 0
+  }))
+  .sort((a, b) => b.receita - a.receita)
+  .slice(0, 10);
 
     res.json({
       ok: true,
