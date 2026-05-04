@@ -538,6 +538,42 @@ app.get("/dashboard-view", async (req, res) => {
           h1 {
             margin-bottom: 20px;
           }
+           .info {
+             position: relative;
+             display: inline-flex;
+             align-items: center;
+             justify-content: center;
+             width: 16px;
+             height: 16px;
+             margin-left: 4px;
+             border-radius: 50%;
+             background: #334155;
+             color: #bfdbfe;
+             font-size: 11px;
+             font-weight: bold;
+          }
+/* Tooltip escondido */
+           .tooltip {
+             position: absolute;
+             bottom: 120%;
+             left: 50%;
+             transform: translateX(-50%);
+             background: #020617;
+             color: #e5e7eb;
+             padding: 8px 10px;
+             border-radius: 6px;
+             font-size: 12px;
+             white-space: nowrap;
+             opacity: 0;
+             pointer-events: none;
+             transition: 0.2s;
+             border: 1px solid #1f2937;
+             z-index: 10;
+          }
+/* Mostrar no hover */
+           .info:hover .tooltip {
+              opacity: 1;
+          }
           .cards {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -593,18 +629,92 @@ app.get("/dashboard-view", async (req, res) => {
 
         <table>
           <thead>
-            <tr>
-              <th>Campanha</th>
-              <th>Leads</th>
-              <th>Pix</th>
-              <th>Depósitos</th>
-              <th>FTD</th>
-              <th>Receita</th>
-              <th>EPL</th>
-              <th>Valor/FTD</th>
-              <th>Taxa FTD</th>
-            </tr>
-          </thead>
+  <tr>
+
+    <th>Campanha</th>
+
+    <th>
+      Leads
+      <span class="info">
+        ?
+        <span class="tooltip">
+          Quantidade total de leads capturados pela campanha.
+        </span>
+      </span>
+    </th>
+
+    <th>
+      Pix
+      <span class="info">
+        ?
+        <span class="tooltip">
+          Quantidade de Pix gerados pelos usuários vindos dessa campanha.
+        </span>
+      </span>
+    </th>
+
+    <th>
+      Depósitos
+      <span class="info">
+        ?
+        <span class="tooltip">
+          Quantidade total de depósitos realizados. Um usuário pode depositar mais de uma vez.
+        </span>
+      </span>
+    </th>
+
+    <th>
+      FTD
+      <span class="info">
+        ?
+        <span class="tooltip">
+          First Time Deposit: quantidade de usuários que fizeram o primeiro depósito.
+        </span>
+      </span>
+    </th>
+
+    <th>
+      Receita
+      <span class="info">
+        ?
+        <span class="tooltip">
+          Soma total dos valores depositados pelos usuários dessa campanha.
+        </span>
+      </span>
+    </th>
+
+    <th>
+      EPL
+      <span class="info">
+        ?
+        <span class="tooltip">
+          Earnings Per Lead: receita média por lead. Fórmula: receita / leads.
+        </span>
+      </span>
+    </th>
+
+    <th>
+      Valor/FTD
+      <span class="info">
+        ?
+        <span class="tooltip">
+          Receita média por FTD. Fórmula: receita / FTD.
+        </span>
+      </span>
+    </th>
+
+    <th>
+      Taxa FTD
+      <span class="info">
+        ?
+        <span class="tooltip">
+          Percentual de leads que viraram FTD. Fórmula: FTD / leads.
+        </span>
+      </span>
+    </th>
+
+  </tr>
+</thead>
           <tbody>
             ${rowsHtml}
           </tbody>
