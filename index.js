@@ -846,10 +846,15 @@ app.get("/dashboard-view", async (req, res) => {
 
 app.get("/dashboard-daily", async (req, res) => {
   try {
+    const filtroData = req.query.data;
     const response = await fetch("https://tracking-middleware.onrender.com/sheets/daily");
     const json = await response.json();
 
-    const data = json.daily;
+    let data = json.daily;
+
+      if (filtroData) {
+    data = data.filter(item => item.data === filtroData);
+      }
 
     let grouped = {};
 
@@ -894,6 +899,33 @@ app.get("/dashboard-daily", async (req, res) => {
       `;
     });
 
+    const filtroUI = `
+  <form method="GET" style="margin-bottom:20px;">
+    <input 
+      type="text" 
+      name="data" 
+      placeholder="Ex: 04/05/2026"
+      value="${filtroData || ""}"
+      style="
+        padding:10px;
+        border-radius:6px;
+        border:none;
+        margin-right:10px;
+      "
+    />
+    <button style="
+      padding:10px 15px;
+      background:#2563eb;
+      border:none;
+      color:white;
+      border-radius:6px;
+      cursor:pointer;
+    ">
+      Filtrar
+    </button>
+  </form>
+`;
+
     res.send(`
       <html>
       <head>
@@ -921,6 +953,7 @@ app.get("/dashboard-daily", async (req, res) => {
       </head>
       <body>
         <h1>📊 Dashboard por Data</h1>
+        ${filtroUI}
         ${html}
       </body>
       </html>
