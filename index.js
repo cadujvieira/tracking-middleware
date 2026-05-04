@@ -54,7 +54,7 @@ async function getSheetData() {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.SPREADSHEET_ID,
-    range: "Página1!A1:Z1000",
+    range: "Página1!A:Z",
   });
 
   return response.data.values;
