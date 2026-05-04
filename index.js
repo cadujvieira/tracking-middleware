@@ -325,7 +325,7 @@ app.get("/sheets/dashboard", async (req, res) => {
         : 0
     });
 
-    app.get("/sheets/campaigns", async (req, res) => {
+app.get("/sheets/campaigns", async (req, res) => {
   try {
     const data = await getSheetData();
 
