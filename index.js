@@ -5,6 +5,7 @@ const cors = require("cors");
 const crypto = require("crypto");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
+const { google } = require("googleapis");
 
 const app = express();
 
@@ -41,6 +42,22 @@ function buildUrlWithParams(baseUrl, params) {
     }
   });
   return url.toString();
+}
+
+async function getSheetData() {
+  const auth = new google.auth.GoogleAuth({
+    keyFile: "credentials.json",
+    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
+  });
+
+  const sheets = google.sheets({ version: "v4", auth });
+
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: process.env.SPREADSHEET_ID,
+    range: "Página1!A1:Z1000",
+  });
+
+  return response.data.values;
 }
 
 function normalizeEvent(body) {
