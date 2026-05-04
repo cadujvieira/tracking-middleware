@@ -44,10 +44,19 @@ function buildUrlWithParams(baseUrl, params) {
   return url.toString();
 }
 
+function calcularQualidade(ticketMedioDeposito, frequenciaDeposito, ftd) {
+  if (ftd === 0) return "sem_ftd";
+  if (ticketMedioDeposito >= 50 && frequenciaDeposito >= 2) return "diamante";
+  if (ticketMedioDeposito >= 50) return "ouro";
+  if (ticketMedioDeposito >= 30) return "muito_bom";
+  if (ticketMedioDeposito >= 20) return "bom";
+  return "ruim";
+}
+
 async function getSheetData() {
   const auth = new google.auth.GoogleAuth({
-  keyFile: "/etc/secrets/credentials.json",
-  scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
+    keyFile: "/etc/secrets/credentials.json",
+    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
   });
 
   const sheets = google.sheets({ version: "v4", auth });
@@ -57,11 +66,10 @@ async function getSheetData() {
     range: "Página1!A:Z",
   });
 
-  return response.data.values;
+  return response.data.values || [];
 }
 
 function normalizeEvent(body) {
-  // 1) Formato interno/teste manual
   if (body.click_id && body.event_name) {
     return {
       click_id: body.click_id,
@@ -73,13 +81,11 @@ function normalizeEvent(body) {
     };
   }
 
-  // 2) Formato padrão da plataforma: Depósito pago
   if (body.action === "invoice_paid" && body.invoice) {
     const invoice = body.invoice || {};
     const user = body.user || {};
 
     return {
-      // Provisório: enquanto a plataforma não devolver click_id real
       click_id:
         body.click_id ||
         body.subid ||
@@ -87,7 +93,6 @@ function normalizeEvent(body) {
         body.utm_content ||
         body.utm_campaign ||
         `user_${user.id || "unknown"}`,
-
       event_name: "purchase",
       event_id: `invoice_${invoice.id || Date.now()}`,
       value: Number(invoice.value || 0),
@@ -167,7 +172,20 @@ app.get("/", (req, res) => {
   res.json({
     status: "online",
     service: "tracking-middleware",
-    endpoints: ["/redirect", "/event", "/dashboard/summary", "/dashboard/campaigns", "/dashboard/creatives"],
+    endpoints: [
+      "/redirect",
+      "/event",
+      "/sheets/events",
+      "/sheets/dashboard",
+      "/sheets/campaigns",
+      "/sheets/top",
+      "/sheets/daily",
+      "/dashboard-view",
+      "/dashboard-daily",
+      "/dashboard/summary",
+      "/dashboard/campaigns",
+      "/dashboard/creatives",
+    ],
   });
 });
 
@@ -195,7 +213,6 @@ app.get("/sheets/events", async (req, res) => {
 
     const headers = data[0];
     const rows = data.slice(1);
-
     const idx = (name) => headers.indexOf(name);
 
     const filterEvent = req.query.evento;
@@ -262,7 +279,6 @@ app.get("/sheets/dashboard", async (req, res) => {
 
     const headers = data[0];
     const rows = data.slice(1);
-
     const idx = (name) => headers.indexOf(name);
 
     let receita = 0;
@@ -305,7 +321,6 @@ app.get("/sheets/dashboard", async (req, res) => {
 
     res.json({
       ok: true,
-
       receita,
       leads,
       leadsUnicos: leadsUnicos.size,
@@ -314,7 +329,6 @@ app.get("/sheets/dashboard", async (req, res) => {
       depositantesUnicos: depositantesUnicos.size,
       ftd,
       ftdUnicos: ftdUnicos.size,
-
       ticketMedioDeposito: depositos ? receita / depositos : 0,
       depositoPorLead: leads ? depositos / leads : 0,
       depositoPorLeadUnico: leadsUnicos.size ? depositos / leadsUnicos.size : 0,
@@ -322,14 +336,13 @@ app.get("/sheets/dashboard", async (req, res) => {
       conversaoLeadUnicoFTD: leadsUnicos.size ? ftdUnicos.size / leadsUnicos.size : 0,
       conversaoLeadDepositanteUnico: leadsUnicos.size
         ? depositantesUnicos.size / leadsUnicos.size
-        : 0
+        : 0,
     });
-
   } catch (error) {
     console.error("Erro no dashboard:", error);
     res.status(500).json({
       ok: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -356,7 +369,7 @@ app.get("/sheets/campaigns", async (req, res) => {
           pixGerado: 0,
           depositos: 0,
           ftd: 0,
-          receita: 0
+          receita: 0,
         };
       }
 
@@ -372,26 +385,32 @@ app.get("/sheets/campaigns", async (req, res) => {
     });
 
     const result = Object.values(campaigns)
-      .map((item) => ({
-        ...item,
-        ticketMedio: item.depositos ? item.receita / item.depositos : 0,
-        conversaoLeadDeposito: item.leads ? item.depositos / item.leads : 0,
-        conversaoLeadFTD: item.leads ? item.ftd / item.leads : 0
-        ticketMedioDeposito: c.depositos ? c.receita / c.depositos : 0,
-        frequenciaDeposito: c.ftd ? c.depositos / c.ftd : 0,
-      }))
+      .map((item) => {
+        const ticketMedioDeposito = item.depositos ? item.receita / item.depositos : 0;
+        const frequenciaDeposito = item.ftd ? item.depositos / item.ftd : 0;
+        const qualidade = calcularQualidade(ticketMedioDeposito, frequenciaDeposito, item.ftd);
+
+        return {
+          ...item,
+          ticketMedio: item.depositos ? item.receita / item.depositos : 0,
+          conversaoLeadDeposito: item.leads ? item.depositos / item.leads : 0,
+          conversaoLeadFTD: item.leads ? item.ftd / item.leads : 0,
+          ticketMedioDeposito,
+          frequenciaDeposito,
+          qualidade,
+        };
+      })
       .sort((a, b) => b.receita - a.receita);
 
     res.json({
       ok: true,
       totalCampaigns: result.length,
-      campaigns: result
+      campaigns: result,
     });
-
   } catch (error) {
     res.status(500).json({
       ok: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -415,13 +434,15 @@ app.get("/sheets/top", async (req, res) => {
         campaigns[campaign] = {
           campaign,
           leads: 0,
+          pixGerado: 0,
           depositos: 0,
           receita: 0,
-          ftd: 0
+          ftd: 0,
         };
       }
 
       if (evento === "lead") campaigns[campaign].leads++;
+      if (evento === "pix_gerado") campaigns[campaign].pixGerado++;
 
       if (evento === "DEPOSITO_WH") {
         campaigns[campaign].depositos++;
@@ -432,40 +453,35 @@ app.get("/sheets/top", async (req, res) => {
     });
 
     const result = Object.values(campaigns)
-  .filter(c => c.leads >= 10)
-  .map(c => {
-  const ticketMedioDeposito = c.depositos ? c.receita / c.depositos : 0;
-  const frequenciaDeposito = c.ftd ? c.depositos / c.ftd : 0;
+      .filter((c) => c.leads >= 10)
+      .map((c) => {
+        const ticketMedioDeposito = c.depositos ? c.receita / c.depositos : 0;
+        const frequenciaDeposito = c.ftd ? c.depositos / c.ftd : 0;
+        const qualidade = calcularQualidade(ticketMedioDeposito, frequenciaDeposito, c.ftd);
 
-  let qualidade = 'baixo';
+        return {
+          ...c,
+          epl: c.leads ? c.receita / c.leads : 0,
+          valorPorFTD: c.ftd ? c.receita / c.ftd : 0,
+          taxaFTD: c.leads ? c.ftd / c.leads : 0,
+          ticketMedioDeposito,
+          frequenciaDeposito,
+          qualidade,
+        };
+      })
+      .sort((a, b) => b.receita - a.receita)
+      .slice(0, 10);
 
-  if (ticketMedioDeposito >= 50 && frequenciaDeposito > 1) {
-    qualidade = 'diamante';
-  } else if (ticketMedioDeposito >= 50) {
-    qualidade = 'ouro';
-  } else if (ticketMedioDeposito >= 30) {
-    qualidade = 'bom';
-  } else if (ticketMedioDeposito >= 20) {
-    qualidade = 'medio';
+    res.json({
+      ok: true,
+      top: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
   }
-
-  return {
-    ...c,
-    epl: c.leads ? c.receita / c.leads : 0,
-    valorPorFTD: c.ftd ? c.receita / c.ftd : 0,
-    taxaFTD: c.leads ? c.ftd / c.leads : 0,
-
-    ticketMedioDeposito,
-    frequenciaDeposito,
-    qualidade
-  };
-})
-  .sort((a, b) => b.receita - a.receita)
-  .slice(0, 10);
-
-res.json({
-  ok: true,
-  top: result
 });
 
 app.get("/sheets/daily", async (req, res) => {
@@ -494,7 +510,7 @@ app.get("/sheets/daily", async (req, res) => {
           pixGerado: 0,
           depositos: 0,
           ftd: 0,
-          receita: 0
+          receita: 0,
         };
       }
 
@@ -512,12 +528,21 @@ app.get("/sheets/daily", async (req, res) => {
     });
 
     const result = Object.values(daily)
-      .map(item => ({
-        ...item,
-        epl: item.leads ? item.receita / item.leads : 0,
-        valorPorFTD: item.ftd ? item.receita / item.ftd : 0,
-        taxaFTD: item.leads ? item.ftd / item.leads : 0
-      }))
+      .map((item) => {
+        const ticketMedioDeposito = item.depositos ? item.receita / item.depositos : 0;
+        const frequenciaDeposito = item.ftd ? item.depositos / item.ftd : 0;
+        const qualidade = calcularQualidade(ticketMedioDeposito, frequenciaDeposito, item.ftd);
+
+        return {
+          ...item,
+          epl: item.leads ? item.receita / item.leads : 0,
+          valorPorFTD: item.ftd ? item.receita / item.ftd : 0,
+          taxaFTD: item.leads ? item.ftd / item.leads : 0,
+          ticketMedioDeposito,
+          frequenciaDeposito,
+          qualidade,
+        };
+      })
       .sort((a, b) => {
         const [da, ma, ya] = a.data.split("/");
         const [db, mb, yb] = b.data.split("/");
@@ -531,13 +556,12 @@ app.get("/sheets/daily", async (req, res) => {
     res.json({
       ok: true,
       total: result.length,
-      daily: result
+      daily: result,
     });
-
   } catch (error) {
     res.status(500).json({
       ok: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -564,7 +588,7 @@ app.get("/dashboard-view", async (req, res) => {
           pixGerado: 0,
           depositos: 0,
           receita: 0,
-          ftd: 0
+          ftd: 0,
         };
       }
 
@@ -582,68 +606,60 @@ app.get("/dashboard-view", async (req, res) => {
     });
 
     const result = Object.values(campaigns)
-  .filter(c => c.leads >= 10)
-  .map(c => {
-    const ticketMedioDeposito = c.depositos ? c.receita / c.depositos : 0;
-    const frequenciaDeposito = c.ftd ? c.depositos / c.ftd : 0;
+      .filter((c) => c.leads >= 10)
+      .map((c) => {
+        const ticketMedioDeposito = c.depositos ? c.receita / c.depositos : 0;
+        const frequenciaDeposito = c.ftd ? c.depositos / c.ftd : 0;
+        const qualidade = calcularQualidade(ticketMedioDeposito, frequenciaDeposito, c.ftd);
 
-    let qualidade = "ruim";
-
-    if (c.ftd === 0) {
-      qualidade = "sem_ftd";
-    } else if (ticketMedioDeposito >= 50 && frequenciaDeposito >= 2) {
-      qualidade = "diamante";
-    } else if (ticketMedioDeposito >= 50) {
-      qualidade = "ouro";
-    } else if (ticketMedioDeposito >= 30) {
-      qualidade = "muito_bom";
-    } else if (ticketMedioDeposito >= 20) {
-      qualidade = "bom";
-    } else {
-      qualidade = "ruim";
-    }
-
-    return {
-      ...c,
-      epl: c.leads ? c.receita / c.leads : 0,
-      valorPorFTD: c.ftd ? c.receita / c.ftd : 0,
-      taxaFTD: c.leads ? c.ftd / c.leads : 0,
-      ticketMedioDeposito,
-      frequenciaDeposito,
-      qualidade
-    };
-  })
+        return {
+          ...c,
+          epl: c.leads ? c.receita / c.leads : 0,
+          valorPorFTD: c.ftd ? c.receita / c.ftd : 0,
+          taxaFTD: c.leads ? c.ftd / c.leads : 0,
+          ticketMedioDeposito,
+          frequenciaDeposito,
+          qualidade,
+        };
+      })
+      .sort((a, b) => b.receita - a.receita)
+      .slice(0, 20);
 
     const totalReceita = result.reduce((acc, c) => acc + c.receita, 0);
     const totalLeads = result.reduce((acc, c) => acc + c.leads, 0);
     const totalFtd = result.reduce((acc, c) => acc + c.ftd, 0);
     const totalDepositos = result.reduce((acc, c) => acc + c.depositos, 0);
 
-    const rowsHtml = result.map(c => {
+    const rowsHtml = result
+      .map((c) => {
+        let rowClass = "";
 
-  let rowClass = '';
+        if (c.taxaFTD >= 0.5 && c.epl >= 20) {
+          rowClass = "good";
+        } else if (c.taxaFTD >= 0.25) {
+          rowClass = "medium";
+        } else {
+          rowClass = "bad";
+        }
 
-  if (c.taxaFTD >= 0.5 && c.epl >= 20) {
-    rowClass = 'good';
-  } else if (c.taxaFTD >= 0.25) {
-    rowClass = 'medium';
-  } else {
-    rowClass = 'bad';
-  }
-
-  return `
-    <tr>
-      <td>${c.campaign}</td>
-      <td>${c.leads}</td>
-      <td>${c.pixGerado}</td>
-      <td>${c.depositos}</td>
-      <td>${c.ftd}</td>
-      <td class="${rowClass}-cell">R$ ${c.epl.toFixed(2)}</td>
-      <td>R$ ${c.valorPorFTD.toFixed(2)}</td>
-      <td class="${rowClass}-cell">${(c.taxaFTD * 100).toFixed(2)}%</td>
-    </tr>
-  `;
-}).join('');
+        return `
+          <tr>
+            <td>${c.campaign}</td>
+            <td>${c.leads}</td>
+            <td>${c.pixGerado}</td>
+            <td>${c.depositos}</td>
+            <td>${c.ftd}</td>
+            <td>R$ ${c.receita.toFixed(2)}</td>
+            <td class="${rowClass}-cell">R$ ${c.epl.toFixed(2)}</td>
+            <td>R$ ${c.valorPorFTD.toFixed(2)}</td>
+            <td class="${rowClass}-cell">${(c.taxaFTD * 100).toFixed(2)}%</td>
+            <td>R$ ${c.ticketMedioDeposito.toFixed(2)}</td>
+            <td>${c.frequenciaDeposito.toFixed(2)}x</td>
+            <td class="${c.qualidade}">${c.qualidade}</td>
+          </tr>
+        `;
+      })
+      .join("");
 
     res.send(`
       <!DOCTYPE html>
@@ -661,41 +677,40 @@ app.get("/dashboard-view", async (req, res) => {
           h1 {
             margin-bottom: 20px;
           }
-           .info {
-             position: relative;
-             display: inline-flex;
-             align-items: center;
-             justify-content: center;
-             width: 16px;
-             height: 16px;
-             margin-left: 4px;
-             border-radius: 50%;
-             background: #334155;
-             color: #bfdbfe;
-             font-size: 11px;
-             font-weight: bold;
+          .info {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            margin-left: 4px;
+            border-radius: 50%;
+            background: #334155;
+            color: #bfdbfe;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
           }
-/* Tooltip escondido */
-           .tooltip {
-             position: absolute;
-             bottom: 120%;
-             left: 50%;
-             transform: translateX(-50%);
-             background: #020617;
-             color: #e5e7eb;
-             padding: 8px 10px;
-             border-radius: 6px;
-             font-size: 12px;
-             white-space: nowrap;
-             opacity: 0;
-             pointer-events: none;
-             transition: 0.2s;
-             border: 1px solid #1f2937;
-             z-index: 10;
+          .tooltip {
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #020617;
+            color: #e5e7eb;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.2s;
+            border: 1px solid #1f2937;
+            z-index: 10;
           }
-/* Mostrar no hover */
-           .info:hover .tooltip {
-              opacity: 1;
+          .info:hover .tooltip {
+            opacity: 1;
           }
           .cards {
             display: grid;
@@ -738,24 +753,6 @@ app.get("/dashboard-view", async (req, res) => {
           tr:hover {
             background: #1f2937;
           }
-          .good {
-            background: rgba(34, 197, 94, 0.12);
-          }
-          .medium {
-            background: rgba(234, 179, 8, 0.12);
-          }
-          .bad {
-            background: rgba(239, 68, 68, 0.12);
-          }
-          .good:hover {
-            background: rgba(34, 197, 94, 0.25);
-          }
-          .medium:hover {
-            background: rgba(234, 179, 8, 0.25);
-          }
-          .bad:hover {
-            background: rgba(239, 68, 68, 0.25);
-          }
           .good-cell {
             color: #22c55e;
             font-weight: bold;
@@ -766,6 +763,30 @@ app.get("/dashboard-view", async (req, res) => {
           }
           .bad-cell {
             color: #ef4444;
+            font-weight: bold;
+          }
+          .diamante {
+            color: #60a5fa;
+            font-weight: bold;
+          }
+          .ouro {
+            color: #22c55e;
+            font-weight: bold;
+          }
+          .muito_bom {
+            color: #4ade80;
+            font-weight: bold;
+          }
+          .bom {
+            color: #eab308;
+            font-weight: bold;
+          }
+          .ruim {
+            color: #ef4444;
+            font-weight: bold;
+          }
+          .sem_ftd {
+            color: #6b7280;
             font-weight: bold;
           }
         </style>
@@ -782,92 +803,21 @@ app.get("/dashboard-view", async (req, res) => {
 
         <table>
           <thead>
-  <tr>
-
-    <th>Campanha</th>
-
-    <th>
-      Leads
-      <span class="info">
-        ?
-        <span class="tooltip">
-          Quantidade total de leads capturados pela campanha.
-        </span>
-      </span>
-    </th>
-
-    <th>
-      Pix
-      <span class="info">
-        ?
-        <span class="tooltip">
-          Quantidade de Pix gerados pelos usuários vindos dessa campanha.
-        </span>
-      </span>
-    </th>
-
-    <th>
-      Depósitos
-      <span class="info">
-        ?
-        <span class="tooltip">
-          Quantidade total de depósitos realizados. Um usuário pode depositar mais de uma vez.
-        </span>
-      </span>
-    </th>
-
-    <th>
-      FTD
-      <span class="info">
-        ?
-        <span class="tooltip">
-          First Time Deposit: quantidade de usuários que fizeram o primeiro depósito.
-        </span>
-      </span>
-    </th>
-
-    <th>
-      Receita
-      <span class="info">
-        ?
-        <span class="tooltip">
-          Soma total dos valores depositados pelos usuários dessa campanha.
-        </span>
-      </span>
-    </th>
-
-    <th>
-      EPL
-      <span class="info">
-        ?
-        <span class="tooltip">
-          Earnings Per Lead: receita média por lead. Fórmula: receita / leads.
-        </span>
-      </span>
-    </th>
-
-    <th>
-      Valor/FTD
-      <span class="info">
-        ?
-        <span class="tooltip">
-          Receita média por FTD. Fórmula: receita / FTD.
-        </span>
-      </span>
-    </th>
-
-    <th>
-      Taxa FTD
-      <span class="info">
-        ?
-        <span class="tooltip">
-          Percentual de leads que viraram FTD. Fórmula: FTD / leads.
-        </span>
-      </span>
-    </th>
-
-  </tr>
-</thead>
+            <tr>
+              <th>Campanha</th>
+              <th>Leads <span class="info">?<span class="tooltip">Quantidade total de leads capturados pela campanha.</span></span></th>
+              <th>Pix <span class="info">?<span class="tooltip">Quantidade de Pix gerados pelos usuários vindos dessa campanha.</span></span></th>
+              <th>Depósitos <span class="info">?<span class="tooltip">Quantidade total de depósitos realizados. Um usuário pode depositar mais de uma vez.</span></span></th>
+              <th>FTD <span class="info">?<span class="tooltip">First Time Deposit: quantidade de usuários que fizeram o primeiro depósito.</span></span></th>
+              <th>Receita <span class="info">?<span class="tooltip">Soma total dos valores depositados pelos usuários dessa campanha.</span></span></th>
+              <th>EPL <span class="info">?<span class="tooltip">Earnings Per Lead: receita média por lead. Fórmula: receita / leads.</span></span></th>
+              <th>Valor/FTD <span class="info">?<span class="tooltip">Receita média por FTD. Fórmula: receita / FTD.</span></span></th>
+              <th>Taxa FTD <span class="info">?<span class="tooltip">Percentual de leads que viraram FTD. Fórmula: FTD / leads.</span></span></th>
+              <th>Ticket Depósito <span class="info">?<span class="tooltip">Valor médio por depósito. Fórmula: receita / depósitos.</span></span></th>
+              <th>Frequência <span class="info">?<span class="tooltip">Média de depósitos por usuário FTD. Fórmula: depósitos / FTD.</span></span></th>
+              <th>Segmentação <span class="info">?<span class="tooltip">Classificação: diamante = ticket >= R$50 e frequência >= 2x; ouro = ticket >= R$50; muito bom = ticket >= R$30; bom = ticket >= R$20.</span></span></th>
+            </tr>
+          </thead>
           <tbody>
             ${rowsHtml}
           </tbody>
@@ -875,7 +825,6 @@ app.get("/dashboard-view", async (req, res) => {
       </body>
       </html>
     `);
-
   } catch (error) {
     res.status(500).send("Erro ao gerar dashboard: " + error.message);
   }
@@ -884,36 +833,36 @@ app.get("/dashboard-view", async (req, res) => {
 app.get("/dashboard-daily", async (req, res) => {
   try {
     const formatarData = (dataISO) => {
-  if (!dataISO) return null;
-  const [ano, mes, dia] = dataISO.split("-");
-  return `${dia}/${mes}/${ano}`;
-      };
+      if (!dataISO) return null;
+      const [ano, mes, dia] = dataISO.split("-");
+      return `${dia}/${mes}/${ano}`;
+    };
 
     const dataInicio = formatarData(req.query.dataInicio);
     const dataFim = formatarData(req.query.dataFim);
     const response = await fetch("https://tracking-middleware.onrender.com/sheets/daily");
     const json = await response.json();
 
-    let data = json.daily;
+    let data = json.daily || [];
 
-      if (dataInicio && dataFim) {
-  data = data.filter(item => {
-    const [d, m, a] = item.data.split("/");
-    const dataItem = new Date(`${a}-${m}-${d}`);
+    if (dataInicio && dataFim) {
+      data = data.filter((item) => {
+        const [d, m, a] = item.data.split("/");
+        const dataItem = new Date(`${a}-${m}-${d}`);
 
-    const [di, mi, ai] = dataInicio.split("/");
-    const inicio = new Date(`${ai}-${mi}-${di}`);
+        const [di, mi, ai] = dataInicio.split("/");
+        const inicio = new Date(`${ai}-${mi}-${di}`);
 
-    const [df, mf, af] = dataFim.split("/");
-    const fim = new Date(`${af}-${mf}-${df}`);
+        const [df, mf, af] = dataFim.split("/");
+        const fim = new Date(`${af}-${mf}-${df}`);
 
-    return dataItem >= inicio && dataItem <= fim;
-  });
+        return dataItem >= inicio && dataItem <= fim;
+      });
     }
 
-    let grouped = {};
+    const grouped = {};
 
-    data.forEach(item => {
+    data.forEach((item) => {
       if (!grouped[item.data]) {
         grouped[item.data] = [];
       }
@@ -922,29 +871,18 @@ app.get("/dashboard-daily", async (req, res) => {
 
     let html = "";
 
-    Object.keys(grouped).forEach(date => {
+    Object.keys(grouped).forEach((date) => {
       const totalDepositoDia = grouped[date].reduce((acc, c) => acc + c.receita, 0);
+
       html += `
-  <div style="margin-top:30px; display:flex; align-items:center; gap:15px;">
-    
-    <h2 style="margin:0;">📅 ${date}</h2>
+        <div style="margin-top:30px; display:flex; align-items:center; gap:15px;">
+          <h2 style="margin:0;">📅 ${date}</h2>
+          <div style="background:#0f172a; border:1px solid #1f2937; padding:8px 12px; border-radius:8px; font-size:14px; color:#93c5fd;">
+            💰 Total depositado: <strong style="color:#22c55e;">R$ ${totalDepositoDia.toFixed(2)}</strong>
+          </div>
+        </div>
 
-    <div style="
-      background:#0f172a;
-      border:1px solid #1f2937;
-      padding:8px 12px;
-      border-radius:8px;
-      font-size:14px;
-      color:#93c5fd;
-    ">
-      💰 Total depositado: <strong style="color:#22c55e;">
-        R$ ${totalDepositoDia.toFixed(2)}
-      </strong>
-    </div>
-
-  </div>
-
-  <table>
+        <table>
           <thead>
             <tr>
               <th>Campanha</th>
@@ -954,98 +892,55 @@ app.get("/dashboard-daily", async (req, res) => {
               <th>Receita</th>
               <th>EPL</th>
               <th>Taxa FTD</th>
-              <th>
-         Ticket Depósito
-  <span class="info">
-    ?
-    <span class="tooltip">
-      Valor médio por depósito (receita / depósitos)
-    </span>
-  </span>
-</th>
-
-<th>
-  Frequência
-  <span class="info">
-    ?
-    <span class="tooltip">
-      Média de depósitos por usuário (depósitos / FTD)
-    </span>
-  </span>
-</th>
-
-<th>
-  Segmentação
-  <span class="info">
-    ?
-    <span class="tooltip">
-      Classificação do público baseada em ticket e recorrência
-    </span>
-  </span>
-</th>
+              <th>Ticket Depósito <span class="info">?<span class="tooltip">Valor médio por depósito. Fórmula: receita / depósitos.</span></span></th>
+              <th>Frequência <span class="info">?<span class="tooltip">Média de depósitos por usuário FTD. Fórmula: depósitos / FTD.</span></span></th>
+              <th>Segmentação <span class="info">?<span class="tooltip">Classificação: diamante = ticket >= R$50 e frequência >= 2x; ouro = ticket >= R$50; muito bom = ticket >= R$30; bom = ticket >= R$20.</span></span></th>
             </tr>
           </thead>
           <tbody>
-            ${grouped[date].map(c => `
-              <tr>
-                <td>${c.campaign}</td>
-                <td>${c.leads}</td>
-                <td>${c.depositos}</td>
-                <td>${c.ftd}</td>
-                <td>R$ ${c.receita.toFixed(2)}</td>
-                <td>R$ ${c.epl.toFixed(2)}</td>
-                <td>${(c.taxaFTD * 100).toFixed(2)}%</td>
-
-                <td>R$ ${c.ticketMedioDeposito.toFixed(2)}</td>
-                <td>${c.frequenciaDeposito.toFixed(2)}x</td>
-                <td class="${c.qualidade}">${c.qualidade}</td>
-              </tr>
-            `).join("")}
+            ${grouped[date]
+              .map(
+                (c) => `
+                  <tr>
+                    <td>${c.campaign}</td>
+                    <td>${c.leads}</td>
+                    <td>${c.depositos}</td>
+                    <td>${c.ftd}</td>
+                    <td>R$ ${c.receita.toFixed(2)}</td>
+                    <td>R$ ${c.epl.toFixed(2)}</td>
+                    <td>${(c.taxaFTD * 100).toFixed(2)}%</td>
+                    <td>R$ ${c.ticketMedioDeposito.toFixed(2)}</td>
+                    <td>${c.frequenciaDeposito.toFixed(2)}x</td>
+                    <td class="${c.qualidade}">${c.qualidade}</td>
+                  </tr>
+                `
+              )
+              .join("")}
           </tbody>
         </table>
       `;
     });
 
     const filtroUI = `
-<form method="GET" style="margin-bottom:20px; display:flex; gap:10px; align-items:center;">
-
-  <input
-    type="date"
-    name="dataInicio"
-    value="${dataInicio ? dataInicio.split('/').reverse().join('-') : ''}"
-    style="
-      padding:10px;
-      border-radius:6px;
-      border:none;
-    "
-  />
-
-  <span style="color:#93c5fd;">até</span>
-
-  <input
-    type="date"
-    name="dataFim"
-    value="${dataFim ? dataFim.split('/').reverse().join('-') : ''}"
-    style="
-      padding:10px;
-      border-radius:6px;
-      border:none;
-    "
-  />
-
-  <button style="
-    padding:10px 15px;
-    background:#2563eb;
-    border:none;
-    color:white;
-    border-radius:6px;
-    cursor:pointer;
-  ">
-    Filtrar
-  </button>
-
-</form>
-`;
+      <form method="GET" style="margin-bottom:20px; display:flex; gap:10px; align-items:center;">
+        <input
+          type="date"
+          name="dataInicio"
+          value="${dataInicio ? dataInicio.split("/").reverse().join("-") : ""}"
+          style="padding:10px; border-radius:6px; border:none;"
+        />
+        <span style="color:#93c5fd;">até</span>
+        <input
+          type="date"
+          name="dataFim"
+          value="${dataFim ? dataFim.split("/").reverse().join("-") : ""}"
+          style="padding:10px; border-radius:6px; border:none;"
+        />
+        <button style="padding:10px 15px; background:#2563eb; border:none; color:white; border-radius:6px; cursor:pointer;">
+          Filtrar
+        </button>
+      </form>
+    `;
 
     res.send(`
       <html>
@@ -1066,9 +961,18 @@ app.get("/dashboard-daily", async (req, res) => {
           th, td {
             padding: 10px;
             border-bottom: 1px solid #1f2937;
+            text-align: left;
           }
           th {
             background: #1e293b;
+            color: #93c5fd;
+          }
+          .info {
+            margin-left: 6px;
+            cursor: pointer;
+            color: #93c5fd;
+            position: relative;
+            font-weight: bold;
           }
           .tooltip {
             visibility: hidden;
@@ -1085,18 +989,34 @@ app.get("/dashboard-daily", async (req, res) => {
             transition: 0.2s;
             z-index: 10;
           }
-
-         .info:hover .tooltip {
-           visibility: visible;
-           opacity: 1;
+          .info:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
           }
-          .info {
-            margin-left: 6px;
-            cursor: pointer;
-            color: #93c5fd;
-            position: relative;
+          .diamante {
+            color: #60a5fa;
             font-weight: bold;
-           }
+          }
+          .ouro {
+            color: #22c55e;
+            font-weight: bold;
+          }
+          .muito_bom {
+            color: #4ade80;
+            font-weight: bold;
+          }
+          .bom {
+            color: #eab308;
+            font-weight: bold;
+          }
+          .ruim {
+            color: #ef4444;
+            font-weight: bold;
+          }
+          .sem_ftd {
+            color: #6b7280;
+            font-weight: bold;
+          }
         </style>
       </head>
       <body>
@@ -1106,7 +1026,6 @@ app.get("/dashboard-daily", async (req, res) => {
       </body>
       </html>
     `);
-
   } catch (err) {
     res.send(err.message);
   }
