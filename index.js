@@ -888,7 +888,6 @@ app.get("/dashboard-daily", async (req, res) => {
     Object.keys(grouped).forEach(date => {
       const totalDepositoDia = grouped[date].reduce((acc, c) => acc + c.receita, 0);
       html += `
-        html += `
   <div style="margin-top:30px; display:flex; align-items:center; gap:15px;">
     
     <h2 style="margin:0;">📅 ${date}</h2>
@@ -909,7 +908,6 @@ app.get("/dashboard-daily", async (req, res) => {
   </div>
 
   <table>
-`
           <thead>
             <tr>
               <th>Campanha</th>
