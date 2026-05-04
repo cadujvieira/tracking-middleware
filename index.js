@@ -355,6 +355,7 @@ app.get("/sheets/campaigns", async (req, res) => {
           campaigns[campaign].depositos++;
           campaigns[campaign].receita += valor;
       }
+      
         if (evento === "FTD_WH") campaigns[campaign].ftd++;
     });
 
