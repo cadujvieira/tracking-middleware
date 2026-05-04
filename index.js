@@ -453,6 +453,171 @@ app.get("/sheets/top", async (req, res) => {
   }
 });
 
+app.get("/dashboard-view", async (req, res) => {
+  try {
+    const data = await getSheetData();
+
+    const headers = data[0];
+    const rows = data.slice(1);
+    const idx = (name) => headers.indexOf(name);
+
+    const campaigns = {};
+
+    rows.forEach((row) => {
+      const campaign = row[idx("utm_campaign")] || "sem_campanha";
+      const evento = row[idx("evento")];
+      const valor = parseFloat(row[idx("valor")]) || 0;
+
+      if (!campaigns[campaign]) {
+        campaigns[campaign] = {
+          campaign,
+          leads: 0,
+          pixGerado: 0,
+          depositos: 0,
+          receita: 0,
+          ftd: 0
+        };
+      }
+
+      if (evento === "lead") campaigns[campaign].leads++;
+      if (evento === "pix_gerado") campaigns[campaign].pixGerado++;
+
+      if (evento === "DEPOSITO_WH") {
+        campaigns[campaign].depositos++;
+        campaigns[campaign].receita += valor;
+      }
+
+      if (evento === "FTD_WH") {
+        campaigns[campaign].ftd++;
+      }
+    });
+
+    const result = Object.values(campaigns)
+      .filter(c => c.leads >= 10)
+      .map(c => ({
+        ...c,
+        epl: c.leads ? c.receita / c.leads : 0,
+        valorPorFTD: c.ftd ? c.receita / c.ftd : 0,
+        taxaFTD: c.leads ? c.ftd / c.leads : 0
+      }))
+      .sort((a, b) => b.receita - a.receita)
+      .slice(0, 20);
+
+    const totalReceita = result.reduce((acc, c) => acc + c.receita, 0);
+    const totalLeads = result.reduce((acc, c) => acc + c.leads, 0);
+    const totalFtd = result.reduce((acc, c) => acc + c.ftd, 0);
+    const totalDepositos = result.reduce((acc, c) => acc + c.depositos, 0);
+
+    const rowsHtml = result.map(c => `
+      <tr>
+        <td>${c.campaign}</td>
+        <td>${c.leads}</td>
+        <td>${c.pixGerado}</td>
+        <td>${c.depositos}</td>
+        <td>${c.ftd}</td>
+        <td>R$ ${c.receita.toFixed(2)}</td>
+        <td>R$ ${c.epl.toFixed(2)}</td>
+        <td>R$ ${c.valorPorFTD.toFixed(2)}</td>
+        <td>${(c.taxaFTD * 100).toFixed(2)}%</td>
+      </tr>
+    `).join("");
+
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Dashboard Meta Ads</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: #e5e7eb;
+            padding: 30px;
+          }
+          h1 {
+            margin-bottom: 20px;
+          }
+          .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 30px;
+          }
+          .card {
+            background: #111827;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #1f2937;
+          }
+          .card span {
+            color: #94a3b8;
+            font-size: 14px;
+          }
+          .card strong {
+            display: block;
+            font-size: 26px;
+            margin-top: 8px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #111827;
+            border-radius: 12px;
+            overflow: hidden;
+          }
+          th, td {
+            padding: 12px;
+            border-bottom: 1px solid #1f2937;
+            text-align: left;
+            font-size: 14px;
+          }
+          th {
+            background: #1e293b;
+            color: #93c5fd;
+          }
+          tr:hover {
+            background: #1f2937;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Dashboard Meta Ads</h1>
+
+        <div class="cards">
+          <div class="card"><span>Receita Top 20</span><strong>R$ ${totalReceita.toFixed(2)}</strong></div>
+          <div class="card"><span>Leads</span><strong>${totalLeads}</strong></div>
+          <div class="card"><span>Depósitos</span><strong>${totalDepositos}</strong></div>
+          <div class="card"><span>FTDs</span><strong>${totalFtd}</strong></div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Campanha</th>
+              <th>Leads</th>
+              <th>Pix</th>
+              <th>Depósitos</th>
+              <th>FTD</th>
+              <th>Receita</th>
+              <th>EPL</th>
+              <th>Valor/FTD</th>
+              <th>Taxa FTD</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `);
+
+  } catch (error) {
+    res.status(500).send("Erro ao gerar dashboard: " + error.message);
+  }
+});
+
 app.get("/redirect", async (req, res) => {
   try {
     const click_id = `clk_${Date.now()}_${uuidv4().slice(0, 8)}`;
