@@ -453,6 +453,80 @@ app.get("/sheets/top", async (req, res) => {
   }
 });
 
+app.get("/sheets/daily", async (req, res) => {
+  try {
+    const data = await getSheetData();
+
+    const headers = data[0];
+    const rows = data.slice(1);
+    const idx = (name) => headers.indexOf(name);
+
+    const daily = {};
+
+    rows.forEach((row) => {
+      const dataEvento = row[idx("data")] || "sem_data";
+      const campaign = row[idx("utm_campaign")] || "sem_campanha";
+      const evento = row[idx("evento")];
+      const valor = parseFloat(row[idx("valor")]) || 0;
+
+      const key = `${dataEvento}__${campaign}`;
+
+      if (!daily[key]) {
+        daily[key] = {
+          data: dataEvento,
+          campaign,
+          leads: 0,
+          pixGerado: 0,
+          depositos: 0,
+          ftd: 0,
+          receita: 0
+        };
+      }
+
+      if (evento === "lead") daily[key].leads++;
+      if (evento === "pix_gerado") daily[key].pixGerado++;
+
+      if (evento === "DEPOSITO_WH") {
+        daily[key].depositos++;
+        daily[key].receita += valor;
+      }
+
+      if (evento === "FTD_WH") {
+        daily[key].ftd++;
+      }
+    });
+
+    const result = Object.values(daily)
+      .map(item => ({
+        ...item,
+        epl: item.leads ? item.receita / item.leads : 0,
+        valorPorFTD: item.ftd ? item.receita / item.ftd : 0,
+        taxaFTD: item.leads ? item.ftd / item.leads : 0
+      }))
+      .sort((a, b) => {
+        const [da, ma, ya] = a.data.split("/");
+        const [db, mb, yb] = b.data.split("/");
+        const dateA = new Date(`${ya}-${ma}-${da}`);
+        const dateB = new Date(`${yb}-${mb}-${db}`);
+
+        if (dateB - dateA !== 0) return dateB - dateA;
+        return b.receita - a.receita;
+      });
+
+    res.json({
+      ok: true,
+      total: result.length,
+      daily: result
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
 app.get("/dashboard-view", async (req, res) => {
   try {
     const data = await getSheetData();
