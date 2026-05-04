@@ -886,9 +886,30 @@ app.get("/dashboard-daily", async (req, res) => {
     let html = "";
 
     Object.keys(grouped).forEach(date => {
+      const totalDepositoDia = grouped[date].reduce((acc, c) => acc + c.receita, 0);
       html += `
-        <h2 style="margin-top:30px;">📅 ${date}</h2>
-        <table>
+        html += `
+  <div style="margin-top:30px; display:flex; align-items:center; gap:15px;">
+    
+    <h2 style="margin:0;">📅 ${date}</h2>
+
+    <div style="
+      background:#0f172a;
+      border:1px solid #1f2937;
+      padding:8px 12px;
+      border-radius:8px;
+      font-size:14px;
+      color:#93c5fd;
+    ">
+      💰 Total depositado: <strong style="color:#22c55e;">
+        R$ ${totalDepositoDia.toFixed(2)}
+      </strong>
+    </div>
+
+  </div>
+
+  <table>
+`
           <thead>
             <tr>
               <th>Campanha</th>
