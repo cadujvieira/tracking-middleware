@@ -433,26 +433,39 @@ app.get("/sheets/top", async (req, res) => {
 
     const result = Object.values(campaigns)
   .filter(c => c.leads >= 10)
-  .map(c => ({
+  .map(c => {
+  const ticketMedioDeposito = c.depositos ? c.receita / c.depositos : 0;
+  const frequenciaDeposito = c.ftd ? c.depositos / c.ftd : 0;
+
+  let qualidade = 'baixo';
+
+  if (ticketMedioDeposito >= 50 && frequenciaDeposito > 1) {
+    qualidade = 'diamante';
+  } else if (ticketMedioDeposito >= 50) {
+    qualidade = 'ouro';
+  } else if (ticketMedioDeposito >= 30) {
+    qualidade = 'bom';
+  } else if (ticketMedioDeposito >= 20) {
+    qualidade = 'medio';
+  }
+
+  return {
     ...c,
     epl: c.leads ? c.receita / c.leads : 0,
     valorPorFTD: c.ftd ? c.receita / c.ftd : 0,
-    taxaFTD: c.leads ? c.ftd / c.leads : 0
-  }))
+    taxaFTD: c.leads ? c.ftd / c.leads : 0,
+
+    ticketMedioDeposito,
+    frequenciaDeposito,
+    qualidade
+  };
+})
   .sort((a, b) => b.receita - a.receita)
   .slice(0, 10);
 
-    res.json({
-      ok: true,
-      top: result
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      ok: false,
-      error: error.message
-    });
-  }
+res.json({
+  ok: true,
+  top: result
 });
 
 app.get("/sheets/daily", async (req, res) => {
