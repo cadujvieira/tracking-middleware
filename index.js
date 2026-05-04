@@ -171,7 +171,7 @@ app.get("/", (req, res) => {
   });
 });
 
-app.get("/test-sheet", async (req, res) => {
+app.get("/test-sheet-2", async (req, res) => {
   try {
     const data = await getSheetData();
 
@@ -601,4 +601,3 @@ initDb()
     console.error("Erro ao iniciar banco:", error);
     process.exit(1);
   });
-// teste
