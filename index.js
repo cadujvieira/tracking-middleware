@@ -256,6 +256,55 @@ app.get("/sheets/events", async (req, res) => {
   }
 });
 
+app.get("/sheets/dashboard", async (req, res) => {
+  try {
+    const data = await getSheetData();
+
+    const headers = data[0];
+    const rows = data.slice(1);
+
+    const idx = (name) => headers.indexOf(name);
+
+    let totalRevenue = 0;
+    let leads = 0;
+    let pixGerado = 0;
+    let depositos = 0;
+    let ftd = 0;
+
+    rows.forEach((row) => {
+      const evento = row[idx("evento")];
+      const valor = parseFloat(row[idx("valor")]) || 0;
+
+      if (evento === "lead") leads++;
+      if (evento === "pix_gerado") pixGerado++;
+      if (evento === "DEPOSITO_WH") {
+        depositos++;
+        totalRevenue += valor;
+      }
+      if (evento === "FTD_WH") ftd++;
+    });
+
+    res.json({
+      ok: true,
+      receita: totalRevenue,
+      leads,
+      pixGerado,
+      depositos,
+      ftd,
+      ticketMedio: depositos ? totalRevenue / depositos : 0,
+      conversaoLeadDeposito: leads ? depositos / leads : 0,
+      conversaoLeadFTD: leads ? ftd / leads : 0
+    });
+
+  } catch (error) {
+    console.error("Erro no dashboard:", error);
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
 app.get("/redirect", async (req, res) => {
   try {
     const click_id = `clk_${Date.now()}_${uuidv4().slice(0, 8)}`;
