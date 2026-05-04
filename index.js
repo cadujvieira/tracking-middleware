@@ -601,3 +601,4 @@ initDb()
     console.error("Erro ao iniciar banco:", error);
     process.exit(1);
   });
+// teste
