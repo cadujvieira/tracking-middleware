@@ -521,16 +521,15 @@ app.get("/dashboard-view", async (req, res) => {
   }
 
   return `
-    <tr class="${rowClass}">
+    <tr>
       <td>${c.campaign}</td>
       <td>${c.leads}</td>
       <td>${c.pixGerado}</td>
       <td>${c.depositos}</td>
       <td>${c.ftd}</td>
-      <td>R$ ${c.receita.toFixed(2)}</td>
-      <td>R$ ${c.epl.toFixed(2)}</td>
+      <td class="${rowClass}-cell">R$ ${c.epl.toFixed(2)}</td>
       <td>R$ ${c.valorPorFTD.toFixed(2)}</td>
-      <td>${(c.taxaFTD * 100).toFixed(2)}%</td>
+      <td class="${rowClass}-cell">${(c.taxaFTD * 100).toFixed(2)}%</td>
     </tr>
   `;
 }).join('');
@@ -645,6 +644,18 @@ app.get("/dashboard-view", async (req, res) => {
           }
           .bad:hover {
             background: rgba(239, 68, 68, 0.25);
+          }
+          .good-cell {
+            color: #22c55e;
+            font-weight: bold;
+          }
+          .medium-cell {
+            color: #eab308;
+            font-weight: bold;
+          }
+          .bad-cell {
+            color: #ef4444;
+            font-weight: bold;
           }
         </style>
       </head>
