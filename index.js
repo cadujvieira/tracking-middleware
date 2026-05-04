@@ -846,7 +846,13 @@ app.get("/dashboard-view", async (req, res) => {
 
 app.get("/dashboard-daily", async (req, res) => {
   try {
-    const filtroData = req.query.data;
+    const formatarData = (dataISO) => {
+  if (!dataISO) return null;
+  const [ano, mes, dia] = dataISO.split("-");
+  return `${dia}/${mes}/${ano}`;
+      };
+
+    const filtroData = formatarData(req.query.data);
     const response = await fetch("https://tracking-middleware.onrender.com/sheets/daily");
     const json = await response.json();
 
@@ -901,17 +907,16 @@ app.get("/dashboard-daily", async (req, res) => {
 
     const filtroUI = `
   <form method="GET" style="margin-bottom:20px;">
-    <input 
-      type="text" 
-      name="data" 
-      placeholder="Ex: 04/05/2026"
-      value="${filtroData || ""}"
+    <input
+      type="date"
+      name="data"
+      value="${filtroData ? filtroData.split('/').reverse().join('-') : ''}"
       style="
         padding:10px;
         border-radius:6px;
         border:none;
         margin-right:10px;
-      "
+     "
     />
     <button style="
       padding:10px 15px;
