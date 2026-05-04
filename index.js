@@ -377,6 +377,8 @@ app.get("/sheets/campaigns", async (req, res) => {
         ticketMedio: item.depositos ? item.receita / item.depositos : 0,
         conversaoLeadDeposito: item.leads ? item.depositos / item.leads : 0,
         conversaoLeadFTD: item.leads ? item.ftd / item.leads : 0
+        ticketMedioDeposito: c.depositos ? c.receita / c.depositos : 0,
+        frequenciaDeposito: c.ftd ? c.depositos / c.ftd : 0,
       }))
       .sort((a, b) => b.receita - a.receita);
 
@@ -567,15 +569,37 @@ app.get("/dashboard-view", async (req, res) => {
     });
 
     const result = Object.values(campaigns)
-      .filter(c => c.leads >= 10)
-      .map(c => ({
-        ...c,
-        epl: c.leads ? c.receita / c.leads : 0,
-        valorPorFTD: c.ftd ? c.receita / c.ftd : 0,
-        taxaFTD: c.leads ? c.ftd / c.leads : 0
-      }))
-      .sort((a, b) => b.receita - a.receita)
-      .slice(0, 20);
+  .filter(c => c.leads >= 10)
+  .map(c => {
+    const ticketMedioDeposito = c.depositos ? c.receita / c.depositos : 0;
+    const frequenciaDeposito = c.ftd ? c.depositos / c.ftd : 0;
+
+    let qualidade = "ruim";
+
+    if (c.ftd === 0) {
+      qualidade = "sem_ftd";
+    } else if (ticketMedioDeposito >= 50 && frequenciaDeposito >= 2) {
+      qualidade = "diamante";
+    } else if (ticketMedioDeposito >= 50) {
+      qualidade = "ouro";
+    } else if (ticketMedioDeposito >= 30) {
+      qualidade = "muito_bom";
+    } else if (ticketMedioDeposito >= 20) {
+      qualidade = "bom";
+    } else {
+      qualidade = "ruim";
+    }
+
+    return {
+      ...c,
+      epl: c.leads ? c.receita / c.leads : 0,
+      valorPorFTD: c.ftd ? c.receita / c.ftd : 0,
+      taxaFTD: c.leads ? c.ftd / c.leads : 0,
+      ticketMedioDeposito,
+      frequenciaDeposito,
+      qualidade
+    };
+  })
 
     const totalReceita = result.reduce((acc, c) => acc + c.receita, 0);
     const totalLeads = result.reduce((acc, c) => acc + c.leads, 0);
@@ -917,6 +941,35 @@ app.get("/dashboard-daily", async (req, res) => {
               <th>Receita</th>
               <th>EPL</th>
               <th>Taxa FTD</th>
+              <th>
+         Ticket Depósito
+  <span class="info">
+    ?
+    <span class="tooltip">
+      Valor médio por depósito (receita / depósitos)
+    </span>
+  </span>
+</th>
+
+<th>
+  Frequência
+  <span class="info">
+    ?
+    <span class="tooltip">
+      Média de depósitos por usuário (depósitos / FTD)
+    </span>
+  </span>
+</th>
+
+<th>
+  Segmentação
+  <span class="info">
+    ?
+    <span class="tooltip">
+      Classificação do público baseada em ticket e recorrência
+    </span>
+  </span>
+</th>
             </tr>
           </thead>
           <tbody>
@@ -929,6 +982,10 @@ app.get("/dashboard-daily", async (req, res) => {
                 <td>R$ ${c.receita.toFixed(2)}</td>
                 <td>R$ ${c.epl.toFixed(2)}</td>
                 <td>${(c.taxaFTD * 100).toFixed(2)}%</td>
+
+                <td>R$ ${c.ticketMedioDeposito.toFixed(2)}</td>
+                <td>${c.frequenciaDeposito.toFixed(2)}x</td>
+                <td class="${c.qualidade}">${c.qualidade}</td>
               </tr>
             `).join("")}
           </tbody>
@@ -1000,6 +1057,33 @@ app.get("/dashboard-daily", async (req, res) => {
           th {
             background: #1e293b;
           }
+          .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            background: #0f172a;
+            color: #e5e7eb;
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            top: 20px;
+            left: 0;
+            white-space: nowrap;
+            transition: 0.2s;
+            z-index: 10;
+          }
+
+         .info:hover .tooltip {
+           visibility: visible;
+           opacity: 1;
+          }
+          .info {
+            margin-left: 6px;
+            cursor: pointer;
+            color: #93c5fd;
+            position: relative;
+            font-weight: bold;
+           }
         </style>
       </head>
       <body>
