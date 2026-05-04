@@ -325,6 +325,52 @@ app.get("/sheets/dashboard", async (req, res) => {
         : 0
     });
 
+    app.get("/sheets/campaigns", async (req, res) => {
+  try {
+    const data = await getSheetData();
+
+    const headers = data[0];
+    const rows = data.slice(1);
+
+    const idx = (name) => headers.indexOf(name);
+
+    const campaigns = {};
+
+    rows.forEach((row) => {
+      const campaign = row[idx("utm_campaign")] || "sem_campanha";
+      const evento = row[idx("evento")];
+      const valor = parseFloat(row[idx("valor")]) || 0;
+
+      if (!campaigns[campaign]) {
+        campaigns[campaign] = {
+          leads: 0,
+          depositos: 0,
+          receita: 0,
+          ftd: 0
+        };
+      }
+
+      if (evento === "lead") campaigns[campaign].leads++;
+      if (evento === "DEPOSITO_WH") {
+        campaigns[campaign].depositos++;
+        campaigns[campaign].receita += valor;
+      }
+      if (evento === "FTD_WH") campaigns[campaign].ftd++;
+    });
+
+    res.json({
+      ok: true,
+      campaigns
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
   } catch (error) {
     console.error("Erro no dashboard:", error);
     res.status(500).json({
