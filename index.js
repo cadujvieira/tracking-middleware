@@ -340,7 +340,6 @@ app.get("/sheets/campaigns", async (req, res) => {
 
     const headers = data[0];
     const rows = data.slice(1);
-
     const idx = (name) => headers.indexOf(name);
 
     const campaigns = {};
@@ -352,30 +351,39 @@ app.get("/sheets/campaigns", async (req, res) => {
 
       if (!campaigns[campaign]) {
         campaigns[campaign] = {
+          campaign,
           leads: 0,
+          pixGerado: 0,
           depositos: 0,
-          receita: 0,
-          ftd: 0
+          ftd: 0,
+          receita: 0
         };
       }
 
-      if (evento === "lead") {
-        campaigns[campaign].leads++;
-      }
+      if (evento === "lead") campaigns[campaign].leads++;
+      if (evento === "pix_gerado") campaigns[campaign].pixGerado++;
 
       if (evento === "DEPOSITO_WH") {
         campaigns[campaign].depositos++;
         campaigns[campaign].receita += valor;
       }
 
-      if (evento === "FTD_WH") {
-        campaigns[campaign].ftd++;
-      }
+      if (evento === "FTD_WH") campaigns[campaign].ftd++;
     });
+
+    const result = Object.values(campaigns)
+      .map((item) => ({
+        ...item,
+        ticketMedio: item.depositos ? item.receita / item.depositos : 0,
+        conversaoLeadDeposito: item.leads ? item.depositos / item.leads : 0,
+        conversaoLeadFTD: item.leads ? item.ftd / item.leads : 0
+      }))
+      .sort((a, b) => b.receita - a.receita);
 
     res.json({
       ok: true,
-      campaigns
+      totalCampaigns: result.length,
+      campaigns: result
     });
 
   } catch (error) {
