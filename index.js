@@ -508,19 +508,32 @@ app.get("/dashboard-view", async (req, res) => {
     const totalFtd = result.reduce((acc, c) => acc + c.ftd, 0);
     const totalDepositos = result.reduce((acc, c) => acc + c.depositos, 0);
 
-    const rowsHtml = result.map(c => `
-      <tr>
-        <td>${c.campaign}</td>
-        <td>${c.leads}</td>
-        <td>${c.pixGerado}</td>
-        <td>${c.depositos}</td>
-        <td>${c.ftd}</td>
-        <td>R$ ${c.receita.toFixed(2)}</td>
-        <td>R$ ${c.epl.toFixed(2)}</td>
-        <td>R$ ${c.valorPorFTD.toFixed(2)}</td>
-        <td>${(c.taxaFTD * 100).toFixed(2)}%</td>
-      </tr>
-    `).join("");
+    const rowsHtml = result.map(c => {
+
+  let rowClass = '';
+
+  if (c.taxaFTD >= 0.5 && c.epl >= 20) {
+    rowClass = 'good';
+  } else if (c.taxaFTD >= 0.25) {
+    rowClass = 'medium';
+  } else {
+    rowClass = 'bad';
+  }
+
+  return `
+    <tr class="${rowClass}">
+      <td>${c.campaign}</td>
+      <td>${c.leads}</td>
+      <td>${c.pixGerado}</td>
+      <td>${c.depositos}</td>
+      <td>${c.ftd}</td>
+      <td>R$ ${c.receita.toFixed(2)}</td>
+      <td>R$ ${c.epl.toFixed(2)}</td>
+      <td>R$ ${c.valorPorFTD.toFixed(2)}</td>
+      <td>${(c.taxaFTD * 100).toFixed(2)}%</td>
+    </tr>
+  `;
+}).join('');
 
     res.send(`
       <!DOCTYPE html>
@@ -614,6 +627,24 @@ app.get("/dashboard-view", async (req, res) => {
           }
           tr:hover {
             background: #1f2937;
+          }
+          .good {
+            background: rgba(34, 197, 94, 0.12);
+          }
+          .medium {
+            background: rgba(234, 179, 8, 0.12);
+          }
+          .bad {
+            background: rgba(239, 68, 68, 0.12);
+          }
+          .good:hover {
+            background: rgba(34, 197, 94, 0.25);
+          }
+          .medium:hover {
+            background: rgba(234, 179, 8, 0.25);
+          }
+          .bad:hover {
+            background: rgba(239, 68, 68, 0.25);
           }
         </style>
       </head>
