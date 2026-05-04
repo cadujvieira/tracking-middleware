@@ -46,7 +46,7 @@ function buildUrlWithParams(baseUrl, params) {
 
 async function getSheetData() {
   const auth = new google.auth.GoogleAuth({
-  keyFile: "/etc/secrets/credentials.json",,
+  keyFile: "/etc/secrets/credentials.json",
   scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
   });
 
