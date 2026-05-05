@@ -281,6 +281,24 @@ async function initDb() {
       created_at TIMESTAMP DEFAULT NOW()
     );
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS meta_audience_sent (
+      id SERIAL PRIMARY KEY,
+      user_key_hash TEXT NOT NULL,
+      event_name TEXT NOT NULL,
+      user_label TEXT,
+      qualidade TEXT,
+      receita NUMERIC DEFAULT 0,
+      depositos INTEGER DEFAULT 0,
+      ticket_medio_deposito NUMERIC DEFAULT 0,
+      frequencia_deposito NUMERIC DEFAULT 0,
+      meta_status INTEGER,
+      meta_response JSONB,
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(user_key_hash, event_name)
+    );
+  `);
 }
 
 app.get("/", (req, res) => {
@@ -299,6 +317,8 @@ app.get("/", (req, res) => {
       "/dashboard-view",
       "/dashboard-daily",
       "/dashboard-audience",
+      "/meta/send-valued-audience",
+      "/meta/sent-audience-status",
       "/dashboard/summary",
       "/dashboard/campaigns",
       "/dashboard/creatives",
@@ -983,17 +1003,71 @@ app.get("/dashboard-audience", async (req, res) => {
   }
 });
 
+app.get("/meta/sent-audience-status", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        event_name,
+        qualidade,
+        COUNT(*)::int AS total,
+        COALESCE(SUM(receita), 0)::float AS receita
+      FROM meta_audience_sent
+      GROUP BY event_name, qualidade
+      ORDER BY event_name, qualidade
+    `);
+
+    const recent = await pool.query(`
+      SELECT
+        user_label,
+        event_name,
+        qualidade,
+        receita::float AS receita,
+        depositos,
+        meta_status,
+        created_at
+      FROM meta_audience_sent
+      ORDER BY created_at DESC
+      LIMIT 20
+    `);
+
+    res.json({
+      ok: true,
+      summary: result.rows,
+      recent: recent.rows,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
+  }
+});
+
 app.get("/meta/send-valued-audience", async (req, res) => {
   try {
     const confirm = req.query.confirm === "SIM";
     const limit = Number(req.query.limit || 50);
     const eventName = req.query.eventName || "Purchase";
+    const quality = req.query.quality || "ouro,diamante";
+    const allowedQualities = quality.split(",").map((item) => item.trim()).filter(Boolean);
 
     const response = await fetch("https://tracking-middleware.onrender.com/sheets/audience");
     const json = await response.json();
 
+    const sentRows = await pool.query(
+      "SELECT user_key_hash FROM meta_audience_sent WHERE event_name = $1",
+      [eventName]
+    );
+
+    const alreadySent = new Set(sentRows.rows.map((row) => row.user_key_hash));
+
     const valuableUsers = (json.audience || [])
-      .filter((user) => user.enviarPixelValioso === true)
+      .filter((user) => allowedQualities.includes(user.qualidade))
+      .map((user) => ({
+        ...user,
+        userKeyHash: sha256(user.userKey),
+      }))
+      .filter((user) => !alreadySent.has(user.userKeyHash))
       .slice(0, limit);
 
     if (!confirm) {
@@ -1001,10 +1075,12 @@ app.get("/meta/send-valued-audience", async (req, res) => {
         ok: true,
         mode: "preview",
         message: "Nenhum evento foi enviado. Para enviar, use ?confirm=SIM",
-        regra: "Somente usuarios ouro ou diamante entram no envio para o pixel.",
+        regra: "Somente usuarios ainda nao enviados e com qualidade permitida entram no envio.",
         eventName,
         limit,
-        totalValiososEncontrados: valuableUsers.length,
+        allowedQualities,
+        totalJaEnviadosNesseEvento: alreadySent.size,
+        totalNovosValiososEncontrados: valuableUsers.length,
         preview: valuableUsers.map((user) => ({
           usuario: user.usuario,
           qualidade: user.qualidade,
@@ -1022,13 +1098,36 @@ app.get("/meta/send-valued-audience", async (req, res) => {
     for (const user of valuableUsers) {
       const result = await sendMetaConversionEvent(user, eventName);
       results.push(result);
+
+      if (result.sent) {
+        await pool.query(
+          `INSERT INTO meta_audience_sent
+          (user_key_hash, event_name, user_label, qualidade, receita, depositos, ticket_medio_deposito, frequencia_deposito, meta_status, meta_response)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+          ON CONFLICT (user_key_hash, event_name) DO NOTHING`,
+          [
+            user.userKeyHash,
+            eventName,
+            user.usuario,
+            user.qualidade,
+            user.receita,
+            user.depositos,
+            user.ticketMedioDeposito,
+            user.frequenciaDeposito,
+            result.status || null,
+            result.meta || {},
+          ]
+        );
+      }
     }
 
     res.json({
       ok: true,
       mode: "sent",
       eventName,
+      allowedQualities,
       requestedLimit: limit,
+      totalJaEnviadosAntes: alreadySent.size,
       totalAttempted: results.length,
       sent: results.filter((item) => item.sent).length,
       failed: results.filter((item) => !item.sent).length,
