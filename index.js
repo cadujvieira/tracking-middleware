@@ -1422,6 +1422,9 @@ app.get("/dashboard-view", async (req, res) => {
     const result = Object.values(campaigns)
       .filter((c) => c.leads >= 10)
       .map((c) => {
+        const campaignNameKey = normalizeCampaignName(c.campaign);
+        const custo = spendMaps.byCampaignName[campaignNameKey]?.spend || 0;
+        const financeiro = calcularMetricasFinanceiras(c.receita, custo);
         const ticketMedioDeposito = c.depositos ? c.receita / c.depositos : 0;
         const frequenciaDeposito = c.ftd ? c.depositos / c.ftd : 0;
         const qualidade = calcularQualidadeCampanha(ticketMedioDeposito, frequenciaDeposito, c.ftd);
@@ -1431,6 +1434,10 @@ app.get("/dashboard-view", async (req, res) => {
           epl: c.leads ? c.receita / c.leads : 0,
           valorPorFTD: c.ftd ? c.receita / c.ftd : 0,
           taxaFTD: c.leads ? c.ftd / c.leads : 0,
+          custo: financeiro.custo,
+          lucro: financeiro.lucro,
+          roi: financeiro.roi,
+          roas: financeiro.roas,
           ticketMedioDeposito,
           frequenciaDeposito,
           qualidade,
