@@ -44,13 +44,33 @@ function buildUrlWithParams(baseUrl, params) {
   return url.toString();
 }
 
-function calcularQualidade(ticketMedioDeposito, frequenciaDeposito, ftd) {
+function calcularQualidadeCampanha(ticketMedioDeposito, frequenciaDeposito, ftd) {
   if (ftd === 0) return "sem_ftd";
   if (ticketMedioDeposito >= 50 && frequenciaDeposito >= 2) return "diamante";
   if (ticketMedioDeposito >= 50) return "ouro";
   if (ticketMedioDeposito >= 30) return "muito_bom";
   if (ticketMedioDeposito >= 20) return "bom";
   return "ruim";
+}
+
+function calcularQualidadePublico(ticketMedioDeposito, depositos) {
+  if (depositos === 0) return "sem_deposito";
+  if (ticketMedioDeposito >= 50 && depositos >= 2) return "diamante";
+  if (ticketMedioDeposito >= 50) return "ouro";
+  if (ticketMedioDeposito >= 30) return "muito_bom";
+  if (ticketMedioDeposito >= 20) return "bom";
+  return "ruim";
+}
+
+function mascararUsuario(valor) {
+  if (!valor) return "sem_identificacao";
+  if (valor.includes("@")) {
+    const [nome, dominio] = valor.split("@");
+    return `${nome.slice(0, 3)}***@${dominio}`;
+  }
+  const limpo = String(valor).replace(/\D/g, "");
+  if (limpo.length >= 4) return `***${limpo.slice(-4)}`;
+  return valor;
 }
 
 async function getSheetData() {
@@ -180,8 +200,10 @@ app.get("/", (req, res) => {
       "/sheets/campaigns",
       "/sheets/top",
       "/sheets/daily",
+      "/sheets/audience",
       "/dashboard-view",
       "/dashboard-daily",
+      "/dashboard-audience",
       "/dashboard/summary",
       "/dashboard/campaigns",
       "/dashboard/creatives",
@@ -388,7 +410,7 @@ app.get("/sheets/campaigns", async (req, res) => {
       .map((item) => {
         const ticketMedioDeposito = item.depositos ? item.receita / item.depositos : 0;
         const frequenciaDeposito = item.ftd ? item.depositos / item.ftd : 0;
-        const qualidade = calcularQualidade(ticketMedioDeposito, frequenciaDeposito, item.ftd);
+        const qualidade = calcularQualidadeCampanha(ticketMedioDeposito, frequenciaDeposito, item.ftd);
 
         return {
           ...item,
@@ -457,7 +479,7 @@ app.get("/sheets/top", async (req, res) => {
       .map((c) => {
         const ticketMedioDeposito = c.depositos ? c.receita / c.depositos : 0;
         const frequenciaDeposito = c.ftd ? c.depositos / c.ftd : 0;
-        const qualidade = calcularQualidade(ticketMedioDeposito, frequenciaDeposito, c.ftd);
+        const qualidade = calcularQualidadeCampanha(ticketMedioDeposito, frequenciaDeposito, c.ftd);
 
         return {
           ...c,
@@ -531,7 +553,7 @@ app.get("/sheets/daily", async (req, res) => {
       .map((item) => {
         const ticketMedioDeposito = item.depositos ? item.receita / item.depositos : 0;
         const frequenciaDeposito = item.ftd ? item.depositos / item.ftd : 0;
-        const qualidade = calcularQualidade(ticketMedioDeposito, frequenciaDeposito, item.ftd);
+        const qualidade = calcularQualidadeCampanha(ticketMedioDeposito, frequenciaDeposito, item.ftd);
 
         return {
           ...item,
@@ -563,6 +585,306 @@ app.get("/sheets/daily", async (req, res) => {
       ok: false,
       error: error.message,
     });
+  }
+});
+
+app.get("/sheets/audience", async (req, res) => {
+  try {
+    const data = await getSheetData();
+
+    const headers = data[0];
+    const rows = data.slice(1);
+    const idx = (name) => headers.indexOf(name);
+
+    const audience = {};
+
+    rows.forEach((row, rowIndex) => {
+      const email = row[idx("email")] || "";
+      const phone = row[idx("phone")] || "";
+      const userKey = email || phone;
+
+      if (!userKey) return;
+
+      const evento = row[idx("evento")];
+      const valor = parseFloat(row[idx("valor")]) || 0;
+      const dataEvento = row[idx("data")] || "";
+      const campaign = row[idx("utm_campaign")] || "sem_campanha";
+      const source = row[idx("utm_source")] || "";
+      const medium = row[idx("utm_medium")] || "";
+      const content = row[idx("utm_content")] || "";
+
+      if (!audience[userKey]) {
+        audience[userKey] = {
+          userKey,
+          usuario: mascararUsuario(userKey),
+          email,
+          phone,
+          primeiraData: dataEvento,
+          ultimaData: dataEvento,
+          campanhaOrigem: campaign,
+          sourceOrigem: source,
+          mediumOrigem: medium,
+          campanhas: new Set(),
+          sources: new Set(),
+          mediums: new Set(),
+          contents: new Set(),
+          leads: 0,
+          pixGerado: 0,
+          depositos: 0,
+          ftd: 0,
+          receita: 0,
+          eventos: 0,
+          primeiraLinha: rowIndex + 2,
+        };
+      }
+
+      const user = audience[userKey];
+      user.eventos++;
+      user.ultimaData = dataEvento || user.ultimaData;
+      user.campanhas.add(campaign);
+      if (source) user.sources.add(source);
+      if (medium) user.mediums.add(medium);
+      if (content) user.contents.add(content);
+
+      if (evento === "lead") user.leads++;
+      if (evento === "pix_gerado") user.pixGerado++;
+
+      if (evento === "DEPOSITO_WH") {
+        user.depositos++;
+        user.receita += valor;
+      }
+
+      if (evento === "FTD_WH") {
+        user.ftd++;
+      }
+    });
+
+    const result = Object.values(audience)
+      .map((user) => {
+        const ticketMedioDeposito = user.depositos ? user.receita / user.depositos : 0;
+        const frequenciaDeposito = user.depositos;
+        const qualidade = calcularQualidadePublico(ticketMedioDeposito, user.depositos);
+        const enviarPixelValioso = qualidade === "ouro" || qualidade === "diamante";
+
+        return {
+          ...user,
+          campanhas: Array.from(user.campanhas),
+          sources: Array.from(user.sources),
+          mediums: Array.from(user.mediums),
+          contents: Array.from(user.contents),
+          ticketMedioDeposito,
+          frequenciaDeposito,
+          qualidade,
+          enviarPixelValioso,
+        };
+      })
+      .sort((a, b) => {
+        if (b.receita !== a.receita) return b.receita - a.receita;
+        return b.depositos - a.depositos;
+      });
+
+    const resumo = result.reduce(
+      (acc, user) => {
+        acc.totalUsuarios++;
+        acc.receita += user.receita;
+        acc.depositos += user.depositos;
+        acc.ftd += user.ftd;
+        acc[user.qualidade] = (acc[user.qualidade] || 0) + 1;
+        if (user.enviarPixelValioso) acc.publicosValiosos++;
+        return acc;
+      },
+      {
+        totalUsuarios: 0,
+        publicosValiosos: 0,
+        receita: 0,
+        depositos: 0,
+        ftd: 0,
+        diamante: 0,
+        ouro: 0,
+        muito_bom: 0,
+        bom: 0,
+        ruim: 0,
+        sem_deposito: 0,
+      }
+    );
+
+    res.json({
+      ok: true,
+      total: result.length,
+      resumo,
+      audience: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
+  }
+});
+
+app.get("/dashboard-audience", async (req, res) => {
+  try {
+    const response = await fetch("https://tracking-middleware.onrender.com/sheets/audience");
+    const json = await response.json();
+    const audience = json.audience || [];
+    const resumo = json.resumo || {};
+
+    const rowsHtml = audience
+      .slice(0, 200)
+      .map((u) => `
+        <tr>
+          <td>${u.usuario}</td>
+          <td>${u.campanhaOrigem}</td>
+          <td>${u.campanhas.join("<br>")}</td>
+          <td>${u.leads}</td>
+          <td>${u.pixGerado}</td>
+          <td>${u.depositos}</td>
+          <td>${u.ftd}</td>
+          <td>R$ ${u.receita.toFixed(2)}</td>
+          <td>R$ ${u.ticketMedioDeposito.toFixed(2)}</td>
+          <td>${u.frequenciaDeposito}x</td>
+          <td class="${u.qualidade}">${u.qualidade}</td>
+          <td class="${u.enviarPixelValioso ? "enviar" : "nao-enviar"}">${u.enviarPixelValioso ? "SIM" : "NÃO"}</td>
+        </tr>
+      `)
+      .join("");
+
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Dashboard Audience</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: #e5e7eb;
+            padding: 30px;
+          }
+          h1 {
+            margin-bottom: 20px;
+          }
+          .cards {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 30px;
+          }
+          .card {
+            background: #111827;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #1f2937;
+          }
+          .card span {
+            color: #94a3b8;
+            font-size: 14px;
+          }
+          .card strong {
+            display: block;
+            font-size: 24px;
+            margin-top: 8px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #111827;
+            border-radius: 12px;
+            overflow: hidden;
+          }
+          th, td {
+            padding: 12px;
+            border-bottom: 1px solid #1f2937;
+            text-align: left;
+            font-size: 14px;
+            vertical-align: top;
+          }
+          th {
+            background: #1e293b;
+            color: #93c5fd;
+          }
+          tr:hover {
+            background: #1f2937;
+          }
+          .diamante {
+            color: #60a5fa;
+            font-weight: bold;
+          }
+          .ouro {
+            color: #22c55e;
+            font-weight: bold;
+          }
+          .muito_bom {
+            color: #4ade80;
+            font-weight: bold;
+          }
+          .bom {
+            color: #eab308;
+            font-weight: bold;
+          }
+          .ruim {
+            color: #ef4444;
+            font-weight: bold;
+          }
+          .sem_deposito {
+            color: #6b7280;
+            font-weight: bold;
+          }
+          .enviar {
+            color: #22c55e;
+            font-weight: bold;
+          }
+          .nao-enviar {
+            color: #94a3b8;
+            font-weight: bold;
+          }
+          .note {
+            color: #94a3b8;
+            margin-bottom: 18px;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Dashboard de Público Valioso</h1>
+        <div class="note">
+          Esta visão classifica usuários, não campanhas. A ideia é identificar quais públicos devem ensinar o pixel futuramente.
+        </div>
+
+        <div class="cards">
+          <div class="card"><span>Usuários identificados</span><strong>${resumo.totalUsuarios || 0}</strong></div>
+          <div class="card"><span>Públicos valiosos</span><strong>${resumo.publicosValiosos || 0}</strong></div>
+          <div class="card"><span>Diamante</span><strong>${resumo.diamante || 0}</strong></div>
+          <div class="card"><span>Ouro</span><strong>${resumo.ouro || 0}</strong></div>
+          <div class="card"><span>Receita usuários</span><strong>R$ ${Number(resumo.receita || 0).toFixed(2)}</strong></div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Usuário</th>
+              <th>Origem</th>
+              <th>Campanhas tocadas</th>
+              <th>Leads</th>
+              <th>Pix</th>
+              <th>Depósitos</th>
+              <th>FTD</th>
+              <th>Receita</th>
+              <th>Ticket Depósito</th>
+              <th>Frequência</th>
+              <th>Segmentação</th>
+              <th>Enviar Pixel Valioso</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    res.status(500).send("Erro ao gerar dashboard audience: " + error.message);
   }
 });
 
@@ -610,7 +932,7 @@ app.get("/dashboard-view", async (req, res) => {
       .map((c) => {
         const ticketMedioDeposito = c.depositos ? c.receita / c.depositos : 0;
         const frequenciaDeposito = c.ftd ? c.depositos / c.ftd : 0;
-        const qualidade = calcularQualidade(ticketMedioDeposito, frequenciaDeposito, c.ftd);
+        const qualidade = calcularQualidadeCampanha(ticketMedioDeposito, frequenciaDeposito, c.ftd);
 
         return {
           ...c,
