@@ -73,6 +73,99 @@ function mascararUsuario(valor) {
   return valor;
 }
 
+function sha256(value) {
+  return crypto
+    .createHash("sha256")
+    .update(String(value || "").trim().toLowerCase())
+    .digest("hex");
+}
+
+function normalizePhone(phone) {
+  return String(phone || "").replace(/[^0-9]/g, "");
+}
+
+function buildMetaUserData(user) {
+  const userData = {};
+
+  if (user.email) {
+    userData.em = [sha256(user.email)];
+  }
+
+  const phone = normalizePhone(user.phone);
+  if (phone) {
+    userData.ph = [sha256(phone)];
+  }
+
+  return userData;
+}
+
+async function sendMetaConversionEvent(user, eventName = "HighValueUser") {
+  const pixelId = process.env.META_PIXEL_ID;
+  const accessToken = process.env.META_ACCESS_TOKEN;
+  const testEventCode = process.env.META_TEST_EVENT_CODE;
+
+  if (!pixelId || !accessToken) {
+    throw new Error("META_PIXEL_ID ou META_ACCESS_TOKEN nao configurado no Render.");
+  }
+
+  const userData = buildMetaUserData(user);
+
+  if (!userData.em && !userData.ph) {
+    return {
+      sent: false,
+      reason: "Usuario sem email/telefone para enviar ao Meta.",
+      user: user.usuario,
+    };
+  }
+
+  const payload = {
+    data: [
+      {
+        event_name: eventName,
+        event_time: Math.floor(Date.now() / 1000),
+        action_source: "website",
+        event_source_url: "https://tracking-middleware.onrender.com/dashboard-audience",
+        user_data: userData,
+        custom_data: {
+          currency: "BRL",
+          value: Number(user.receita || 0),
+          quality: user.qualidade,
+          deposits: Number(user.depositos || 0),
+          ticket_medio_deposito: Number(user.ticketMedioDeposito || 0),
+          frequencia_deposito: Number(user.frequenciaDeposito || 0),
+          campanha_origem: user.campanhaOrigem || "",
+        },
+      },
+    ],
+  };
+
+  if (testEventCode) {
+    payload.test_event_code = testEventCode;
+  }
+
+  const response = await fetch(
+    `https://graph.facebook.com/v20.0/${pixelId}/events?access_token=${accessToken}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  const responseBody = await response.json();
+
+  return {
+    sent: response.ok,
+    status: response.status,
+    user: user.usuario,
+    qualidade: user.qualidade,
+    receita: user.receita,
+    meta: responseBody,
+  };
+}
+
 async function getSheetData() {
   const auth = new google.auth.GoogleAuth({
     keyFile: "/etc/secrets/credentials.json",
@@ -885,6 +978,64 @@ app.get("/dashboard-audience", async (req, res) => {
     `);
   } catch (error) {
     res.status(500).send("Erro ao gerar dashboard audience: " + error.message);
+  }
+});
+
+app.get("/meta/send-valued-audience", async (req, res) => {
+  try {
+    const confirm = req.query.confirm === "SIM";
+    const limit = Number(req.query.limit || 50);
+    const eventName = req.query.eventName || "HighValueUser";
+
+    const response = await fetch("https://tracking-middleware.onrender.com/sheets/audience");
+    const json = await response.json();
+
+    const valuableUsers = (json.audience || [])
+      .filter((user) => user.enviarPixelValioso === true)
+      .slice(0, limit);
+
+    if (!confirm) {
+      return res.json({
+        ok: true,
+        mode: "preview",
+        message: "Nenhum evento foi enviado. Para enviar, use ?confirm=SIM",
+        eventName,
+        limit,
+        totalValiososEncontrados: valuableUsers.length,
+        preview: valuableUsers.map((user) => ({
+          usuario: user.usuario,
+          qualidade: user.qualidade,
+          receita: user.receita,
+          depositos: user.depositos,
+          ticketMedioDeposito: user.ticketMedioDeposito,
+          frequenciaDeposito: user.frequenciaDeposito,
+          campanhaOrigem: user.campanhaOrigem,
+        })),
+      });
+    }
+
+    const results = [];
+
+    for (const user of valuableUsers) {
+      const result = await sendMetaConversionEvent(user, eventName);
+      results.push(result);
+    }
+
+    res.json({
+      ok: true,
+      mode: "sent",
+      eventName,
+      requestedLimit: limit,
+      totalAttempted: results.length,
+      sent: results.filter((item) => item.sent).length,
+      failed: results.filter((item) => !item.sent).length,
+      results,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
   }
 });
 
