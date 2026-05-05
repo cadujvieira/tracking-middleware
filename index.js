@@ -66,70 +66,6 @@ function formatSheetDateToISO(dateBR) {
   return `${ano}-${mes}-${dia}`;
 }
 
-function normalizeCampaignName(name) {
-  return String(name || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[\[\]\(\){}]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function calcularMetricasFinanceiras(receita, custo) {
-  const receitaNum = Number(receita || 0);
-  const custoNum = Number(custo || 0);
-  const lucro = receitaNum - custoNum;
-  const roi = custoNum > 0 ? lucro / custoNum : 0;
-  const roas = custoNum > 0 ? receitaNum / custoNum : 0;
-
-  return {
-    custo: custoNum,
-    lucro,
-    roi,
-    roas,
-  };
-}
-
-async function buildMetaSpendMaps({ since, until } = {}) {
-  const spendRows = await fetchMetaAdSpend({ since, until });
-  const byCampaignName = {};
-  const byDateCampaignName = {};
-
-  spendRows.forEach((row) => {
-    const campaignNameKey = normalizeCampaignName(row.campaign_name);
-    const dateKey = row.data || "sem_data";
-    const dateCampaignKey = `${dateKey}__${campaignNameKey}`;
-
-    if (!byCampaignName[campaignNameKey]) {
-      byCampaignName[campaignNameKey] = {
-        campaign_name: row.campaign_name,
-        campaign_id: row.campaign_id,
-        spend: 0,
-      };
-    }
-
-    byCampaignName[campaignNameKey].spend += Number(row.spend || 0);
-
-    if (!byDateCampaignName[dateCampaignKey]) {
-      byDateCampaignName[dateCampaignKey] = {
-        data: dateKey,
-        campaign_name: row.campaign_name,
-        campaign_id: row.campaign_id,
-        spend: 0,
-      };
-    }
-
-    byDateCampaignName[dateCampaignKey].spend += Number(row.spend || 0);
-  });
-
-  return {
-    rows: spendRows,
-    byCampaignName,
-    byDateCampaignName,
-  };
-}
-
 async function fetchMetaAdSpend({ since, until } = {}) {
   const accessToken = process.env.META_ACCESS_TOKEN;
   const accountIdsRaw = process.env.META_AD_ACCOUNT_IDS || "";
@@ -677,40 +613,759 @@ app.get("/sheets/campaigns", async (req, res) => {
       if (evento === "FTD_WH") campaigns[campaignKey].ftd++;
     });
 
-    const spendMaps = await buildMetaSpendMaps();
+    const result = Object.values(campaigns)
+      .map((item) => {
+        const ticketMedioDeposito = item.depositos ? item.receita / item.depositos : 0;
+        const frequenciaDeposito = item.ftd ? item.depositos / item.ftd : 0;
+        const qualidade = calcularQualidadeCampanha(ticketMedioDeposito, frequenciaDeposito, item.ftd);
 
-      const result = Object.values(campaigns)
-        .filter(c => c.leads >= 10)
-        .map(c => {
-          const campaignNameKey = normalizeCampaignName(c.campaign);
-          const custo = spendMaps.byCampaignName[campaignNameKey]?.spend || 0;
-          const financeiro = calcularMetricasFinanceiras(c.receita, custo);
+        return {
+          ...item,
+          ticketMedio: item.depositos ? item.receita / item.depositos : 0,
+          conversaoLeadDeposito: item.leads ? item.depositos / item.leads : 0,
+          conversaoLeadFTD: item.leads ? item.ftd / item.leads : 0,
+          ticketMedioDeposito,
+          frequenciaDeposito,
+          qualidade,
+        };
+      })
+      .sort((a, b) => b.receita - a.receita);
 
-          return {
-            ...c,
-            epl: c.leads ? c.receita / c.leads : 0,
-            valorPorFTD: c.ftd ? c.receita / c.ftd : 0,
-            taxaFTD: c.leads ? c.ftd / c.leads : 0,
-            ticketMedioDeposito: c.depositos ? c.receita / c.depositos : 0,
-            frequenciaDeposito: c.ftd ? c.depositos / c.ftd : 0,
-            qualidade: calcularQualidadeCampanha(
-              c.depositos ? c.receita / c.depositos : 0,
-              c.ftd ? c.depositos / c.ftd : 0
-            ),
-            custo: financeiro.custo,
-            lucro: financeiro.lucro,
-            roi: financeiro.roi,
-            roas: financeiro.roas,
-          };
-        })
-        .sort((a, b) => b.receita - a.receita)
-        .slice(0, 20);
+    res.json({
+      ok: true,
+      totalCampaigns: result.length,
+      campaigns: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
+  }
+});
+
+app.get("/sheets/top", async (req, res) => {
+  try {
+    const data = await getSheetData();
+
+    const headers = data[0];
+    const rows = data.slice(1);
+    const idx = (name) => headers.indexOf(name);
+
+    const campaigns = {};
+
+    rows.forEach((row) => {
+      const campaign = row[idx("utm_campaign")] || "sem_campanha";
+      const evento = row[idx("evento")];
+      const valor = parseFloat(row[idx("valor")]) || 0;
+
+      if (!campaigns[campaign]) {
+        campaigns[campaign] = {
+          campaign,
+          leads: 0,
+          pixGerado: 0,
+          depositos: 0,
+          receita: 0,
+          ftd: 0,
+        };
+      }
+
+      if (evento === "lead") campaigns[campaignKey].leads++;
+      if (evento === "pix_gerado") campaigns[campaignKey].pixGerado++;
+
+      if (evento === "DEPOSITO_WH") {
+        campaigns[campaignKey].depositos++;
+        campaigns[campaignKey].receita += valor;
+      }
+
+      if (evento === "FTD_WH") campaigns[campaignKey].ftd++;
+    });
+
+    const result = Object.values(campaigns)
+      .filter((c) => c.leads >= 10)
+      .map((c) => {
+        const ticketMedioDeposito = c.depositos ? c.receita / c.depositos : 0;
+        const frequenciaDeposito = c.ftd ? c.depositos / c.ftd : 0;
+        const qualidade = calcularQualidadeCampanha(ticketMedioDeposito, frequenciaDeposito, c.ftd);
+
+        return {
+          ...c,
+          epl: c.leads ? c.receita / c.leads : 0,
+          valorPorFTD: c.ftd ? c.receita / c.ftd : 0,
+          taxaFTD: c.leads ? c.ftd / c.leads : 0,
+          ticketMedioDeposito,
+          frequenciaDeposito,
+          qualidade,
+        };
+      })
+      .sort((a, b) => b.receita - a.receita)
+      .slice(0, 10);
+
+    res.json({
+      ok: true,
+      top: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
+  }
+});
+
+app.get("/sheets/daily", async (req, res) => {
+  try {
+    const data = await getSheetData();
+
+    const headers = data[0];
+    const rows = data.slice(1);
+    const idx = (name) => headers.indexOf(name);
+
+    const daily = {};
+
+    rows.forEach((row) => {
+      const dataEvento = row[idx("data")] || "sem_data";
+      const campaign = row[idx("utm_campaign")] || "sem_campanha";
+      const evento = row[idx("evento")];
+      const valor = parseFloat(row[idx("valor")]) || 0;
+
+      const key = `${dataEvento}__${campaign}`;
+
+      if (!daily[key]) {
+        daily[key] = {
+          data: dataEvento,
+          campaign,
+          leads: 0,
+          pixGerado: 0,
+          depositos: 0,
+          ftd: 0,
+          receita: 0,
+        };
+      }
+
+      if (evento === "lead") daily[key].leads++;
+      if (evento === "pix_gerado") daily[key].pixGerado++;
+
+      if (evento === "DEPOSITO_WH") {
+        daily[key].depositos++;
+        daily[key].receita += valor;
+      }
+
+      if (evento === "FTD_WH") {
+        daily[key].ftd++;
+      }
+    });
+
+    const result = Object.values(daily)
+      .map((item) => {
+        const ticketMedioDeposito = item.depositos ? item.receita / item.depositos : 0;
+        const frequenciaDeposito = item.ftd ? item.depositos / item.ftd : 0;
+        const qualidade = calcularQualidadeCampanha(ticketMedioDeposito, frequenciaDeposito, item.ftd);
+
+        return {
+          ...item,
+          epl: item.leads ? item.receita / item.leads : 0,
+          valorPorFTD: item.ftd ? item.receita / item.ftd : 0,
+          taxaFTD: item.leads ? item.ftd / item.leads : 0,
+          ticketMedioDeposito,
+          frequenciaDeposito,
+          qualidade,
+        };
+      })
+      .sort((a, b) => {
+        const [da, ma, ya] = a.data.split("/");
+        const [db, mb, yb] = b.data.split("/");
+        const dateA = new Date(`${ya}-${ma}-${da}`);
+        const dateB = new Date(`${yb}-${mb}-${db}`);
+
+        if (dateB - dateA !== 0) return dateB - dateA;
+        return b.receita - a.receita;
+      });
+
+    res.json({
+      ok: true,
+      total: result.length,
+      daily: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
+  }
+});
+
+app.get("/meta/ad-spend", async (req, res) => {
+  try {
+    const since = req.query.since || undefined;
+    const until = req.query.until || undefined;
+
+    const rows = await fetchMetaAdSpend({ since, until });
+
+    const byCampaignId = {};
+    const byDateCampaignId = {};
+
+    rows.forEach((row) => {
+      const campaignId = row.campaign_id || "sem_campaign_id";
+      const dateKey = row.data || "sem_data";
+      const dateCampaignKey = `${dateKey}__${campaignId}`;
+
+      if (!byCampaignId[campaignId]) {
+        byCampaignId[campaignId] = {
+          campaign_id: campaignId,
+          campaign_name: row.campaign_name || "",
+          spend: 0,
+          accounts: new Set(),
+        };
+      }
+
+      byCampaignId[campaignId].spend += row.spend;
+      if (row.account_id) byCampaignId[campaignId].accounts.add(row.account_id);
+
+      if (!byDateCampaignId[dateCampaignKey]) {
+        byDateCampaignId[dateCampaignKey] = {
+          data: dateKey,
+          campaign_id: campaignId,
+          campaign_name: row.campaign_name || "",
+          spend: 0,
+          accounts: new Set(),
+        };
+      }
+
+      byDateCampaignId[dateCampaignKey].spend += row.spend;
+      if (row.account_id) byDateCampaignId[dateCampaignKey].accounts.add(row.account_id);
+    });
+
+    const campaigns = Object.values(byCampaignId)
+      .map((item) => ({
+        ...item,
+        accounts: Array.from(item.accounts),
+      }))
+      .sort((a, b) => b.spend - a.spend);
+
+    const daily = Object.values(byDateCampaignId)
+      .map((item) => ({
+        ...item,
+        accounts: Array.from(item.accounts),
+      }))
+      .sort((a, b) => b.spend - a.spend);
+
+    res.json({
+      ok: true,
+      since: since || "last_30d",
+      until: until || "last_30d",
+      totalRows: rows.length,
+      totalSpend: rows.reduce((acc, row) => acc + row.spend, 0),
+      rows,
+      campaigns,
+      daily,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
+  }
+});
+
+app.get("/sheets/audience", async (req, res) => {
+  try {
+    const data = await getSheetData();
+
+    const headers = data[0];
+    const rows = data.slice(1);
+    const idx = (name) => headers.indexOf(name);
+
+    const audience = {};
+
+    rows.forEach((row, rowIndex) => {
+      const email = row[idx("email")] || "";
+      const phone = row[idx("phone")] || "";
+      const userKey = email || phone;
+
+      if (!userKey) return;
+
+      const evento = row[idx("evento")];
+      const valor = parseFloat(row[idx("valor")]) || 0;
+      const dataEvento = row[idx("data")] || "";
+      const campaign = row[idx("utm_campaign")] || "sem_campanha";
+      const source = row[idx("utm_source")] || "";
+      const medium = row[idx("utm_medium")] || "";
+      const content = row[idx("utm_content")] || "";
+
+      if (!audience[userKey]) {
+        audience[userKey] = {
+          userKey,
+          usuario: mascararUsuario(userKey),
+          email,
+          phone,
+          primeiraData: dataEvento,
+          ultimaData: dataEvento,
+          campanhaOrigem: campaign,
+          sourceOrigem: source,
+          mediumOrigem: medium,
+          campanhas: new Set(),
+          sources: new Set(),
+          mediums: new Set(),
+          contents: new Set(),
+          leads: 0,
+          pixGerado: 0,
+          depositos: 0,
+          ftd: 0,
+          receita: 0,
+          eventos: 0,
+          primeiraLinha: rowIndex + 2,
+        };
+      }
+
+      const user = audience[userKey];
+      user.eventos++;
+      user.ultimaData = dataEvento || user.ultimaData;
+      user.campanhas.add(campaign);
+      if (source) user.sources.add(source);
+      if (medium) user.mediums.add(medium);
+      if (content) user.contents.add(content);
+
+      if (evento === "lead") user.leads++;
+      if (evento === "pix_gerado") user.pixGerado++;
+
+      if (evento === "DEPOSITO_WH") {
+        user.depositos++;
+        user.receita += valor;
+      }
+
+      if (evento === "FTD_WH") {
+        user.ftd++;
+      }
+    });
+
+    const result = Object.values(audience)
+      .map((user) => {
+        const ticketMedioDeposito = user.depositos ? user.receita / user.depositos : 0;
+        const frequenciaDeposito = user.depositos;
+        const qualidade = calcularQualidadePublico(ticketMedioDeposito, user.depositos);
+        const enviarPixelValioso = qualidade === "ouro" || qualidade === "diamante";
+
+        return {
+          ...user,
+          campanhas: Array.from(user.campanhas),
+          sources: Array.from(user.sources),
+          mediums: Array.from(user.mediums),
+          contents: Array.from(user.contents),
+          ticketMedioDeposito,
+          frequenciaDeposito,
+          qualidade,
+          enviarPixelValioso,
+        };
+      })
+      .sort((a, b) => {
+        if (b.receita !== a.receita) return b.receita - a.receita;
+        return b.depositos - a.depositos;
+      });
+
+    const resumo = result.reduce(
+      (acc, user) => {
+        acc.totalUsuarios++;
+        acc.receita += user.receita;
+        acc.depositos += user.depositos;
+        acc.ftd += user.ftd;
+        acc[user.qualidade] = (acc[user.qualidade] || 0) + 1;
+        if (user.enviarPixelValioso) acc.publicosValiosos++;
+        return acc;
+      },
+      {
+        totalUsuarios: 0,
+        publicosValiosos: 0,
+        receita: 0,
+        depositos: 0,
+        ftd: 0,
+        diamante: 0,
+        ouro: 0,
+        muito_bom: 0,
+        bom: 0,
+        ruim: 0,
+        sem_deposito: 0,
+      }
+    );
+
+    res.json({
+      ok: true,
+      total: result.length,
+      resumo,
+      audience: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
+  }
+});
+
+app.get("/dashboard-audience", async (req, res) => {
+  try {
+    const response = await fetch("https://tracking-middleware.onrender.com/sheets/audience");
+    const json = await response.json();
+    const audience = json.audience || [];
+    const resumo = json.resumo || {};
+
+    const rowsHtml = audience
+      .slice(0, 200)
+      .map((u) => `
+        <tr>
+          <td>${u.usuario}</td>
+          <td>${u.campanhaOrigem}</td>
+          <td>${u.campanhas.join("<br>")}</td>
+          <td>${u.leads}</td>
+          <td>${u.pixGerado}</td>
+          <td>${u.depositos}</td>
+          <td>${u.ftd}</td>
+          <td>R$ ${u.receita.toFixed(2)}</td>
+          <td>R$ ${u.ticketMedioDeposito.toFixed(2)}</td>
+          <td>${u.frequenciaDeposito}x</td>
+          <td class="${u.qualidade}">${u.qualidade}</td>
+          <td class="${u.enviarPixelValioso ? "enviar" : "nao-enviar"}">${u.enviarPixelValioso ? "SIM" : "NÃO"}</td>
+        </tr>
+      `)
+      .join("");
+
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Dashboard Audience</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: #e5e7eb;
+            padding: 30px;
+          }
+          h1 {
+            margin-bottom: 20px;
+          }
+          .cards {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 30px;
+          }
+          .card {
+            background: #111827;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #1f2937;
+          }
+          .card span {
+            color: #94a3b8;
+            font-size: 14px;
+          }
+          .card strong {
+            display: block;
+            font-size: 24px;
+            margin-top: 8px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #111827;
+            border-radius: 12px;
+            overflow: hidden;
+          }
+          th, td {
+            padding: 12px;
+            border-bottom: 1px solid #1f2937;
+            text-align: left;
+            font-size: 14px;
+            vertical-align: top;
+          }
+          th {
+            background: #1e293b;
+            color: #93c5fd;
+          }
+          tr:hover {
+            background: #1f2937;
+          }
+          .diamante {
+            color: #60a5fa;
+            font-weight: bold;
+          }
+          .ouro {
+            color: #22c55e;
+            font-weight: bold;
+          }
+          .muito_bom {
+            color: #4ade80;
+            font-weight: bold;
+          }
+          .bom {
+            color: #eab308;
+            font-weight: bold;
+          }
+          .ruim {
+            color: #ef4444;
+            font-weight: bold;
+          }
+          .sem_deposito {
+            color: #6b7280;
+            font-weight: bold;
+          }
+          .enviar {
+            color: #22c55e;
+            font-weight: bold;
+          }
+          .nao-enviar {
+            color: #94a3b8;
+            font-weight: bold;
+          }
+          .note {
+            color: #94a3b8;
+            margin-bottom: 18px;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Dashboard de Público Valioso</h1>
+        <div class="note">
+          Esta visão classifica usuários, não campanhas. A ideia é identificar quais públicos devem ensinar o pixel futuramente.
+        </div>
+
+        <div class="cards">
+          <div class="card"><span>Usuários identificados</span><strong>${resumo.totalUsuarios || 0}</strong></div>
+          <div class="card"><span>Públicos valiosos</span><strong>${resumo.publicosValiosos || 0}</strong></div>
+          <div class="card"><span>Diamante</span><strong>${resumo.diamante || 0}</strong></div>
+          <div class="card"><span>Ouro</span><strong>${resumo.ouro || 0}</strong></div>
+          <div class="card"><span>Receita usuários</span><strong>R$ ${Number(resumo.receita || 0).toFixed(2)}</strong></div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Usuário</th>
+              <th>Origem</th>
+              <th>Campanhas tocadas</th>
+              <th>Leads</th>
+              <th>Pix</th>
+              <th>Depósitos</th>
+              <th>FTD</th>
+              <th>Receita</th>
+              <th>Ticket Depósito</th>
+              <th>Frequência</th>
+              <th>Segmentação</th>
+              <th>Enviar Pixel Valioso</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    res.status(500).send("Erro ao gerar dashboard audience: " + error.message);
+  }
+});
+
+app.get("/meta/sent-audience-status", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        event_name,
+        qualidade,
+        COUNT(*)::int AS total,
+        COALESCE(SUM(receita), 0)::float AS receita
+      FROM meta_audience_sent
+      GROUP BY event_name, qualidade
+      ORDER BY event_name, qualidade
+    `);
+
+    const recent = await pool.query(`
+      SELECT
+        user_label,
+        event_name,
+        qualidade,
+        receita::float AS receita,
+        depositos,
+        meta_status,
+        created_at
+      FROM meta_audience_sent
+      ORDER BY created_at DESC
+      LIMIT 20
+    `);
+
+    res.json({
+      ok: true,
+      summary: result.rows,
+      recent: recent.rows,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
+  }
+});
+
+app.get("/meta/send-valued-audience", async (req, res) => {
+  try {
+    const confirm = req.query.confirm === "SIM";
+    const limit = Number(req.query.limit || 50);
+    const eventName = req.query.eventName || "Purchase";
+    const quality = req.query.quality || "ouro,diamante";
+    const allowedQualities = quality.split(",").map((item) => item.trim()).filter(Boolean);
+
+    const response = await fetch("https://tracking-middleware.onrender.com/sheets/audience");
+    const json = await response.json();
+
+    const sentRows = await pool.query(
+      "SELECT user_key_hash FROM meta_audience_sent WHERE event_name = $1",
+      [eventName]
+    );
+
+    const alreadySent = new Set(sentRows.rows.map((row) => row.user_key_hash));
+
+    const valuableUsers = (json.audience || [])
+      .filter((user) => allowedQualities.includes(user.qualidade))
+      .map((user) => ({
+        ...user,
+        userKeyHash: sha256(user.userKey),
+      }))
+      .filter((user) => !alreadySent.has(user.userKeyHash))
+      .slice(0, limit);
+
+    if (!confirm) {
+      return res.json({
+        ok: true,
+        mode: "preview",
+        message: "Nenhum evento foi enviado. Para enviar, use ?confirm=SIM",
+        regra: "Somente usuarios ainda nao enviados e com qualidade permitida entram no envio.",
+        eventName,
+        limit,
+        allowedQualities,
+        totalJaEnviadosNesseEvento: alreadySent.size,
+        totalNovosValiososEncontrados: valuableUsers.length,
+        preview: valuableUsers.map((user) => ({
+          usuario: user.usuario,
+          qualidade: user.qualidade,
+          receita: user.receita,
+          depositos: user.depositos,
+          ticketMedioDeposito: user.ticketMedioDeposito,
+          frequenciaDeposito: user.frequenciaDeposito,
+          campanhaOrigem: user.campanhaOrigem,
+        })),
+      });
+    }
+
+    const results = [];
+
+    for (const user of valuableUsers) {
+      const result = await sendMetaConversionEvent(user, eventName);
+      results.push(result);
+
+      if (result.sent) {
+        await pool.query(
+          `INSERT INTO meta_audience_sent
+          (user_key_hash, event_name, user_label, qualidade, receita, depositos, ticket_medio_deposito, frequencia_deposito, meta_status, meta_response)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+          ON CONFLICT (user_key_hash, event_name) DO NOTHING`,
+          [
+            user.userKeyHash,
+            eventName,
+            user.usuario,
+            user.qualidade,
+            user.receita,
+            user.depositos,
+            user.ticketMedioDeposito,
+            user.frequenciaDeposito,
+            result.status || null,
+            result.meta || {},
+          ]
+        );
+      }
+    }
+
+    res.json({
+      ok: true,
+      mode: "sent",
+      eventName,
+      allowedQualities,
+      requestedLimit: limit,
+      totalJaEnviadosAntes: alreadySent.size,
+      totalAttempted: results.length,
+      sent: results.filter((item) => item.sent).length,
+      failed: results.filter((item) => !item.sent).length,
+      results,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
+  }
+});
+
+app.get("/dashboard-view", async (req, res) => {
+  try {
+    const data = await getSheetData();
+
+    const headers = data[0];
+    const rows = data.slice(1);
+    const idx = (name) => headers.indexOf(name);
+
+    const campaigns = {};
+
+    rows.forEach((row) => {
+      const campaign = row[idx("utm_campaign")] || "sem_campanha";
+      const evento = row[idx("evento")];
+      const valor = parseFloat(row[idx("valor")]) || 0;
+
+      if (!campaigns[campaign]) {
+        campaigns[campaign] = {
+          campaign,
+          leads: 0,
+          pixGerado: 0,
+          depositos: 0,
+          receita: 0,
+          ftd: 0,
+        };
+      }
+
+      if (evento === "lead") campaigns[campaign].leads++;
+      if (evento === "pix_gerado") campaigns[campaign].pixGerado++;
+
+      if (evento === "DEPOSITO_WH") {
+        campaigns[campaign].depositos++;
+        campaigns[campaign].receita += valor;
+      }
+
+      if (evento === "FTD_WH") {
+        campaigns[campaign].ftd++;
+      }
+    });
+
+    const result = Object.values(campaigns)
+      .filter((c) => c.leads >= 10)
+      .map((c) => {
+        const ticketMedioDeposito = c.depositos ? c.receita / c.depositos : 0;
+        const frequenciaDeposito = c.ftd ? c.depositos / c.ftd : 0;
+        const qualidade = calcularQualidadeCampanha(ticketMedioDeposito, frequenciaDeposito, c.ftd);
+
+        return {
+          ...c,
+          epl: c.leads ? c.receita / c.leads : 0,
+          valorPorFTD: c.ftd ? c.receita / c.ftd : 0,
+          taxaFTD: c.leads ? c.ftd / c.leads : 0,
+          ticketMedioDeposito,
+          frequenciaDeposito,
+          qualidade,
+        };
+      })
+      .sort((a, b) => b.receita - a.receita)
+      .slice(0, 20);
 
     const totalReceita = result.reduce((acc, c) => acc + c.receita, 0);
-    const totalCusto = result.reduce((acc, c) => acc + (c.custo || 0), 0);
-    const totalLucro = totalReceita - totalCusto;
-    const totalRoi = totalCusto > 0 ? totalLucro / totalCusto : 0;
-    const totalRoas = totalCusto > 0 ? totalReceita / totalCusto : 0;
     const totalLeads = result.reduce((acc, c) => acc + c.leads, 0);
     const totalFtd = result.reduce((acc, c) => acc + c.ftd, 0);
     const totalDepositos = result.reduce((acc, c) => acc + c.depositos, 0);
@@ -727,9 +1382,6 @@ app.get("/sheets/campaigns", async (req, res) => {
           rowClass = "bad";
         }
 
-        const lucroClass = (c.lucro || 0) >= 0 ? "good-cell" : "bad-cell";
-        const roiClass = (c.roi || 0) >= 0 ? "good-cell" : "bad-cell";
-
         return `
           <tr>
             <td>${c.campaign}</td>
@@ -738,10 +1390,6 @@ app.get("/sheets/campaigns", async (req, res) => {
             <td>${c.depositos}</td>
             <td>${c.ftd}</td>
             <td>R$ ${c.receita.toFixed(2)}</td>
-            <td>R$ ${(c.custo || 0).toFixed(2)}</td>
-            <td class="${lucroClass}">R$ ${(c.lucro || 0).toFixed(2)}</td>
-            <td class="${roiClass}">${((c.roi || 0) * 100).toFixed(2)}%</td>
-            <td>${(c.roas || 0).toFixed(2)}x</td>
             <td class="${rowClass}-cell">R$ ${c.epl.toFixed(2)}</td>
             <td>R$ ${c.valorPorFTD.toFixed(2)}</td>
             <td class="${rowClass}-cell">${(c.taxaFTD * 100).toFixed(2)}%</td>
@@ -888,10 +1536,6 @@ app.get("/sheets/campaigns", async (req, res) => {
 
         <div class="cards">
           <div class="card"><span>Receita Top 20</span><strong>R$ ${totalReceita.toFixed(2)}</strong></div>
-          <div class="card"><span>Custo Meta</span><strong>R$ ${totalCusto.toFixed(2)}</strong></div>
-          <div class="card"><span>Lucro</span><strong>R$ ${totalLucro.toFixed(2)}</strong></div>
-          <div class="card"><span>ROI</span><strong>${(totalRoi * 100).toFixed(2)}%</strong></div>
-          <div class="card"><span>ROAS</span><strong>${totalRoas.toFixed(2)}x</strong></div>
           <div class="card"><span>Leads</span><strong>${totalLeads}</strong></div>
           <div class="card"><span>Depósitos</span><strong>${totalDepositos}</strong></div>
           <div class="card"><span>FTDs</span><strong>${totalFtd}</strong></div>
@@ -906,10 +1550,6 @@ app.get("/sheets/campaigns", async (req, res) => {
               <th>Depósitos <span class="info">?<span class="tooltip">Quantidade total de depósitos realizados. Um usuário pode depositar mais de uma vez.</span></span></th>
               <th>FTD <span class="info">?<span class="tooltip">First Time Deposit: quantidade de usuários que fizeram o primeiro depósito.</span></span></th>
               <th>Receita <span class="info">?<span class="tooltip">Soma total dos valores depositados pelos usuários dessa campanha.</span></span></th>
-              <th>Custo <span class="info">?<span class="tooltip">Gasto da campanha puxado automaticamente da Meta Ads API.</span></span></th>
-              <th>Lucro <span class="info">?<span class="tooltip">Receita menos custo. Fórmula: receita - custo.</span></span></th>
-              <th>ROI <span class="info">?<span class="tooltip">Retorno sobre investimento. Fórmula: lucro / custo.</span></span></th>
-              <th>ROAS <span class="info">?<span class="tooltip">Retorno sobre gasto em mídia. Fórmula: receita / custo.</span></span></th>
               <th>EPL <span class="info">?<span class="tooltip">Earnings Per Lead: receita média por lead. Fórmula: receita / leads.</span></span></th>
               <th>Valor/FTD <span class="info">?<span class="tooltip">Receita média por FTD. Fórmula: receita / FTD.</span></span></th>
               <th>Taxa FTD <span class="info">?<span class="tooltip">Percentual de leads que viraram FTD. Fórmula: FTD / leads.</span></span></th>
