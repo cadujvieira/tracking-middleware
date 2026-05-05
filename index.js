@@ -99,7 +99,7 @@ function buildMetaUserData(user) {
   return userData;
 }
 
-async function sendMetaConversionEvent(user, eventName = "HighValueUser") {
+async function sendMetaConversionEvent(user, eventName = "Purchase") {
   const pixelId = process.env.META_PIXEL_ID;
   const accessToken = process.env.META_ACCESS_TOKEN;
   const testEventCode = process.env.META_TEST_EVENT_CODE;
@@ -129,6 +129,8 @@ async function sendMetaConversionEvent(user, eventName = "HighValueUser") {
         custom_data: {
           currency: "BRL",
           value: Number(user.receita || 0),
+          content_name: "High Value User",
+          content_category: user.qualidade,
           quality: user.qualidade,
           deposits: Number(user.depositos || 0),
           ticket_medio_deposito: Number(user.ticketMedioDeposito || 0),
@@ -985,7 +987,7 @@ app.get("/meta/send-valued-audience", async (req, res) => {
   try {
     const confirm = req.query.confirm === "SIM";
     const limit = Number(req.query.limit || 50);
-    const eventName = req.query.eventName || "HighValueUser";
+    const eventName = req.query.eventName || "Purchase";
 
     const response = await fetch("https://tracking-middleware.onrender.com/sheets/audience");
     const json = await response.json();
@@ -999,6 +1001,7 @@ app.get("/meta/send-valued-audience", async (req, res) => {
         ok: true,
         mode: "preview",
         message: "Nenhum evento foi enviado. Para enviar, use ?confirm=SIM",
+        regra: "Somente usuarios ouro ou diamante entram no envio para o pixel.",
         eventName,
         limit,
         totalValiososEncontrados: valuableUsers.length,
