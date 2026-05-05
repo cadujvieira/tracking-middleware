@@ -66,6 +66,71 @@ function formatSheetDateToISO(dateBR) {
   return `${ano}-${mes}-${dia}`;
 }
 
+function normalizeCampaignName(name) {
+  return String(name || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\[\]\(\){}]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function calcularMetricasFinanceiras(receita, custo) {
+  const receitaNum = Number(receita || 0);
+  const custoNum = Number(custo || 0);
+  const lucro = receitaNum - custoNum;
+  const roi = custoNum > 0 ? lucro / custoNum : 0;
+  const roas = custoNum > 0 ? receitaNum / custoNum : 0;
+
+  return {
+    custo: custoNum,
+    lucro,
+    roi,
+    roas,
+  };
+}
+
+async function buildMetaSpendMaps({ since, until } = {}) {
+  const spendRows = await fetchMetaAdSpend({ since, until });
+
+  const byCampaignName = {};
+  const byDateCampaignName = {};
+
+  spendRows.forEach((row) => {
+    const campaignNameKey = normalizeCampaignName(row.campaign_name);
+    const dateKey = row.data || "sem_data";
+    const dateCampaignKey = `${dateKey}__${campaignNameKey}`;
+
+    if (!byCampaignName[campaignNameKey]) {
+      byCampaignName[campaignNameKey] = {
+        campaign_name: row.campaign_name,
+        campaign_id: row.campaign_id,
+        spend: 0,
+      };
+    }
+
+    byCampaignName[campaignNameKey].spend += Number(row.spend || 0);
+
+    if (!byDateCampaignName[dateCampaignKey]) {
+      byDateCampaignName[dateCampaignKey] = {
+        data: dateKey,
+        campaign_name: row.campaign_name,
+        campaign_id: row.campaign_id,
+        spend: 0,
+      };
+    }
+
+    byDateCampaignName[dateCampaignKey].spend += Number(row.spend || 0);
+  });
+
+  return {
+    rows: spendRows,
+    byCampaignName,
+    byDateCampaignName,
+  };
+}
+
 async function fetchMetaAdSpend({ since, until } = {}) {
   const accessToken = process.env.META_ACCESS_TOKEN;
   const accountIdsRaw = process.env.META_AD_ACCOUNT_IDS || "";
@@ -683,21 +748,24 @@ app.get("/sheets/top", async (req, res) => {
 
     const result = Object.values(campaigns)
       .filter((c) => c.leads >= 10)
-      .map((c) => {
-        const ticketMedioDeposito = c.depositos ? c.receita / c.depositos : 0;
-        const frequenciaDeposito = c.ftd ? c.depositos / c.ftd : 0;
-        const qualidade = calcularQualidadeCampanha(ticketMedioDeposito, frequenciaDeposito, c.ftd);
+      .map(c => {
+        const campaignNameKey = normalizeCampaignName(c.campaign);
+        const custo = spendMaps.byCampaignName[campaignNameKey]?.spend || 0;
+        const financeiro = calcularMetricasFinanceiras(c.receita, custo);
 
-        return {
-          ...c,
-          epl: c.leads ? c.receita / c.leads : 0,
-          valorPorFTD: c.ftd ? c.receita / c.ftd : 0,
-          taxaFTD: c.leads ? c.ftd / c.leads : 0,
-          ticketMedioDeposito,
-          frequenciaDeposito,
-          qualidade,
+          return {
+        ...c,
+         epl: c.leads ? c.receita / c.leads : 0,
+         valorPorFTD: c.ftd ? c.receita / c.ftd : 0,
+         taxaFTD: c.leads ? c.ftd / c.leads : 0,
+         ticketMedioDeposito: c.depositos ? c.receita / c.depositos : 0,
+         frequenciaDeposito: c.ftd ? c.depositos / c.ftd : 0,
+         custo: financeiro.custo,
+         lucro: financeiro.lucro,
+         roi: financeiro.roi,
+         roas: financeiro.roas,
         };
-      })
+     })
       .sort((a, b) => b.receita - a.receita)
       .slice(0, 10);
 
@@ -1137,6 +1205,10 @@ app.get("/dashboard-audience", async (req, res) => {
           <div class="card"><span>Diamante</span><strong>${resumo.diamante || 0}</strong></div>
           <div class="card"><span>Ouro</span><strong>${resumo.ouro || 0}</strong></div>
           <div class="card"><span>Receita usuários</span><strong>R$ ${Number(resumo.receita || 0).toFixed(2)}</strong></div>
+          <div class="card"><span>Custo Meta</span><strong>R$ ${totalCusto.toFixed(2)}</strong></div>
+          <div class="card"><span>Lucro</span><strong>R$ ${totalLucro.toFixed(2)}</strong></div>
+          <div class="card"><span>ROI</span><strong>${(totalRoi * 100).toFixed(2)}%</strong></div>
+          <div class="card"><span>ROAS</span><strong>${totalRoas.toFixed(2)}x</strong></div>
         </div>
 
         <table>
@@ -1345,6 +1417,8 @@ app.get("/dashboard-view", async (req, res) => {
       }
     });
 
+    const spendMaps = await buildMetaSpendMaps();
+
     const result = Object.values(campaigns)
       .filter((c) => c.leads >= 10)
       .map((c) => {
@@ -1366,6 +1440,10 @@ app.get("/dashboard-view", async (req, res) => {
       .slice(0, 20);
 
     const totalReceita = result.reduce((acc, c) => acc + c.receita, 0);
+    const totalCusto = result.reduce((acc, c) => acc + (c.custo || 0), 0);
+    const totalLucro = totalReceita - totalCusto;
+    const totalRoi = totalCusto > 0 ? totalLucro / totalCusto : 0;
+    const totalRoas = totalCusto > 0 ? totalReceita / totalCusto : 0;
     const totalLeads = result.reduce((acc, c) => acc + c.leads, 0);
     const totalFtd = result.reduce((acc, c) => acc + c.ftd, 0);
     const totalDepositos = result.reduce((acc, c) => acc + c.depositos, 0);
@@ -1390,6 +1468,10 @@ app.get("/dashboard-view", async (req, res) => {
             <td>${c.depositos}</td>
             <td>${c.ftd}</td>
             <td>R$ ${c.receita.toFixed(2)}</td>
+            <td>R$ ${(c.custo || 0).toFixed(2)}</td>
+            <td>R$ ${(c.lucro || 0).toFixed(2)}</td>
+            <td>${((c.roi || 0) * 100).toFixed(2)}%</td>
+            <td>${(c.roas || 0).toFixed(2)}x</td>
             <td class="${rowClass}-cell">R$ ${c.epl.toFixed(2)}</td>
             <td>R$ ${c.valorPorFTD.toFixed(2)}</td>
             <td class="${rowClass}-cell">${(c.taxaFTD * 100).toFixed(2)}%</td>
@@ -1630,6 +1712,10 @@ app.get("/dashboard-daily", async (req, res) => {
               <th>Depósitos</th>
               <th>FTD</th>
               <th>Receita</th>
+              <th>Custo</th>
+              <th>Lucro</th>
+              <th>ROI</th>
+              <th>ROAS</th>
               <th>EPL</th>
               <th>Taxa FTD</th>
               <th>Ticket Depósito <span class="info">?<span class="tooltip">Valor médio por depósito. Fórmula: receita / depósitos.</span></span></th>
