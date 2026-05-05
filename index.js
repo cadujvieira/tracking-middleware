@@ -44,6 +44,93 @@ function buildUrlWithParams(baseUrl, params) {
   return url.toString();
 }
 
+function getCell(headers, row, possibleNames) {
+  for (const name of possibleNames) {
+    const index = headers.indexOf(name);
+    if (index >= 0 && row[index] !== undefined && row[index] !== null && row[index] !== "") {
+      return row[index];
+    }
+  }
+  return "";
+}
+
+function parseMetaDateToSheetDate(dateISO) {
+  if (!dateISO) return "";
+  const [ano, mes, dia] = dateISO.split("-");
+  return `${dia}/${mes}/${ano}`;
+}
+
+function formatSheetDateToISO(dateBR) {
+  if (!dateBR || !dateBR.includes("/")) return "";
+  const [dia, mes, ano] = dateBR.split("/");
+  return `${ano}-${mes}-${dia}`;
+}
+
+async function fetchMetaAdSpend({ since, until } = {}) {
+  const accessToken = process.env.META_ACCESS_TOKEN;
+  const accountIdsRaw = process.env.META_AD_ACCOUNT_IDS || "";
+
+  if (!accessToken) {
+    throw new Error("META_ACCESS_TOKEN nao configurado no Render.");
+  }
+
+  if (!accountIdsRaw) {
+    throw new Error("META_AD_ACCOUNT_IDS nao configurado no Render.");
+  }
+
+  const accountIds = accountIdsRaw
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((id) => (id.startsWith("act_") ? id : `act_${id}`));
+
+  const allRows = [];
+
+  for (const accountId of accountIds) {
+    const params = new URLSearchParams({
+      fields: "account_id,account_name,campaign_id,campaign_name,spend,date_start,date_stop",
+      level: "campaign",
+      time_increment: "1",
+      access_token: accessToken,
+      limit: "500",
+    });
+
+    if (since && until) {
+      params.set("time_range", JSON.stringify({ since, until }));
+    } else {
+      params.set("date_preset", "last_30d");
+    }
+
+    let url = `https://graph.facebook.com/v20.0/${accountId}/insights?${params.toString()}`;
+
+    while (url) {
+      const response = await fetch(url);
+      const json = await response.json();
+
+      if (!response.ok) {
+        throw new Error(`Erro Meta Ads ${accountId}: ${JSON.stringify(json)}`);
+      }
+
+      (json.data || []).forEach((row) => {
+        allRows.push({
+          account_id: row.account_id || accountId.replace("act_", ""),
+          account_name: row.account_name || "",
+          campaign_id: row.campaign_id || "",
+          campaign_name: row.campaign_name || "",
+          spend: Number(row.spend || 0),
+          date_start: row.date_start || "",
+          date_stop: row.date_stop || "",
+          data: parseMetaDateToSheetDate(row.date_start || ""),
+        });
+      });
+
+      url = json.paging?.next || null;
+    }
+  }
+
+  return allRows;
+}
+
 function calcularQualidadeCampanha(ticketMedioDeposito, frequenciaDeposito, ftd) {
   if (ftd === 0) return "sem_ftd";
   if (ticketMedioDeposito >= 50 && frequenciaDeposito >= 2) return "diamante";
@@ -314,6 +401,7 @@ app.get("/", (req, res) => {
       "/sheets/top",
       "/sheets/daily",
       "/sheets/audience",
+      "/meta/ad-spend",
       "/dashboard-view",
       "/dashboard-daily",
       "/dashboard-audience",
@@ -496,12 +584,16 @@ app.get("/sheets/campaigns", async (req, res) => {
 
     rows.forEach((row) => {
       const campaign = row[idx("utm_campaign")] || "sem_campanha";
+      const campaignId = getCell(headers, row, ["campaign_id", "campaignid", "utm_campaign_id", "id_campanha", "campaign id"]);
+      const campaignKey = campaignId || campaign;
       const evento = row[idx("evento")];
       const valor = parseFloat(row[idx("valor")]) || 0;
 
-      if (!campaigns[campaign]) {
-        campaigns[campaign] = {
+      if (!campaigns[campaignKey]) {
+        campaigns[campaignKey] = {
           campaign,
+          campaignId,
+          campaignKey,
           leads: 0,
           pixGerado: 0,
           depositos: 0,
@@ -510,15 +602,15 @@ app.get("/sheets/campaigns", async (req, res) => {
         };
       }
 
-      if (evento === "lead") campaigns[campaign].leads++;
-      if (evento === "pix_gerado") campaigns[campaign].pixGerado++;
+      if (evento === "lead") campaigns[campaignKey].leads++;
+      if (evento === "pix_gerado") campaigns[campaignKey].pixGerado++;
 
       if (evento === "DEPOSITO_WH") {
-        campaigns[campaign].depositos++;
-        campaigns[campaign].receita += valor;
+        campaigns[campaignKey].depositos++;
+        campaigns[campaignKey].receita += valor;
       }
 
-      if (evento === "FTD_WH") campaigns[campaign].ftd++;
+      if (evento === "FTD_WH") campaigns[campaignKey].ftd++;
     });
 
     const result = Object.values(campaigns)
@@ -578,15 +670,15 @@ app.get("/sheets/top", async (req, res) => {
         };
       }
 
-      if (evento === "lead") campaigns[campaign].leads++;
-      if (evento === "pix_gerado") campaigns[campaign].pixGerado++;
+      if (evento === "lead") campaigns[campaignKey].leads++;
+      if (evento === "pix_gerado") campaigns[campaignKey].pixGerado++;
 
       if (evento === "DEPOSITO_WH") {
-        campaigns[campaign].depositos++;
-        campaigns[campaign].receita += valor;
+        campaigns[campaignKey].depositos++;
+        campaigns[campaignKey].receita += valor;
       }
 
-      if (evento === "FTD_WH") campaigns[campaign].ftd++;
+      if (evento === "FTD_WH") campaigns[campaignKey].ftd++;
     });
 
     const result = Object.values(campaigns)
@@ -694,6 +786,79 @@ app.get("/sheets/daily", async (req, res) => {
       ok: true,
       total: result.length,
       daily: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
+  }
+});
+
+app.get("/meta/ad-spend", async (req, res) => {
+  try {
+    const since = req.query.since || undefined;
+    const until = req.query.until || undefined;
+
+    const rows = await fetchMetaAdSpend({ since, until });
+
+    const byCampaignId = {};
+    const byDateCampaignId = {};
+
+    rows.forEach((row) => {
+      const campaignId = row.campaign_id || "sem_campaign_id";
+      const dateKey = row.data || "sem_data";
+      const dateCampaignKey = `${dateKey}__${campaignId}`;
+
+      if (!byCampaignId[campaignId]) {
+        byCampaignId[campaignId] = {
+          campaign_id: campaignId,
+          campaign_name: row.campaign_name || "",
+          spend: 0,
+          accounts: new Set(),
+        };
+      }
+
+      byCampaignId[campaignId].spend += row.spend;
+      if (row.account_id) byCampaignId[campaignId].accounts.add(row.account_id);
+
+      if (!byDateCampaignId[dateCampaignKey]) {
+        byDateCampaignId[dateCampaignKey] = {
+          data: dateKey,
+          campaign_id: campaignId,
+          campaign_name: row.campaign_name || "",
+          spend: 0,
+          accounts: new Set(),
+        };
+      }
+
+      byDateCampaignId[dateCampaignKey].spend += row.spend;
+      if (row.account_id) byDateCampaignId[dateCampaignKey].accounts.add(row.account_id);
+    });
+
+    const campaigns = Object.values(byCampaignId)
+      .map((item) => ({
+        ...item,
+        accounts: Array.from(item.accounts),
+      }))
+      .sort((a, b) => b.spend - a.spend);
+
+    const daily = Object.values(byDateCampaignId)
+      .map((item) => ({
+        ...item,
+        accounts: Array.from(item.accounts),
+      }))
+      .sort((a, b) => b.spend - a.spend);
+
+    res.json({
+      ok: true,
+      since: since || "last_30d",
+      until: until || "last_30d",
+      totalRows: rows.length,
+      totalSpend: rows.reduce((acc, row) => acc + row.spend, 0),
+      rows,
+      campaigns,
+      daily,
     });
   } catch (error) {
     res.status(500).json({
