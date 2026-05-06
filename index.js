@@ -787,6 +787,7 @@ app.get("/dashboard-view", async (req, res) => {
               <th>Leads <span class="info">?<span class="tooltip">Quantidade total de leads capturados pela campanha.</span></span></th>
               <th>Pix <span class="info">?<span class="tooltip">Quantidade de Pix gerados pelos usuários vindos dessa campanha.</span></span></th>
               <th>Depósitos <span class="info">?<span class="tooltip">Quantidade total de depósitos realizados. Um usuário pode depositar mais de uma vez.</span></span></th>
+              <th>Depositantes</th> <span class="info">?<span class="tooltip">Quantidade total de pessoas que depositaram na casa.</span></span></th>
               <th>FTD <span class="info">?<span class="tooltip">First Time Deposit: quantidade de usuários que fizeram o primeiro depósito.</span></span></th>
               <th>Receita <span class="info">?<span class="tooltip">Soma total dos valores depositados pelos usuários dessa campanha.</span></span></th>
               <th>EPL <span class="info">?<span class="tooltip">Receita média por lead. Fórmula: receita / leads.</span></span></th>
@@ -871,6 +872,7 @@ app.get("/dashboard-daily", async (req, res) => {
                 <td>${c.campaign}</td>
                 <td>${c.leads}</td>
                 <td>${c.depositos}</td>
+                <<td>${c.depositantesUnicos}</td>
                 <td>${c.ftd}</td>
                 <td>R$ ${c.receita.toFixed(2)}</td>
                 <td>R$ ${c.epl.toFixed(2)}</td>
