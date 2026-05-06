@@ -872,7 +872,6 @@ app.get("/dashboard-daily", async (req, res) => {
               <th>Depositantes</th>
               <th>FTD</th>
               <th>Receita</th>
-              <th>EPL</th>
               <th>Taxa FTD</th>
               <th>Ticket Depósito</th>
               <th>Frequência</th>
@@ -888,7 +887,6 @@ app.get("/dashboard-daily", async (req, res) => {
                 <<td>${c.depositantesUnicos}</td>
                 <td>${c.ftd}</td>
                 <td>R$ ${c.receita.toFixed(2)}</td>
-                <td>R$ ${c.epl.toFixed(2)}</td>
                 <td>${(c.taxaFTD * 100).toFixed(2)}%</td>
                 <td>R$ ${c.ticketMedioDeposito.toFixed(2)}</td>
                 <td>${c.frequenciaDeposito.toFixed(2)}x</td>
