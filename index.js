@@ -805,7 +805,7 @@ app.get("/dashboard-view", async (req, res) => {
     const dataInicio = req.query.dataInicio;
     const dataFim = req.query.dataFim;
 
-    const metaCosts = await getMetaCosts(dataInicio, dataFim);
+    const metaCosts = {};
 
     const result = Object.values(campaigns)
       .filter((c) => c.leads >= 10)
