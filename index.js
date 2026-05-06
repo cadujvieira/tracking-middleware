@@ -198,7 +198,6 @@ async function getMetaCosts() {
     const costs = {};
 
     for (const accountId of META_AD_ACCOUNT_IDS) {
-
       const url = `https://graph.facebook.com/v19.0/act_${accountId}/insights`;
 
       const params = new URLSearchParams({
@@ -221,24 +220,21 @@ async function getMetaCosts() {
       }
 
       data.data.forEach((item) => {
+        const normalized = normalizeName(item.campaign_name);
 
-        if (!costs[item.campaign_name]) {
-          costs[item.campaign_name] = 0;
+        if (!costs[normalized]) {
+          costs[normalized] = 0;
         }
 
-        costs[item.campaign_name] += parseFloat(item.spend || 0);
-
+        costs[normalized] += parseFloat(item.spend || 0);
       });
     }
 
     console.log(costs);
 
     return costs;
-
   } catch (error) {
-
     console.log("ERRO META:", error.message);
-
     return {};
   }
 }
