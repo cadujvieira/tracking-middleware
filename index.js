@@ -843,9 +843,6 @@ app.get("/dashboard-view", async (req, res) => {
           <td class="${rowClass}-cell">${(c.taxaFTD * 100).toFixed(2)}%</td>
           <td>${(c.taxaFTDUnico * 100).toFixed(2)}%</td>
           <td>R$ ${c.ticketMedioDeposito.toFixed(2)}</td>
-          <td>R$ ${custo.toFixed(2)}</td>
-          <td>R$ ${lucro.toFixed(2)}</td>
-          <td>${roi.toFixed(2)}%</td>
           <td>${c.frequenciaDeposito.toFixed(2)}x</td>
         </tr>
       `;
@@ -907,9 +904,6 @@ app.get("/dashboard-view", async (req, res) => {
               <th>Taxa FTD <span class="info">?<span class="tooltip">Percentual de leads que viraram FTD. Fórmula: FTD / leads.</span></span></th>
               <th>Taxa FTD Real <span class="info">?<span class="tooltip">Percentual de leads únicos que viraram FTD. Fórmula: FTD / leads únicos.</span></span></th>
               <th>Ticket Depósito <span class="info">?<span class="tooltip">Valor médio por depósito. Fórmula: receita / depósitos.</span></span></th>
-              <th>Custo Meta <span class="info">?<span class="tooltip">Valor gasto na campanha segundo a API do Meta Ads.</span></span></th>
-              <th>Lucro <span class="info">?<span class="tooltip">Lucro líquido da campanha. Fórmula: receita - custo.</span></span></th>
-              <th>ROI <span class="info">?<span class="tooltip">Retorno sobre investimento da campanha. Fórmula: (lucro / custo) × 100.</span></span></th>
               <th>Frequência <span class="info">?<span class="tooltip">Média de depósitos por FTD. Fórmula: depósitos / FTD.</span></span></th>
               <th>Segmentação <span class="info">?<span class="tooltip">Diamante = ticket >= 50 e frequência >= 2x; Ouro = ticket >= 50; Muito bom = ticket >= 30; Bom = ticket >= 20.</span></span></th>
             </tr>
@@ -980,9 +974,6 @@ app.get("/dashboard-daily", async (req, res) => {
               <th>Depositantes</th>
               <th>FTD</th>
               <th>Receita</th>
-              <th>Custo Meta</th>
-              <th>Lucro</th>
-              <th>ROI</th>
               <th>Taxa FTD</th>
               <th>Ticket Depósito</th>
               <th>Frequência</th>
@@ -1001,9 +992,6 @@ app.get("/dashboard-daily", async (req, res) => {
                 <<td>${c.depositantesUnicos}</td>
                 <td>${c.ftd}</td>
                 <td>R$ ${c.receita.toFixed(2)}</td>
-                <td>R$ ${custo.toFixed(2)}</td>
-                <td>R$ ${(c.receita - custo).toFixed(2)}</td>
-                <td>${custo > 0 ? (((c.receita - custo) / custo) * 100).toFixed(2) : "0.00"}%</td>
                 <td>${(c.taxaFTD * 100).toFixed(2)}%</td>
                 <td>R$ ${c.ticketMedioDeposito.toFixed(2)}</td>
                 <td>${c.frequenciaDeposito.toFixed(2)}x</td>
