@@ -6,6 +6,10 @@ const crypto = require("crypto");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const { google } = require("googleapis");
+const axios = require("axios");
+
+const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
+const META_AD_ACCOUNT_ID = process.env.META_AD_ACCOUNT_ID;
 
 const app = express();
 
@@ -166,6 +170,45 @@ async function sendMetaConversionEvent(user, eventName = "Purchase") {
     receita: user.receita,
     meta: responseBody,
   };
+}
+
+async function getMetaCosts() {
+  try {
+    const hoje = new Date();
+    const ontem = new Date();
+
+    ontem.setDate(hoje.getDate() - 1);
+
+    const since = ontem.toISOString().split("T")[0];
+    const until = hoje.toISOString().split("T")[0];
+
+    const url = `https://graph.facebook.com/v19.0/act_${META_AD_ACCOUNT_ID}/insights`;
+
+    const response = await axios.get(url, {
+      params: {
+        access_token: META_ACCESS_TOKEN,
+        level: "campaign",
+        fields: "campaign_name,spend",
+        time_range: JSON.stringify({
+          since,
+          until
+        }),
+        limit: 500
+      }
+    });
+
+    const costs = {};
+
+    response.data.data.forEach((item) => {
+      costs[item.campaign_name] = parseFloat(item.spend || 0);
+    });
+
+    return costs;
+
+  } catch (error) {
+    console.log("ERRO META:", error.response?.data || error.message);
+    return {};
+  }
 }
 
 async function getSheetData() {
@@ -472,6 +515,7 @@ function buildCampaignsFromRows(headers, rows) {
        depositos: 0,
        depositantesUnicos: new Set(),
        receita: 0,
+       custo: 0,
        ftd: 0,
     };
   }
@@ -585,6 +629,7 @@ app.get("/sheets/daily", async (req, res) => {
           depositantesUnicos: new Set(),
           ftd: 0,
           receita: 0
+          custo: 0,
        };
      }
 
