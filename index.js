@@ -558,18 +558,31 @@ app.get("/sheets/daily", async (req, res) => {
       const campaign = row[idx("utm_campaign")] || "sem_campanha";
       const evento = row[idx("evento")];
       const valor = parseFloat(row[idx("valor")]) || 0;
+      const email = row[idx("email")] || "";
+      const phone = row[idx("phone")] || "";
+      const userKey = email || phone;
       const key = `${dataEvento}__${campaign}`;
 
       if (!daily[key]) {
-        daily[key] = { data: dataEvento, campaign, leads: 0, pixGerado: 0, depositos: 0, ftd: 0, receita: 0 };
-      }
+        daily[key] = {
+          data: dataEvento,
+          campaign,
+          leads: 0,
+          pixGerado: 0,
+          depositos: 0,
+          depositantesUnicos: new Set(),
+          ftd: 0,
+          receita: 0
+       };
+     }
 
       if (evento === "lead") daily[key].leads++;
       if (evento === "pix_gerado") daily[key].pixGerado++;
       if (evento === "DEPOSITO_WH") {
         daily[key].depositos++;
         daily[key].receita += valor;
-      }
+      if (userKey) daily[key].depositantesUnicos.add(userKey);
+     }
       if (evento === "FTD_WH") daily[key].ftd++;
     });
 
