@@ -457,19 +457,23 @@ function buildCampaignsFromRows(headers, rows) {
 
   rows.forEach((row) => {
     const campaign = row[idx("utm_campaign")] || "sem_campanha";
+    const email = row[idx("email")] || "";
+    const phone = row[idx("phone")] || "";
+    const userKey = email || phone;
     const evento = row[idx("evento")];
     const valor = parseFloat(row[idx("valor")]) || 0;
 
     if (!campaigns[campaign]) {
-      campaigns[campaign] = {
-        campaign,
-        leads: 0,
-        pixGerado: 0,
-        depositos: 0,
-        receita: 0,
-        ftd: 0,
-      };
-    }
+       campaigns[campaign] = {
+       campaign,
+       leads: 0,
+       pixGerado: 0,
+       depositos: 0,
+       depositantesUnicos: new Set(),
+       receita: 0,
+       ftd: 0,
+    };
+  }
 
     if (evento === "lead") campaigns[campaign].leads++;
     if (evento === "pix_gerado") campaigns[campaign].pixGerado++;
@@ -477,7 +481,8 @@ function buildCampaignsFromRows(headers, rows) {
     if (evento === "DEPOSITO_WH") {
       campaigns[campaign].depositos++;
       campaigns[campaign].receita += valor;
-    }
+    if (userKey) campaigns[campaign].depositantesUnicos.add(userKey);
+  }
 
     if (evento === "FTD_WH") campaigns[campaign].ftd++;
   });
@@ -487,11 +492,13 @@ function buildCampaignsFromRows(headers, rows) {
 
 function enrichCampaign(item) {
   const ticketMedioDeposito = item.depositos ? item.receita / item.depositos : 0;
-  const frequenciaDeposito = item.ftd ? item.depositos / item.ftd : 0;
+  const depositantesUnicos = item.depositantesUnicos instanceof Set ? item.depositantesUnicos.size : 0;
+  const frequenciaDeposito = depositantesUnicos ? item.depositos / depositantesUnicos : 0;
   const qualidade = calcularQualidadeCampanha(ticketMedioDeposito, frequenciaDeposito, item.ftd);
 
   return {
     ...item,
+    depositantesUnicos,
     epl: item.leads ? item.receita / item.leads : 0,
     valorPorFTD: item.ftd ? item.receita / item.ftd : 0,
     taxaFTD: item.leads ? item.ftd / item.leads : 0,
@@ -721,6 +728,7 @@ app.get("/dashboard-view", async (req, res) => {
           <td>${c.leads}</td>
           <td>${c.pixGerado}</td>
           <td>${c.depositos}</td>
+          <<td>${c.depositantesUnicos}</td>
           <td>${c.ftd}</td>
           <td>R$ ${c.receita.toFixed(2)}</td>
           <td class="${rowClass}-cell">R$ ${c.epl.toFixed(2)}</td>
@@ -844,7 +852,17 @@ app.get("/dashboard-daily", async (req, res) => {
         <table>
           <thead>
             <tr>
-              <th>Campanha</th><th>Leads</th><th>Depósitos</th><th>FTD</th><th>Receita</th><th>EPL</th><th>Taxa FTD</th><th>Ticket Depósito</th><th>Frequência</th><th>Segmentação</th>
+              <th>Campanha</th>
+              <th>Leads</th>
+              <th>Depósitos</th>
+              <th>Depositantes</th>
+              <th>FTD</th>
+              <th>Receita</th>
+              <th>EPL</th>
+              <th>Taxa FTD</th>
+              <th>Ticket Depósito</th>
+              <th>Frequência</th>
+              <th>Segmentação</th>
             </tr>
           </thead>
           <tbody>
