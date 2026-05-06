@@ -751,6 +751,7 @@ app.get("/dashboard-view", async (req, res) => {
         <tr>
           <td>${c.campaign}</td>
           <td>${c.leads}</td>
+          <td>${c.leadsUnicos}</td>
           <td>${c.pixGerado}</td>
           <td>${c.depositos}</td>
           <<td>${c.depositantesUnicos}</td>
@@ -812,6 +813,7 @@ app.get("/dashboard-view", async (req, res) => {
             <tr>
               <th>Campanha</th>
               <th>Leads <span class="info">?<span class="tooltip">Quantidade total de leads capturados pela campanha.</span></span></th>
+              <th>Leads Únicos <span class="info">?<span class="tooltip">Quantidade de usuários únicos que geraram lead nessa campanha.</span></span></th>
               <th>Pix <span class="info">?<span class="tooltip">Quantidade de Pix gerados pelos usuários vindos dessa campanha.</span></span></th>
               <th>Depósitos <span class="info">?<span class="tooltip">Quantidade total de depósitos realizados. Um usuário pode depositar mais de uma vez.</span></span></th>
               <th>Depositantes <span class="info">?<span class="tooltip">Quantidade total de pessoas que depositaram na casa.</span></span></th>
