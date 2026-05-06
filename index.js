@@ -956,6 +956,11 @@ app.get("/dashboard-daily", async (req, res) => {
       grouped[item.data].push(item);
     });
 
+    const metaCosts = await getMetaCosts(
+    req.query.dataInicio,
+    req.query.dataFim
+     );
+
     let html = "";
     Object.keys(grouped).forEach((date) => {
       const totalDepositoDia = grouped[date].reduce((acc, c) => acc + c.receita, 0);
@@ -982,7 +987,10 @@ app.get("/dashboard-daily", async (req, res) => {
             </tr>
           </thead>
           <tbody>
-            ${grouped[date].map((c) => `
+            ${grouped[date].map((c) => {
+            const custo = metaCosts[normalizeName(c.campaign)] || 0;
+
+            return `
               <tr>
                 <td>${c.campaign}</td>
                 <td>${c.leads}</td>
@@ -994,7 +1002,8 @@ app.get("/dashboard-daily", async (req, res) => {
                 <td>R$ ${c.ticketMedioDeposito.toFixed(2)}</td>
                 <td>${c.frequenciaDeposito.toFixed(2)}x</td>
                 <td class="${c.qualidade}">${c.qualidade}</td>
-              </tr>`).join("")}
+              </tr>`;
+                }).join("")}
           </tbody>
         </table>
       `;
