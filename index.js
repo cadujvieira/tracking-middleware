@@ -6,7 +6,6 @@ const crypto = require("crypto");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const { google } = require("googleapis");
-const axios = require("axios");
 
 const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
 const META_AD_ACCOUNT_ID = process.env.META_AD_ACCOUNT_ID;
@@ -184,29 +183,35 @@ async function getMetaCosts() {
 
     const url = `https://graph.facebook.com/v19.0/act_${META_AD_ACCOUNT_ID}/insights`;
 
-    const response = await axios.get(url, {
-      params: {
-        access_token: META_ACCESS_TOKEN,
-        level: "campaign",
-        fields: "campaign_name,spend",
-        time_range: JSON.stringify({
-          since,
-          until
-        }),
-        limit: 500
-      }
-    });
+    const params = new URLSearchParams({
+      access_token: META_ACCESS_TOKEN,
+      level: "campaign",
+      fields: "campaign_name,spend",
+      time_range: JSON.stringify({
+         since,
+         until
+     }),
+      limit: "500"
+   });
+
+const response = await fetch(`${url}?${params.toString()}`);
+const data = await response.json();
 
     const costs = {};
 
-    response.data.data.forEach((item) => {
-      costs[item.campaign_name] = parseFloat(item.spend || 0);
-    });
+    if (!data.data) {
+  console.log("ERRO META:", data);
+  return {};
+}
+
+data.data.forEach((item) => {
+  costs[item.campaign_name] = parseFloat(item.spend || 0);
+});
 
     return costs;
 
   } catch (error) {
-    console.log("ERRO META:", error.response?.data || error.message);
+    console.log("ERRO META:", error.message);
     return {};
   }
 }
