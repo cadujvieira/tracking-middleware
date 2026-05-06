@@ -628,7 +628,7 @@ app.get("/sheets/daily", async (req, res) => {
           depositos: 0,
           depositantesUnicos: new Set(),
           ftd: 0,
-          receita: 0
+          receita: 0,
           custo: 0,
        };
      }
