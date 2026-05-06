@@ -56,6 +56,18 @@ function calcularQualidadeCampanha(ticketMedioDeposito, frequenciaDeposito, ftd)
   return "ruim";
 }
 
+function normalizeName(name) {
+  return String(name || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\[|\]/g, "")
+    .replace(/__/g, "_")
+    .replace(/\s+/g, " ")
+    .replace(/[^a-z0-9 ]/g, "")
+    .trim();
+}
+
 function calcularQualidadePublico(ticketMedioDeposito, depositos) {
   if (depositos === 0) return "sem_deposito";
   if (ticketMedioDeposito >= 50 && depositos >= 2) return "diamante";
@@ -205,7 +217,9 @@ const data = await response.json();
 }
 
 data.data.forEach((item) => {
-  costs[item.campaign_name] = parseFloat(item.spend || 0);
+  const normalized = normalizeName(item.campaign_name);
+
+  costs[normalized] = parseFloat(item.spend || 0);
 });
 
 console.log(costs);
@@ -796,7 +810,7 @@ app.get("/dashboard-view", async (req, res) => {
 
     const rowsHtml = result.map((c) => {
       let rowClass = "";
-      const custo = metaCosts[c.campaign] || 0;
+      const custo = metaCosts[normalizeName(c.campaign)] || 0;
       const lucro = c.receita - custo;
       const roi = custo > 0 ? (lucro / custo) * 100 : 0;
       if (c.taxaFTD >= 0.5 && c.epl >= 20) rowClass = "good";
