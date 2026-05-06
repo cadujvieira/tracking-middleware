@@ -208,6 +208,8 @@ data.data.forEach((item) => {
   costs[item.campaign_name] = parseFloat(item.spend || 0);
 });
 
+console.log(costs);
+
     return costs;
 
   } catch (error) {
