@@ -467,6 +467,7 @@ function buildCampaignsFromRows(headers, rows) {
        campaigns[campaign] = {
        campaign,
        leads: 0,
+       leadsUnicos: new Set(),
        pixGerado: 0,
        depositos: 0,
        depositantesUnicos: new Set(),
@@ -475,7 +476,13 @@ function buildCampaignsFromRows(headers, rows) {
     };
   }
 
-    if (evento === "lead") campaigns[campaign].leads++;
+    if (evento === "lead") {
+      campaigns[campaign].leads++;
+
+    if (userKey) {
+      campaigns[campaign].leadsUnicos.add(userKey);
+    }
+  }
     if (evento === "pix_gerado") campaigns[campaign].pixGerado++;
 
     if (evento === "DEPOSITO_WH") {
@@ -492,6 +499,7 @@ function buildCampaignsFromRows(headers, rows) {
 
 function enrichCampaign(item) {
   const ticketMedioDeposito = item.depositos ? item.receita / item.depositos : 0;
+  const leadsUnicos = item.leadsUnicos instanceof Set ? item.leadsUnicos.size : 0;
   const depositantesUnicos = item.depositantesUnicos instanceof Set ? item.depositantesUnicos.size : 0;
   const frequenciaDeposito = depositantesUnicos ? item.depositos / depositantesUnicos : 0;
   const qualidade = calcularQualidadeCampanha(ticketMedioDeposito, frequenciaDeposito, item.ftd);
@@ -499,9 +507,13 @@ function enrichCampaign(item) {
   return {
     ...item,
     depositantesUnicos,
+    leadsUnicos,
     epl: item.leads ? item.receita / item.leads : 0,
     valorPorFTD: item.ftd ? item.receita / item.ftd : 0,
     taxaFTD: item.leads ? item.ftd / item.leads : 0,
+    eplUnico: leadsUnicos ? item.receita / leadsUnicos : 0,
+    taxaFTDUnico: leadsUnicos ? item.ftd / leadsUnicos : 0,
+    conversaoLeadUnicoDeposito: leadsUnicos ? depositantesUnicos / leadsUnicos : 0,
     ticketMedio: ticketMedioDeposito,
     conversaoLeadDeposito: item.leads ? item.depositos / item.leads : 0,
     conversaoLeadFTD: item.leads ? item.ftd / item.leads : 0,
@@ -745,8 +757,10 @@ app.get("/dashboard-view", async (req, res) => {
           <td>${c.ftd}</td>
           <td>R$ ${c.receita.toFixed(2)}</td>
           <td class="${rowClass}-cell">R$ ${c.epl.toFixed(2)}</td>
+          <td>R$ ${c.eplUnico.toFixed(2)}</td>
           <td>R$ ${c.valorPorFTD.toFixed(2)}</td>
           <td class="${rowClass}-cell">${(c.taxaFTD * 100).toFixed(2)}%</td>
+          <td>${(c.taxaFTDUnico * 100).toFixed(2)}%</td>
           <td>R$ ${c.ticketMedioDeposito.toFixed(2)}</td>
           <td>${c.frequenciaDeposito.toFixed(2)}x</td>
           <td class="${c.qualidade}">${c.qualidade}</td>
@@ -804,8 +818,10 @@ app.get("/dashboard-view", async (req, res) => {
               <th>FTD <span class="info">?<span class="tooltip">First Time Deposit: quantidade de usuários que fizeram o primeiro depósito.</span></span></th>
               <th>Receita <span class="info">?<span class="tooltip">Soma total dos valores depositados pelos usuários dessa campanha.</span></span></th>
               <th>EPL <span class="info">?<span class="tooltip">Receita média por lead. Fórmula: receita / leads.</span></span></th>
+              <th>EPL Real <span class="info">?<span class="tooltip">Receita média por lead único. Fórmula: receita / leads únicos.</span></span></th>
               <th>Valor/FTD <span class="info">?<span class="tooltip">Receita média por FTD. Fórmula: receita / FTD.</span></span></th>
               <th>Taxa FTD <span class="info">?<span class="tooltip">Percentual de leads que viraram FTD. Fórmula: FTD / leads.</span></span></th>
+              <th>Taxa FTD Real <span class="info">?<span class="tooltip">Percentual de leads únicos que viraram FTD. Fórmula: FTD / leads únicos.</span></span></th>
               <th>Ticket Depósito <span class="info">?<span class="tooltip">Valor médio por depósito. Fórmula: receita / depósitos.</span></span></th>
               <th>Frequência <span class="info">?<span class="tooltip">Média de depósitos por FTD. Fórmula: depósitos / FTD.</span></span></th>
               <th>Segmentação <span class="info">?<span class="tooltip">Diamante = ticket >= 50 e frequência >= 2x; Ouro = ticket >= 50; Muito bom = ticket >= 30; Bom = ticket >= 20.</span></span></th>
