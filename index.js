@@ -8,7 +8,9 @@ const { v4: uuidv4 } = require("uuid");
 const { google } = require("googleapis");
 
 const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
-const META_AD_ACCOUNT_ID = process.env.META_AD_ACCOUNT_ID;
+const META_AD_ACCOUNT_IDS = process.env.META_AD_ACCOUNT_IDS
+  ? process.env.META_AD_ACCOUNT_IDS.split(",")
+  : [];
 
 const app = express();
 
