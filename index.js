@@ -185,15 +185,15 @@ async function sendMetaConversionEvent(user, eventName = "Purchase") {
   };
 }
 
-async function getMetaCosts() {
+async function getMetaCosts(sinceParam, untilParam) {
   try {
     const hoje = new Date();
     const ontem = new Date();
 
     ontem.setDate(hoje.getDate() - 1);
 
-    const since = ontem.toISOString().split("T")[0];
-    const until = hoje.toISOString().split("T")[0];
+    const since = sinceParam || ontem.toISOString().split("T")[0];
+    const until = untilParam || hoje.toISOString().split("T")[0];
 
     const costs = {};
 
@@ -802,7 +802,10 @@ app.get("/dashboard-view", async (req, res) => {
     const headers = data[0];
     const rows = data.slice(1);
     const campaigns = buildCampaignsFromRows(headers, rows);
-    const metaCosts = await getMetaCosts();
+    const dataInicio = req.query.dataInicio;
+    const dataFim = req.query.dataFim;
+
+    const metaCosts = await getMetaCosts(dataInicio, dataFim);
 
     const result = Object.values(campaigns)
       .filter((c) => c.leads >= 10)
