@@ -239,32 +239,6 @@ async function getMetaCosts() {
   }
 }
 
-const response = await fetch(`${url}?${params.toString()}`);
-const data = await response.json();
-
-    const costs = {};
-
-    if (!data.data) {
-  console.log("ERRO META:", data);
-  return {};
-}
-
-data.data.forEach((item) => {
-  const normalized = normalizeName(item.campaign_name);
-
-  costs[normalized] = parseFloat(item.spend || 0);
-});
-
-console.log(costs);
-
-    return costs;
-
-  } catch (error) {
-    console.log("ERRO META:", error.message);
-    return {};
-  }
-}
-
 async function getSheetData() {
   const auth = new google.auth.GoogleAuth({
     keyFile: "/etc/secrets/credentials.json",
