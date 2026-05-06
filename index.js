@@ -779,6 +779,7 @@ app.get("/dashboard-view", async (req, res) => {
     const headers = data[0];
     const rows = data.slice(1);
     const campaigns = buildCampaignsFromRows(headers, rows);
+    const metaCosts = await getMetaCosts();
 
     const result = Object.values(campaigns)
       .filter((c) => c.leads >= 10)
@@ -793,6 +794,9 @@ app.get("/dashboard-view", async (req, res) => {
 
     const rowsHtml = result.map((c) => {
       let rowClass = "";
+      const custo = metaCosts[c.campaign] || 0;
+      const lucro = c.receita - custo;
+      const roi = custo > 0 ? (lucro / custo) * 100 : 0;
       if (c.taxaFTD >= 0.5 && c.epl >= 20) rowClass = "good";
       else if (c.taxaFTD >= 0.25) rowClass = "medium";
       else rowClass = "bad";
@@ -813,8 +817,10 @@ app.get("/dashboard-view", async (req, res) => {
           <td class="${rowClass}-cell">${(c.taxaFTD * 100).toFixed(2)}%</td>
           <td>${(c.taxaFTDUnico * 100).toFixed(2)}%</td>
           <td>R$ ${c.ticketMedioDeposito.toFixed(2)}</td>
+          <td>R$ ${custo.toFixed(2)}</td>
+          <td>R$ ${lucro.toFixed(2)}</td>
+          <td>${roi.toFixed(2)}%</td>
           <td>${c.frequenciaDeposito.toFixed(2)}x</td>
-          <td class="${c.qualidade}">${c.qualidade}</td>
         </tr>
       `;
     }).join("");
@@ -875,6 +881,9 @@ app.get("/dashboard-view", async (req, res) => {
               <th>Taxa FTD <span class="info">?<span class="tooltip">Percentual de leads que viraram FTD. Fórmula: FTD / leads.</span></span></th>
               <th>Taxa FTD Real <span class="info">?<span class="tooltip">Percentual de leads únicos que viraram FTD. Fórmula: FTD / leads únicos.</span></span></th>
               <th>Ticket Depósito <span class="info">?<span class="tooltip">Valor médio por depósito. Fórmula: receita / depósitos.</span></span></th>
+              <th>Custo Meta <span class="info">?<span class="tooltip">Valor gasto na campanha segundo a API do Meta Ads.</span></span></th>
+              <th>Lucro <span class="info">?<span class="tooltip">Lucro líquido da campanha. Fórmula: receita - custo.</span></span></th>
+              <th>ROI <span class="info">?<span class="tooltip">Retorno sobre investimento da campanha. Fórmula: (lucro / custo) × 100.</span></span></th>
               <th>Frequência <span class="info">?<span class="tooltip">Média de depósitos por FTD. Fórmula: depósitos / FTD.</span></span></th>
               <th>Segmentação <span class="info">?<span class="tooltip">Diamante = ticket >= 50 e frequência >= 2x; Ouro = ticket >= 50; Muito bom = ticket >= 30; Bom = ticket >= 20.</span></span></th>
             </tr>
