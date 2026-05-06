@@ -195,18 +195,53 @@ async function getMetaCosts() {
     const since = ontem.toISOString().split("T")[0];
     const until = hoje.toISOString().split("T")[0];
 
-    const url = `https://graph.facebook.com/v19.0/act_${META_AD_ACCOUNT_ID}/insights`;
+    const costs = {};
 
-    const params = new URLSearchParams({
-      access_token: META_ACCESS_TOKEN,
-      level: "campaign",
-      fields: "campaign_name,spend",
-      time_range: JSON.stringify({
-         since,
-         until
-     }),
-      limit: "500"
-   });
+    for (const accountId of META_AD_ACCOUNT_IDS) {
+
+      const url = `https://graph.facebook.com/v19.0/act_${accountId}/insights`;
+
+      const params = new URLSearchParams({
+        access_token: META_ACCESS_TOKEN,
+        level: "campaign",
+        fields: "campaign_name,spend",
+        time_range: JSON.stringify({
+          since,
+          until
+        }),
+        limit: "500"
+      });
+
+      const response = await fetch(`${url}?${params.toString()}`);
+      const data = await response.json();
+
+      if (!data.data) {
+        console.log("ERRO META:", data);
+        continue;
+      }
+
+      data.data.forEach((item) => {
+
+        if (!costs[item.campaign_name]) {
+          costs[item.campaign_name] = 0;
+        }
+
+        costs[item.campaign_name] += parseFloat(item.spend || 0);
+
+      });
+    }
+
+    console.log(costs);
+
+    return costs;
+
+  } catch (error) {
+
+    console.log("ERRO META:", error.message);
+
+    return {};
+  }
+}
 
 const response = await fetch(`${url}?${params.toString()}`);
 const data = await response.json();
