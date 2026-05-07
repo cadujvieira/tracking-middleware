@@ -1072,6 +1072,25 @@ app.get("/dashboard-daily", async (req, res) => {
     let html = "";
     Object.keys(grouped).forEach((date) => {
       const totalDepositoDia = grouped[date].reduce((acc, c) => acc + c.receita, 0);
+      const totalLeadsDia = grouped[date].reduce((acc, c) => acc + c.leads, 0);
+
+      const totalDepositosDia = grouped[date].reduce((acc, c) => acc + c.depositos, 0);
+
+      const totalDepositantesDia = grouped[date].reduce((acc, c) => acc + c.depositantesUnicos, 0);
+
+      const totalFTDDia = grouped[date].reduce((acc, c) => acc + c.ftd, 0);
+
+      const mediaTaxaFTD =
+         grouped[date].reduce((acc, c) => acc + (c.taxaFTD || 0), 0) /
+         grouped[date].length;
+
+      const mediaTicket =
+        grouped[date].reduce((acc, c) => acc + (c.ticketMedioDeposito || 0), 0) /
+        grouped[date].length;
+
+      const mediaFrequencia =
+        grouped[date].reduce((acc, c) => acc + (c.frequenciaDeposito || 0), 0) /
+        grouped[date].length;
       html += `
         <div style="margin-top:30px; display:flex; align-items:center; gap:15px;">
           <h2 style="margin:0;">📅 ${date}</h2>
