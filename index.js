@@ -1131,7 +1131,21 @@ app.get("/dashboard-daily", async (req, res) => {
                 <td class="${c.qualidade}">${c.qualidade}</td>
               </tr>`;
                 }).join("")}
-          </tbody>
+
+             <tr style="background:#0f172a; font-weight:bold; border-top:2px solid #334155;">
+               <td>Total do dia</td>
+               <td>${totalLeadsDia}</td>
+               <td>${totalDepositosDia}</td>
+               <td>${totalDepositantesDia}</td>
+               <td>${totalFTDDia}</td>
+               <td>R$ ${totalDepositoDia.toFixed(2)}</td>
+               <td>${(mediaTaxaFTD * 100).toFixed(2)}%</td>
+               <td>R$ ${mediaTicket.toFixed(2)}</td>
+               <td>${mediaFrequencia.toFixed(2)}x</td>
+               <td>-</td>
+               </tr>
+
+             </tbody>
         </table>
       `;
     });
