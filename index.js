@@ -79,6 +79,40 @@ function calcularQualidadePublico(ticketMedioDeposito, depositos) {
   return "ruim";
 }
 
+function calcularScoreUsuario({ ticketMedioDeposito, frequenciaDeposito, depositos, receita }) {
+  let score = 0;
+
+  // Ticket médio
+  if (ticketMedioDeposito >= 100) score += 35;
+  else if (ticketMedioDeposito >= 50) score += 25;
+  else if (ticketMedioDeposito >= 30) score += 15;
+  else if (ticketMedioDeposito >= 20) score += 8;
+
+  // Frequência
+  if (frequenciaDeposito >= 5) score += 35;
+  else if (frequenciaDeposito >= 3) score += 25;
+  else if (frequenciaDeposito >= 2) score += 15;
+  else if (frequenciaDeposito >= 1) score += 5;
+
+  // Quantidade de depósitos
+  if (depositos >= 10) score += 20;
+  else if (depositos >= 5) score += 15;
+  else if (depositos >= 2) score += 8;
+  else if (depositos >= 1) score += 3;
+
+  // Receita total
+  if (receita >= 1000) score += 10;
+  else if (receita >= 500) score += 7;
+  else if (receita >= 200) score += 4;
+  else if (receita >= 50) score += 2;
+
+  if (score >= 85) return { score, nivel: "whale" };
+  if (score >= 70) return { score, nivel: "vip" };
+  if (score >= 50) return { score, nivel: "high_value" };
+  if (score >= 30) return { score, nivel: "mid_value" };
+  return { score, nivel: "low_value" };
+}
+
 function mascararUsuario(valor) {
   if (!valor) return "sem_identificacao";
   if (valor.includes("@")) {
@@ -758,6 +792,7 @@ app.get("/sheets/audience", async (req, res) => {
         const ticketMedioDeposito = user.depositos ? user.receita / user.depositos : 0;
         const frequenciaDeposito = user.depositos;
         const qualidade = calcularQualidadePublico(ticketMedioDeposito, user.depositos);
+        const scoreUsuario = calcularScoreUsuario({ticketMedioDeposito, frequenciaDeposito, depositos: user.depositos, receita: user.receita});
         const enviarPixelValioso = qualidade === "ouro" || qualidade === "diamante";
 
         return {
@@ -769,6 +804,8 @@ app.get("/sheets/audience", async (req, res) => {
           ticketMedioDeposito,
           frequenciaDeposito,
           qualidade,
+          score: scoreUsuario.score,
+          nivelScore: scoreUsuario.nivel,
           enviarPixelValioso,
         };
       })
@@ -837,6 +874,8 @@ app.get("/dashboard-view", async (req, res) => {
           <<td>${c.depositantesUnicos}</td>
           <td>${c.ftd}</td>
           <td>R$ ${c.receita.toFixed(2)}</td>
+          <td>${c.score || 0}</td>
+          <td>${c.nivelScore || "-"}</td>
           <td class="${rowClass}-cell">R$ ${c.epl.toFixed(2)}</td>
           <td>R$ ${c.eplUnico.toFixed(2)}</td>
           <td>R$ ${c.valorPorFTD.toFixed(2)}</td>
@@ -898,6 +937,8 @@ app.get("/dashboard-view", async (req, res) => {
               <th>Depositantes <span class="info">?<span class="tooltip">Quantidade total de pessoas que depositaram na casa.</span></span></th>
               <th>FTD <span class="info">?<span class="tooltip">First Time Deposit: quantidade de usuários que fizeram o primeiro depósito.</span></span></th>
               <th>Receita <span class="info">?<span class="tooltip">Soma total dos valores depositados pelos usuários dessa campanha.</span></span></th>
+              <th>Score</th><th title="Pontuação calculada com base em ticket, frequência, depósitos e receita total do usuário">Score</th>
+              <th>Nível</th><th title="Classificação automática do usuário baseada no score comportamental">Nível</th>
               <th>EPL <span class="info">?<span class="tooltip">Receita média por lead. Fórmula: receita / leads.</span></span></th>
               <th>EPL Real <span class="info">?<span class="tooltip">Receita média por lead único. Fórmula: receita / leads únicos.</span></span></th>
               <th>Valor/FTD <span class="info">?<span class="tooltip">Receita média por FTD. Fórmula: receita / FTD.</span></span></th>
@@ -969,15 +1010,17 @@ app.get("/dashboard-daily", async (req, res) => {
           <thead>
             <tr>
               <th>Campanha</th>
-              <th>Leads</th>
-              <th>Depósitos</th>
-              <th>Depositantes</th>
-              <th>FTD</th>
-              <th>Receita</th>
-              <th>Taxa FTD</th>
-              <th>Ticket Depósito</th>
-              <th>Frequência</th>
-              <th>Segmentação</th>
+              <th>Leads</th> <span class="info">?<span class="tooltip">Quantidade total de leads capturados pela campanha.</span></span></th>
+              <th>Depósitos</th> <span class="info">?<span class="tooltip">Quantidade total de depósitos realizados. Um usuário pode depositar mais de uma vez.</span></span></th>
+              <th>Depositantes</th> <span class="info">?<span class="tooltip">Quantidade total de pessoas que depositaram na casa.</span></span></th>
+              <th>FTD</th> <span class="info">?<span class="tooltip">First Time Deposit: quantidade de usuários que fizeram o primeiro depósito.</span></span></th>
+              <th>Receita</th> <span class="info">?<span class="tooltip">Soma total dos valores depositados pelos usuários dessa campanha.</span></span></th>
+              <th>Score</th><th title="Pontuação calculada com base em ticket, frequência, depósitos e receita total do usuário">Score</th>
+              <th>Nível</th><th title="Classificação automática do usuário baseada no score comportamental">Nível</th>
+              <th>Taxa FTD</th> <span class="info">?<span class="tooltip">Percentual de leads que viraram FTD. Fórmula: FTD / leads.</span></span></th>
+              <th>Ticket Depósito</th> <span class="info">?<span class="tooltip">Valor médio por depósito. Fórmula: receita / depósitos.</span></span></th>
+              <th>Frequência</th> <span class="info">?<span class="tooltip">Média de depósitos por FTD. Fórmula: depósitos / FTD.</span></span></th>
+              <th>Segmentação</th> <span class="info">?<span class="tooltip">Diamante = ticket >= 50 e frequência >= 2x; Ouro = ticket >= 50; Muito bom = ticket >= 30; Bom = ticket >= 20.</span></span></th>
             </tr>
           </thead>
           <tbody>
@@ -992,6 +1035,8 @@ app.get("/dashboard-daily", async (req, res) => {
                 <<td>${c.depositantesUnicos}</td>
                 <td>${c.ftd}</td>
                 <td>R$ ${c.receita.toFixed(2)}</td>
+                <td>${c.score || 0}</td>
+                <td>${c.nivelScore || "-"}</td>
                 <td>${(c.taxaFTD * 100).toFixed(2)}%</td>
                 <td>R$ ${c.ticketMedioDeposito.toFixed(2)}</td>
                 <td>${c.frequenciaDeposito.toFixed(2)}x</td>
@@ -1014,16 +1059,28 @@ app.get("/dashboard-daily", async (req, res) => {
 
     res.send(`
       <html><head><style>
-        body { font-family: Arial; background: #0f172a; color: #e5e7eb; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: #111827; }
-        th, td { padding: 10px; border-bottom: 1px solid #1f2937; text-align: left; }
-        th { background: #1e293b; color: #93c5fd; }
-        .diamante { color: #60a5fa; font-weight: bold; }
-        .ouro { color: #22c55e; font-weight: bold; }
-        .muito_bom { color: #4ade80; font-weight: bold; }
-        .bom { color: #eab308; font-weight: bold; }
-        .ruim { color: #ef4444; font-weight: bold; }
-        .sem_ftd { color: #6b7280; font-weight: bold; }
+        body { font-family: Arial, sans-serif; background: #0f172a; color: #e5e7eb; padding: 30px; }
+          h1 { margin-bottom: 20px; }
+          .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
+          .card { background: #111827; padding: 20px; border-radius: 12px; border: 1px solid #1f2937; }
+          .card span { color: #94a3b8; font-size: 14px; }
+          .card strong { display: block; font-size: 26px; margin-top: 8px; }
+          table { width: 100%; border-collapse: collapse; background: #111827; border-radius: 12px; overflow: hidden; }
+          th, td { padding: 12px; border-bottom: 1px solid #1f2937; text-align: left; font-size: 14px; }
+          th { background: #1e293b; color: #93c5fd; }
+          tr:hover { background: #1f2937; }
+          .info { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-left: 4px; border-radius: 50%; background: #334155; color: #bfdbfe; font-size: 11px; font-weight: bold; cursor: pointer; }
+          .tooltip { position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: #020617; color: #e5e7eb; padding: 8px 10px; border-radius: 6px; font-size: 12px; white-space: nowrap; opacity: 0; pointer-events: none; transition: 0.2s; border: 1px solid #1f2937; z-index: 10; }
+          .info:hover .tooltip { opacity: 1; }
+          .good-cell { color: #22c55e; font-weight: bold; }
+          .medium-cell { color: #eab308; font-weight: bold; }
+          .bad-cell { color: #ef4444; font-weight: bold; }
+          .diamante { color: #60a5fa; font-weight: bold; }
+          .ouro { color: #22c55e; font-weight: bold; }
+          .muito_bom { color: #4ade80; font-weight: bold; }
+          .bom { color: #eab308; font-weight: bold; }
+          .ruim { color: #ef4444; font-weight: bold; }
+          .sem_ftd { color: #6b7280; font-weight: bold; }
       </style></head><body>
         <h1>📊 Dashboard por Data</h1>
         ${filtroUI}
