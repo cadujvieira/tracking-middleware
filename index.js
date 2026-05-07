@@ -113,6 +113,50 @@ function calcularScoreUsuario({ ticketMedioDeposito, frequenciaDeposito, deposit
   return { score, nivel: "low_value" };
 }
 
+function calcularDiasDesde(dataBR) {
+  if (!dataBR || !dataBR.includes("/")) return null;
+
+  const [dia, mes, ano] = dataBR.split("/");
+  const dataEvento = new Date(`${ano}-${mes}-${dia}T00:00:00`);
+  const hoje = new Date();
+
+  hoje.setHours(0, 0, 0, 0);
+
+  const diffMs = hoje - dataEvento;
+  const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  return diffDias >= 0 ? diffDias : 0;
+}
+
+function classificarSegmentoCRM(user, diasSemAtividade) {
+
+  if (user.leads > 0 && user.ftd === 0) {
+    return "lead_sem_ftd";
+  }
+
+  if (user.ftd > 0 && diasSemAtividade === 0) {
+    return "d0";
+  }
+
+  if (user.ftd > 0 && diasSemAtividade >= 3 && diasSemAtividade < 7) {
+    return "d3";
+  }
+
+  if (user.ftd > 0 && diasSemAtividade >= 7 && diasSemAtividade < 15) {
+    return "d7";
+  }
+
+  if (user.ftd > 0 && diasSemAtividade >= 15 && diasSemAtividade < 30) {
+    return "d15";
+  }
+
+  if (user.ftd > 0 && diasSemAtividade >= 30) {
+    return "d30_plus";
+  }
+
+  return "ativo";
+}
+
 function mascararUsuario(valor) {
   if (!valor) return "sem_identificacao";
   if (valor.includes("@")) {
@@ -773,6 +817,8 @@ app.get("/sheets/audience", async (req, res) => {
       const user = audience[userKey];
       user.eventos++;
       user.ultimaData = dataEvento || user.ultimaData;
+
+      const diasSemAtividade = calcularDiasDesde(user.ultimaData);
       user.campanhas.add(campaign);
       if (source) user.sources.add(source);
       if (medium) user.mediums.add(medium);
@@ -793,6 +839,7 @@ app.get("/sheets/audience", async (req, res) => {
         const frequenciaDeposito = user.depositos;
         const qualidade = calcularQualidadePublico(ticketMedioDeposito, user.depositos);
         const scoreUsuario = calcularScoreUsuario({ticketMedioDeposito, frequenciaDeposito, depositos: user.depositos, receita: user.receita});
+        const segmentoCRM = classificarSegmentoCRM(user, diasSemAtividade);
         const enviarPixelValioso = qualidade === "ouro" || qualidade === "diamante";
 
         return {
@@ -806,6 +853,8 @@ app.get("/sheets/audience", async (req, res) => {
           qualidade,
           score: scoreUsuario.score,
           nivelScore: scoreUsuario.nivel,
+          diasSemAtividade,
+          segmentoCRM,
           enviarPixelValioso,
         };
       })
@@ -821,10 +870,29 @@ app.get("/sheets/audience", async (req, res) => {
         acc.depositos += user.depositos;
         acc.ftd += user.ftd;
         acc[user.qualidade] = (acc[user.qualidade] || 0) + 1;
+        acc[user.segmentoCRM] = (acc[user.segmentoCRM] || 0) + 1;
         if (user.enviarPixelValioso) acc.publicosValiosos++;
         return acc;
       },
-      { totalUsuarios: 0, publicosValiosos: 0, receita: 0, depositos: 0, ftd: 0, diamante: 0, ouro: 0, muito_bom: 0, bom: 0, ruim: 0, sem_deposito: 0 }
+      { totalUsuarios: 0, 
+        publicosValiosos: 0, 
+        receita: 0, 
+        depositos: 0, 
+        ftd: 0, 
+        diamante: 0, 
+        ouro: 0, 
+        muito_bom: 0, 
+        bom: 0, 
+        ruim: 0, 
+        sem_deposito: 0 
+        lead_sem_ftd: 0,
+        d0: 0,
+        d3: 0,
+        d7: 0,
+        d15: 0,
+        d30_plus: 0,
+        ativo: 0
+      }
     );
 
     res.json({ ok: true, total: result.length, resumo, audience: result });
@@ -1104,6 +1172,8 @@ app.get("/dashboard-audience", async (req, res) => {
         <td>R$ ${u.receita.toFixed(2)}</td>
         <td>${u.score || 0}</td>
         <td><span class="${u.nivelScore || ""}">${u.nivelScore || "-"}</span></td>
+        <td>${u.diasSemAtividade ?? "-"}</td>
+        <td class="${u.segmentoCRM || ""}">${u.segmentoCRM || "-"}</td>
         <td>R$ ${u.ticketMedioDeposito.toFixed(2)}</td>
         <td>${u.frequenciaDeposito}x</td>
         <td class="${u.qualidade}">${u.qualidade}</td>
@@ -1134,6 +1204,13 @@ app.get("/dashboard-audience", async (req, res) => {
         .whale { color: #b26bff; font-weight: bold; }
         .vip { color: #ffd700; font-weight: bold; }
         .high_value { color: #22c55e; font-weight: bold; }
+        .lead_sem_ftd { color: #f97316; font-weight: bold; }
+        .d0 { color: #22c55e; font-weight: bold; }
+        .d3 { color: #eab308; font-weight: bold; }
+        .d7 { color: #f97316; font-weight: bold; }
+        .d15 { color: #ef4444; font-weight: bold; }
+        .d30_plus { color: #b91c1c; font-weight: bold; }
+        .ativo { color: #93c5fd; font-weight: bold; }
         .mid_value { color: #facc15; font-weight: bold; }
         .low_value { color: #ef4444; font-weight: bold; }
       </style>
@@ -1161,6 +1238,8 @@ app.get("/dashboard-audience", async (req, res) => {
         <th>Receita</th>
         <th title="Pontuação comportamental do usuário">Score</th>
         <th title="Classificação automática baseada no comportamento">Nível</th>
+        <th title="Quantidade de dias desde a última atividade registrada do usuário">Dias sem atividade</th>
+        <th title="Segmento comportamental de CRM baseado em FTD e recência">Segmento CRM</th>
         <th>Ticket Depósito</th>
         <th>Frequência</th>
         <th>Segmentação</th>
