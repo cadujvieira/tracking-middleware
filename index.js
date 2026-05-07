@@ -1169,20 +1169,22 @@ app.get("/dashboard-audience", async (req, res) => {
     const resumo = json.resumo || {};
 
     const rowsHtml = audience.slice(0, 200).map((u) => `
-      <tr>
-        <td>${u.usuario}</td>
-        <td>${u.campanhaOrigem}</td>
-        <td>${u.campanhas.join("<br>")}</td>
-        <td>${u.depositos}</td>
-        <td>R$ ${u.receita.toFixed(2)}</td>
-        <td>${u.score || 0}</td>
-        <td><span class="${u.nivelScore || ""}">${u.nivelScore || "-"}</span></td>
-        <td>${u.diasSemAtividade ?? "-"}</td>
-        <td class="${u.segmentoCRM || ""}">${u.segmentoCRM || "-"}</td>
-        <td>R$ ${u.ticketMedioDeposito.toFixed(2)}</td>
-        <td>${u.frequenciaDeposito}x</td>
-        <td class="${u.qualidade}">${u.qualidade}</td>
-        <td class="${u.enviarPixelValioso ? "enviar" : "nao-enviar"}">${u.enviarPixelValioso ? "SIM" : "NÃO"}</td>
+      <td>${u.usuario}</td>
+<td>${u.campanhaOrigem}</td>
+<td>${u.campanhas.join("<br>")}</td>
+<td>${u.leads}</td>
+<td>${u.pixGerado}</td>
+<td>${u.depositos}</td>
+<td>${u.ftd}</td>
+<td>R$ ${u.receita.toFixed(2)}</td>
+<td>${u.score || 0}</td>
+<td><span class="${u.nivelScore || ""}">${u.nivelScore || "-"}</span></td>
+<td>${u.diasSemAtividade ?? "-"}</td>
+<td class="${u.segmentoCRM || ""}">${u.segmentoCRM || "-"}</td>
+<td>R$ ${u.ticketMedioDeposito.toFixed(2)}</td>
+<td>${u.frequenciaDeposito}x</td>
+<td class="${u.qualidade}">${u.qualidade}</td>
+<td class="${u.enviarPixelValioso ? "enviar" : "nao-enviar"}">${u.enviarPixelValioso ? "SIM" : "NÃO"}</td>
       </tr>
     `).join("");
 
@@ -1237,23 +1239,23 @@ app.get("/dashboard-audience", async (req, res) => {
         <thead>
         <tr>
         <tr>
-        <th>Usuário</th>
-        <th>Origem <span class="info">?<span class="tooltip">Origem principal identificada do usuário através dos parâmetros UTM.</span></span></th>
-        <th>Campanhas tocadas <span class="info">?<span class="tooltip">Lista de campanhas que tiveram interação com este usuário.</span></span></th>
-        <th>Leads <span class="info">?<span class="tooltip">Quantidade de eventos de lead registrados para este usuário.</span></span></th>
-        <th>Pix <span class="info">?<span class="tooltip">Quantidade de eventos de geração de PIX.</span></span></th>
-        <th>Depósitos <span class="info">?<span class="tooltip">Quantidade total de depósitos realizados.</span></span></th>
-        <th>FTD <span class="info">?<span class="tooltip">Indica quantos First Time Deposits o usuário realizou.</span></span></th>
-        <th>Receita <span class="info">?<span class="tooltip">Receita total gerada pelo usuário.</span></span></th>
-        <th>Score <span class="info">?<span class="tooltip">Pontuação comportamental baseada em depósitos, frequência e receita.</span></span></th>
-        <th>Nível <span class="info">?<span class="tooltip">Classificação avançada do usuário baseada no score final.</span></span></th>
-        <th>Dias sem atividade <span class="info">?<span class="tooltip">Quantidade de dias desde a última atividade registrada.</span></span></th>
-        <th>Segmento CRM <span class="info">?<span class="tooltip">Segmentação automática usada para CRM e automações.</span></span></th>
-        <th>Ticket Depósito <span class="info">?<span class="tooltip">Valor médio por depósito realizado.</span></span></th>
-        <th>Frequência <span class="info">?<span class="tooltip">Média de depósitos por sessão/comportamento do usuário.</span></span></th>
-        <th>Segmentação <span class="info">?<span class="tooltip">Qualidade geral do usuário para otimização do pixel.</span></span></th>
-        <th>Enviar Pixel Valioso <span class="info">?<span class="tooltip">Define se este usuário deve ensinar o pixel da Meta com eventos qualificados.</span></span></th>
-        </tr>
+  <th>Usuário</th>
+  <th>Origem <span class="info">?<span class="tooltip">Origem principal identificada do usuário através dos parâmetros UTM.</span></span></th>
+  <th>Campanhas tocadas <span class="info">?<span class="tooltip">Lista de campanhas que tiveram interação com este usuário.</span></span></th>
+  <th>Leads <span class="info">?<span class="tooltip">Quantidade de eventos de lead registrados para este usuário.</span></span></th>
+  <th>Pix <span class="info">?<span class="tooltip">Quantidade de eventos de geração de PIX.</span></span></th>
+  <th>Depósitos <span class="info">?<span class="tooltip">Quantidade total de depósitos realizados.</span></span></th>
+  <th>FTD <span class="info">?<span class="tooltip">First Time Deposit do usuário.</span></span></th>
+  <th>Receita <span class="info">?<span class="tooltip">Receita total gerada pelo usuário.</span></span></th>
+  <th>Score <span class="info">?<span class="tooltip">Pontuação comportamental baseada em depósitos, frequência e receita.</span></span></th>
+  <th>Nível <span class="info">?<span class="tooltip">Classificação avançada baseada no score final.</span></span></th>
+  <th>Dias sem atividade <span class="info">?<span class="tooltip">Dias desde a última atividade registrada.</span></span></th>
+  <th>Segmento CRM <span class="info">?<span class="tooltip">Segmentação automática usada para CRM e reativação.</span></span></th>
+  <th>Ticket Depósito <span class="info">?<span class="tooltip">Valor médio por depósito realizado.</span></span></th>
+  <th>Frequência <span class="info">?<span class="tooltip">Quantidade média/total de depósitos do usuário.</span></span></th>
+  <th>Segmentação <span class="info">?<span class="tooltip">Qualidade geral do usuário para CRM/pixel.</span></span></th>
+  <th>Enviar Pixel Valioso <span class="info">?<span class="tooltip">Define se este usuário deve ensinar o pixel com evento qualificado.</span></span></th>
+</tr>
         </thead>
         <tbody>
         ${rowsHtml}
