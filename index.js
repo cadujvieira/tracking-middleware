@@ -467,6 +467,7 @@ app.get("/", (req, res) => {
       "/dashboard-view",
       "/dashboard-daily",
       "/dashboard-audience",
+      "/dashboard-crm",
       "/meta/send-valued-audience",
       "/meta/sent-audience-status",
       "/dashboard/summary",
@@ -1301,6 +1302,135 @@ app.get("/dashboard-audience", async (req, res) => {
     `);
   } catch (error) {
     res.status(500).send("Erro ao gerar dashboard audience: " + error.message);
+  }
+});
+
+app.get("/dashboard-crm", async (req, res) => {
+  try {
+
+    const response = await fetch("https://tracking-middleware.onrender.com/sheets/audience");
+    const json = await response.json();
+
+    const audience = json.audience || [];
+
+    const segmentos = {};
+
+    audience.forEach(user => {
+
+      const segmento = user.segmentoCRM || "outros";
+
+      if (!segmentos[segmento]) {
+        segmentos[segmento] = {
+          total: 0,
+          receita: 0,
+          usuarios: []
+        };
+      }
+
+      segmentos[segmento].total++;
+      segmentos[segmento].receita += Number(user.receita || 0);
+
+      segmentos[segmento].usuarios.push(user);
+
+    });
+
+    const rows = Object.entries(segmentos)
+      .sort((a, b) => b[1].receita - a[1].receita)
+      .map(([segmento, dados]) => `
+        <tr>
+          <td>${segmento}</td>
+          <td>${dados.total}</td>
+          <td>R$ ${dados.receita.toFixed(2)}</td>
+          <td>
+            <a href="/crm/export?segmento=${segmento}"
+              style="
+                background:#2563eb;
+                color:white;
+                padding:8px 14px;
+                border-radius:8px;
+                text-decoration:none;
+                font-weight:bold;
+              ">
+              Exportar CSV
+            </a>
+          </td>
+        </tr>
+      `).join("");
+
+    res.send(`
+      <html>
+      <head>
+        <title>Dashboard CRM</title>
+
+        <style>
+
+          body {
+            font-family: Arial;
+            background:#0f172a;
+            color:#e5e7eb;
+            padding:30px;
+          }
+
+          h1 {
+            margin-bottom:20px;
+          }
+
+          table {
+            width:100%;
+            border-collapse:collapse;
+            background:#111827;
+            border-radius:12px;
+            overflow:hidden;
+          }
+
+          th, td {
+            padding:16px;
+            border-bottom:1px solid #1f2937;
+            text-align:left;
+          }
+
+          th {
+            background:#1e293b;
+            color:#93c5fd;
+          }
+
+          tr:hover {
+            background:#172554;
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <h1>📲 Dashboard CRM</h1>
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Segmento</th>
+              <th>Usuários</th>
+              <th>Receita</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${rows}
+          </tbody>
+
+        </table>
+
+      </body>
+      </html>
+    `);
+
+  } catch (error) {
+
+    res.status(500).send(error.message);
+
   }
 });
 
