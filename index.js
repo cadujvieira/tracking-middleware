@@ -871,7 +871,7 @@ app.get("/dashboard-view", async (req, res) => {
           <td>${c.leadsUnicos}</td>
           <td>${c.pixGerado}</td>
           <td>${c.depositos}</td>
-          <<td>${c.depositantesUnicos}</td>
+          <td>${c.depositantesUnicos}</td>
           <td>${c.ftd}</td>
           <td>R$ ${c.receita.toFixed(2)}</td>
           <td class="${rowClass}-cell">R$ ${c.epl.toFixed(2)}</td>
@@ -881,6 +881,7 @@ app.get("/dashboard-view", async (req, res) => {
           <td>${(c.taxaFTDUnico * 100).toFixed(2)}%</td>
           <td>R$ ${c.ticketMedioDeposito.toFixed(2)}</td>
           <td>${c.frequenciaDeposito.toFixed(2)}x</td>
+          <td class="${c.qualidade}">${c.qualidade}</td>
         </tr>
       `;
     }).join("");
@@ -1026,7 +1027,7 @@ app.get("/dashboard-daily", async (req, res) => {
                 <td>${c.campaign}</td>
                 <td>${c.leads}</td>
                 <td>${c.depositos}</td>
-                <<td>${c.depositantesUnicos}</td>
+                <td>${c.depositantesUnicos}</td>
                 <td>${c.ftd}</td>
                 <td>R$ ${c.receita.toFixed(2)}</td>
                 <td>${(c.taxaFTD * 100).toFixed(2)}%</td>
@@ -1101,6 +1102,8 @@ app.get("/dashboard-audience", async (req, res) => {
         <td>${u.depositos}</td>
         <td>${u.ftd}</td>
         <td>R$ ${u.receita.toFixed(2)}</td>
+        <td>${u.score || 0}</td>
+        <td><span class="${u.nivelScore || ""}">${u.nivelScore || "-"}</span></td>
         <td>R$ ${u.ticketMedioDeposito.toFixed(2)}</td>
         <td>${u.frequenciaDeposito}x</td>
         <td class="${u.qualidade}">${u.qualidade}</td>
@@ -1156,8 +1159,8 @@ app.get("/dashboard-audience", async (req, res) => {
         <th>Depósitos</th>
         <th>FTD</th>
         <th>Receita</th>
-        <td>score</td>
-        <td>nivel</td>
+        <th title="Pontuação comportamental do usuário">Score</th>
+        <th title="Classificação automática baseada no comportamento">Nível</th>
         <th>Ticket Depósito</th>
         <th>Frequência</th>
         <th>Segmentação</th>
@@ -1166,18 +1169,12 @@ app.get("/dashboard-audience", async (req, res) => {
         </thead>
         <tbody>
         ${rowsHtml}
-        <td title="Score do usuário">
-        ${u.score || 0}
-    </td>
-
-<td title="Nível comportamental">
-  <span class="${u.nivelScore}">
-    ${u.nivelScore || "-"}
-  </span>
-</td>
+     </span>
+   </td>
         </tbody>
         </table>
-      </body></html>
+      </body>
+      </html>
     `);
   } catch (error) {
     res.status(500).send("Erro ao gerar dashboard audience: " + error.message);
