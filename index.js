@@ -816,7 +816,16 @@ app.get("/sheets/audience", async (req, res) => {
 
       const user = audience[userKey];
       user.eventos++;
-      user.ultimaData = dataEvento || user.ultimaData;
+      if (
+      dataEvento &&
+   (
+      !user.ultimaData ||
+      new Date(dataEvento.split("/").reverse().join("-")) >
+      new Date(user.ultimaData.split("/").reverse().join("-"))
+   )
+   ) {
+      user.ultimaData = dataEvento;
+     }
       user.campanhas.add(campaign);
       if (source) user.sources.add(source);
       if (medium) user.mediums.add(medium);
