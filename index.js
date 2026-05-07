@@ -1236,19 +1236,23 @@ app.get("/dashboard-audience", async (req, res) => {
         <table>
         <thead>
         <tr>
+        <tr>
         <th>Usuário</th>
-        <th>Origem</th>
-        <th>Campanhas tocadas</th>
-        <th>Depósitos</th>
-        <th>Receita</th>
-        <th title="Pontuação comportamental do usuário">Score</th>
-        <th title="Classificação automática baseada no comportamento">Nível</th>
-        <th title="Quantidade de dias desde a última atividade registrada do usuário">Dias sem atividade</th>
-        <th title="Segmento comportamental de CRM baseado em FTD e recência">Segmento CRM</th>
-        <th>Ticket Depósito</th>
-        <th>Frequência</th>
-        <th>Segmentação</th>
-        <th>Enviar Pixel Valioso</th>
+        <th>Origem <span class="info">?<span class="tooltip">Origem principal identificada do usuário através dos parâmetros UTM.</span></span></th>
+        <th>Campanhas tocadas <span class="info">?<span class="tooltip">Lista de campanhas que tiveram interação com este usuário.</span></span></th>
+        <th>Leads <span class="info">?<span class="tooltip">Quantidade de eventos de lead registrados para este usuário.</span></span></th>
+        <th>Pix <span class="info">?<span class="tooltip">Quantidade de eventos de geração de PIX.</span></span></th>
+        <th>Depósitos <span class="info">?<span class="tooltip">Quantidade total de depósitos realizados.</span></span></th>
+        <th>FTD <span class="info">?<span class="tooltip">Indica quantos First Time Deposits o usuário realizou.</span></span></th>
+        <th>Receita <span class="info">?<span class="tooltip">Receita total gerada pelo usuário.</span></span></th>
+        <th>Score <span class="info">?<span class="tooltip">Pontuação comportamental baseada em depósitos, frequência e receita.</span></span></th>
+        <th>Nível <span class="info">?<span class="tooltip">Classificação avançada do usuário baseada no score final.</span></span></th>
+        <th>Dias sem atividade <span class="info">?<span class="tooltip">Quantidade de dias desde a última atividade registrada.</span></span></th>
+        <th>Segmento CRM <span class="info">?<span class="tooltip">Segmentação automática usada para CRM e automações.</span></span></th>
+        <th>Ticket Depósito <span class="info">?<span class="tooltip">Valor médio por depósito realizado.</span></span></th>
+        <th>Frequência <span class="info">?<span class="tooltip">Média de depósitos por sessão/comportamento do usuário.</span></span></th>
+        <th>Segmentação <span class="info">?<span class="tooltip">Qualidade geral do usuário para otimização do pixel.</span></span></th>
+        <th>Enviar Pixel Valioso <span class="info">?<span class="tooltip">Define se este usuário deve ensinar o pixel da Meta com eventos qualificados.</span></span></th>
         </tr>
         </thead>
         <tbody>
