@@ -975,7 +975,7 @@ app.get("/dashboard-view", async (req, res) => {
           .card { background: #111827; padding: 20px; border-radius: 12px; border: 1px solid #1f2937; }
           .card span { color: #94a3b8; font-size: 14px; }
           .card strong { display: block; font-size: 26px; margin-top: 8px; }
-          table { width: 100%; border-collapse: collapse; background: #111827; border-radius: 12px; overflow: hidden; }
+          table { width:100%; border-collapse: collapse; background: #111827; border-radius:12px; }
           th, td { padding: 12px; border-bottom: 1px solid #1f2937; text-align: left; font-size: 14px; }
           th { background: #1e293b; color: #93c5fd; }
           tr:hover { background: #1f2937; }
@@ -1134,7 +1134,7 @@ app.get("/dashboard-daily", async (req, res) => {
           .card { background: #111827; padding: 20px; border-radius: 12px; border: 1px solid #1f2937; }
           .card span { color: #94a3b8; font-size: 14px; }
           .card strong { display: block; font-size: 26px; margin-top: 8px; }
-          table { width: 100%; border-collapse: collapse; background: #111827; border-radius: 12px; overflow: hidden; }
+          table { width:100%; border-collapse: collapse; background: #111827; border-radius:12px; }
           th, td { padding: 12px; border-bottom: 1px solid #1f2937; text-align: left; font-size: 14px; }
           th { background: #1e293b; color: #93c5fd; }
           tr:hover { background: #1f2937; }
@@ -1193,10 +1193,13 @@ app.get("/dashboard-audience", async (req, res) => {
         .card { background: #111827; padding: 20px; border-radius: 12px; border: 1px solid #1f2937; }
         .card span { color: #94a3b8; font-size: 14px; }
         .card strong { display: block; font-size: 24px; margin-top: 8px; }
-        table { width: 100%; border-collapse: collapse; background: #111827; border-radius: 12px; overflow: hidden; }
+        table { width:100%; border-collapse: collapse; background: #111827; border-radius:12px; }
         th, td { padding: 12px; border-bottom: 1px solid #1f2937; text-align: left; font-size: 14px; vertical-align: top; }
         th { background: #1e293b; color: #93c5fd; }
         tr:hover { background: #1f2937; }
+        .info { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-left: 4px; border-radius: 50%; background: #334155; color: #bfdbfe; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .tooltip { position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: #020617; color: #e5e7eb; padding: 8px 10px; border-radius: 6px; font-size: 12px; white-space: nowrap; opacity: 0; pointer-events: none; transition: 0.2s; border: 1px solid #1f2937; z-index: 10; }
+        .info:hover .tooltip { opacity: 1; } 
         .diamante { color: #60a5fa; font-weight: bold; }
         .ouro { color: #22c55e; font-weight: bold; }
         .muito_bom { color: #4ade80; font-weight: bold; }
