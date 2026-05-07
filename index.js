@@ -131,26 +131,26 @@ function calcularDiasDesde(dataBR) {
 function classificarSegmentoCRM(user, diasSemAtividade) {
 
   if (user.leads > 0 && user.ftd === 0) {
-    return "lead_sem_ftd";
+    return "lead_sem_deposito";
   }
 
-  if (user.ftd > 0 && diasSemAtividade === 0) {
+  if (user.depositos > 0 && diasSemAtividade === 0) {
     return "d0";
   }
 
-  if (user.ftd > 0 && diasSemAtividade >= 3 && diasSemAtividade < 7) {
+  if (user.depositos > 0 && diasSemAtividade >= 3 && diasSemAtividade < 7) {
     return "d3";
   }
 
-  if (user.ftd > 0 && diasSemAtividade >= 7 && diasSemAtividade < 15) {
+  if (user.depositos > 0 && diasSemAtividade >= 7 && diasSemAtividade < 15) {
     return "d7";
   }
 
-  if (user.ftd > 0 && diasSemAtividade >= 15 && diasSemAtividade < 30) {
+  if (user.depositos > 0 && diasSemAtividade >= 15 && diasSemAtividade < 30) {
     return "d15";
   }
 
-  if (user.ftd > 0 && diasSemAtividade >= 30) {
+  if (user.depositos > 0 && diasSemAtividade >= 30) {
     return "d30_plus";
   }
 
