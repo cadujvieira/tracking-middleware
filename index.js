@@ -1173,10 +1173,7 @@ app.get("/dashboard-audience", async (req, res) => {
         <td>${u.usuario}</td>
         <td>${u.campanhaOrigem}</td>
         <td>${u.campanhas.join("<br>")}</td>
-        <td>${u.leads}</td>
-        <td>${u.pixGerado}</td>
         <td>${u.depositos}</td>
-        <td>${u.ftd}</td>
         <td>R$ ${u.receita.toFixed(2)}</td>
         <td>${u.score || 0}</td>
         <td><span class="${u.nivelScore || ""}">${u.nivelScore || "-"}</span></td>
@@ -1239,10 +1236,7 @@ app.get("/dashboard-audience", async (req, res) => {
         <th>Usuário</th>
         <th>Origem</th>
         <th>Campanhas tocadas</th>
-        <th>Leads</th>
-        <th>Pix</th>
         <th>Depósitos</th>
-        <th>FTD</th>
         <th>Receita</th>
         <th title="Pontuação comportamental do usuário">Score</th>
         <th title="Classificação automática baseada no comportamento">Nível</th>
