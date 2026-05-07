@@ -884,7 +884,7 @@ app.get("/sheets/audience", async (req, res) => {
         muito_bom: 0, 
         bom: 0, 
         ruim: 0, 
-        sem_deposito: 0 
+        sem_deposito: 0, 
         lead_sem_ftd: 0,
         d0: 0,
         d3: 0,
