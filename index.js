@@ -1269,6 +1269,72 @@ app.get("/dashboard-audience", async (req, res) => {
   }
 });
 
+app.get("/crm/export", async (req, res) => {
+  try {
+    const segmento = req.query.segmento || "";
+    const minScore = Number(req.query.minScore || 0);
+
+    const response = await fetch("https://tracking-middleware.onrender.com/sheets/audience");
+    const json = await response.json();
+
+    let users = json.audience || [];
+
+    if (segmento) {
+      users = users.filter((user) => user.segmentoCRM === segmento);
+    }
+
+    if (minScore > 0) {
+      users = users.filter((user) => Number(user.score || 0) >= minScore);
+    }
+
+    users = users.filter((user) => user.phone);
+
+    const header = [
+      "usuario",
+      "telefone",
+      "segmento_crm",
+      "dias_sem_atividade",
+      "score",
+      "nivel",
+      "depositos",
+      "receita",
+      "campanha_origem"
+    ];
+
+    const lines = users.map((user) => [
+      user.usuario || "",
+      user.phone || "",
+      user.segmentoCRM || "",
+      user.diasSemAtividade ?? "",
+      user.score || 0,
+      user.nivelScore || "",
+      user.depositos || 0,
+      Number(user.receita || 0).toFixed(2),
+      user.campanhaOrigem || ""
+    ]);
+
+    const csv = [
+      header.join(";"),
+      ...lines.map((line) =>
+        line
+          .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+          .join(";")
+      )
+    ].join("\n");
+
+    const fileName = segmento
+      ? `crm_${segmento}.csv`
+      : "crm_todos.csv";
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+
+    return res.send("\uFEFF" + csv);
+  } catch (error) {
+    res.status(500).send("Erro ao exportar CRM: " + error.message);
+  }
+});
+
 app.get("/meta/sent-audience-status", async (req, res) => {
   try {
     const result = await pool.query(`
