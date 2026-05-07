@@ -874,8 +874,6 @@ app.get("/dashboard-view", async (req, res) => {
           <<td>${c.depositantesUnicos}</td>
           <td>${c.ftd}</td>
           <td>R$ ${c.receita.toFixed(2)}</td>
-          <td>${c.score || 0}</td>
-          <td>${c.nivelScore || "-"}</td>
           <td class="${rowClass}-cell">R$ ${c.epl.toFixed(2)}</td>
           <td>R$ ${c.eplUnico.toFixed(2)}</td>
           <td>R$ ${c.valorPorFTD.toFixed(2)}</td>
@@ -937,8 +935,6 @@ app.get("/dashboard-view", async (req, res) => {
               <th>Depositantes <span class="info">?<span class="tooltip">Quantidade total de pessoas que depositaram na casa.</span></span></th>
               <th>FTD <span class="info">?<span class="tooltip">First Time Deposit: quantidade de usuários que fizeram o primeiro depósito.</span></span></th>
               <th>Receita <span class="info">?<span class="tooltip">Soma total dos valores depositados pelos usuários dessa campanha.</span></span></th>
-              <th>Score</th><th title="Pontuação calculada com base em ticket, frequência, depósitos e receita total do usuário">Score</th>
-              <th>Nível</th><th title="Classificação automática do usuário baseada no score comportamental">Nível</th>
               <th>EPL <span class="info">?<span class="tooltip">Receita média por lead. Fórmula: receita / leads.</span></span></th>
               <th>EPL Real <span class="info">?<span class="tooltip">Receita média por lead único. Fórmula: receita / leads únicos.</span></span></th>
               <th>Valor/FTD <span class="info">?<span class="tooltip">Receita média por FTD. Fórmula: receita / FTD.</span></span></th>
@@ -1015,8 +1011,6 @@ app.get("/dashboard-daily", async (req, res) => {
               <th>Depositantes</th> <span class="info">?<span class="tooltip">Quantidade total de pessoas que depositaram na casa.</span></span></th>
               <th>FTD</th> <span class="info">?<span class="tooltip">First Time Deposit: quantidade de usuários que fizeram o primeiro depósito.</span></span></th>
               <th>Receita</th> <span class="info">?<span class="tooltip">Soma total dos valores depositados pelos usuários dessa campanha.</span></span></th>
-              <th>Score</th><th title="Pontuação calculada com base em ticket, frequência, depósitos e receita total do usuário">Score</th>
-              <th>Nível</th><th title="Classificação automática do usuário baseada no score comportamental">Nível</th>
               <th>Taxa FTD</th> <span class="info">?<span class="tooltip">Percentual de leads que viraram FTD. Fórmula: FTD / leads.</span></span></th>
               <th>Ticket Depósito</th> <span class="info">?<span class="tooltip">Valor médio por depósito. Fórmula: receita / depósitos.</span></span></th>
               <th>Frequência</th> <span class="info">?<span class="tooltip">Média de depósitos por FTD. Fórmula: depósitos / FTD.</span></span></th>
@@ -1035,8 +1029,6 @@ app.get("/dashboard-daily", async (req, res) => {
                 <<td>${c.depositantesUnicos}</td>
                 <td>${c.ftd}</td>
                 <td>R$ ${c.receita.toFixed(2)}</td>
-                <td>${c.score || 0}</td>
-                <td>${c.nivelScore || "-"}</td>
                 <td>${(c.taxaFTD * 100).toFixed(2)}%</td>
                 <td>R$ ${c.ticketMedioDeposito.toFixed(2)}</td>
                 <td>${c.frequenciaDeposito.toFixed(2)}x</td>
@@ -1136,7 +1128,14 @@ app.get("/dashboard-audience", async (req, res) => {
         .enviar { color: #22c55e; font-weight: bold; }
         .nao-enviar { color: #94a3b8; font-weight: bold; }
         .note { color: #94a3b8; margin-bottom: 18px; }
-      </style></head><body>
+        .whale { color: #b26bff; font-weight: bold; }
+        .vip { color: #ffd700; font-weight: bold; }
+        .high_value { color: #22c55e; font-weight: bold; }
+        .mid_value { color: #facc15; font-weight: bold; }
+        .low_value { color: #ef4444; font-weight: bold; }
+      </style>
+       </head>
+        <body>
         <h1>Dashboard de Público Valioso</h1>
         <div class="note">Esta visão classifica usuários, não campanhas. A ideia é identificar quais públicos devem ensinar o pixel futuramente.</div>
         <div class="cards">
@@ -1146,7 +1145,38 @@ app.get("/dashboard-audience", async (req, res) => {
           <div class="card"><span>Ouro</span><strong>${resumo.ouro || 0}</strong></div>
           <div class="card"><span>Receita usuários</span><strong>R$ ${Number(resumo.receita || 0).toFixed(2)}</strong></div>
         </div>
-        <table><thead><tr><th>Usuário</th><th>Origem</th><th>Campanhas tocadas</th><th>Leads</th><th>Pix</th><th>Depósitos</th><th>FTD</th><th>Receita</th><th>Ticket Depósito</th><th>Frequência</th><th>Segmentação</th><th>Enviar Pixel Valioso</th></tr></thead><tbody>${rowsHtml}</tbody></table>
+        <table>
+        <thead>
+        <tr>
+        <th>Usuário</th>
+        <th>Origem</th>
+        <th>Campanhas tocadas</th>
+        <th>Leads</th>
+        <th>Pix</th>
+        <th>Depósitos</th>
+        <th>FTD</th>
+        <th>Receita</th>
+        <td>score</td>
+        <td>nivel</td>
+        <th>Ticket Depósito</th>
+        <th>Frequência</th>
+        <th>Segmentação</th>
+        <th>Enviar Pixel Valioso</th>
+        </tr>
+        </thead>
+        <tbody>
+        ${rowsHtml}
+        <td title="Score do usuário">
+        ${u.score || 0}
+    </td>
+
+<td title="Nível comportamental">
+  <span class="${u.nivelScore}">
+    ${u.nivelScore || "-"}
+  </span>
+</td>
+        </tbody>
+        </table>
       </body></html>
     `);
   } catch (error) {
