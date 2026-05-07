@@ -817,8 +817,6 @@ app.get("/sheets/audience", async (req, res) => {
       const user = audience[userKey];
       user.eventos++;
       user.ultimaData = dataEvento || user.ultimaData;
-
-      const diasSemAtividade = calcularDiasDesde(user.ultimaData);
       user.campanhas.add(campaign);
       if (source) user.sources.add(source);
       if (medium) user.mediums.add(medium);
@@ -837,6 +835,7 @@ app.get("/sheets/audience", async (req, res) => {
       .map((user) => {
         const ticketMedioDeposito = user.depositos ? user.receita / user.depositos : 0;
         const frequenciaDeposito = user.depositos;
+        const diasSemAtividade = calcularDiasDesde(user.ultimaData);
         const qualidade = calcularQualidadePublico(ticketMedioDeposito, user.depositos);
         const scoreUsuario = calcularScoreUsuario({ticketMedioDeposito, frequenciaDeposito, depositos: user.depositos, receita: user.receita});
         const segmentoCRM = classificarSegmentoCRM(user, diasSemAtividade);
