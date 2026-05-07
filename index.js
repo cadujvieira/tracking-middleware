@@ -1342,17 +1342,19 @@ app.get("/dashboard-crm", async (req, res) => {
           <td>${dados.total}</td>
           <td>R$ ${dados.receita.toFixed(2)}</td>
           <td>
-            <a href="/crm/export?segmento=${segmento}"
-              style="
-                background:#2563eb;
-                color:white;
-                padding:8px 14px;
-                border-radius:8px;
-                text-decoration:none;
-                font-weight:bold;
-              ">
-              Exportar CSV
-            </a>
+            <button
+            onclick="exportarCRM('${segmento}')"
+             style="
+              background:#2563eb;
+              color:white;
+              padding:8px 14px;
+              border-radius:8px;
+              border:none;
+              cursor:pointer;
+              font-weight:bold;
+           ">
+          Exportar CSV
+       </button>
           </td>
         </tr>
       `).join("");
@@ -1422,6 +1424,20 @@ app.get("/dashboard-crm", async (req, res) => {
           </tbody>
 
         </table>
+      
+      <script>
+        function exportarCRM(segmento) {
+        const senha = prompt("Digite a senha para exportar:");
+  
+    if (!senha) return;
+
+    window.location.href =
+      "/crm/export?segmento=" +
+      encodeURIComponent(segmento) +
+      "&senha=" +
+      encodeURIComponent(senha);
+     }
+     </script>
 
       </body>
       </html>
@@ -1436,6 +1452,12 @@ app.get("/dashboard-crm", async (req, res) => {
 
 app.get("/crm/export", async (req, res) => {
   try {
+    const senha = req.query.senha || "";
+    const senhaCorreta = process.env.CRM_EXPORT_PASSWORD || "123456";
+
+ if (senha !== senhaCorreta) {
+   return res.status(401).send("Senha inválida para exportação.");
+}
     const segmento = req.query.segmento || "";
     const minScore = Number(req.query.minScore || 0);
 
