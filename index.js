@@ -464,6 +464,7 @@ app.get("/", (req, res) => {
       "/sheets/top",
       "/sheets/daily",
       "/sheets/audience",
+      "/painel",
       "/dashboard-view",
       "/dashboard-daily",
       "/dashboard-audience",
@@ -908,6 +909,118 @@ app.get("/sheets/audience", async (req, res) => {
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
+});
+
+app.get("/painel", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8" />
+      <title>Painel Operacional</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          background: #0f172a;
+          color: #e5e7eb;
+          padding: 40px;
+        }
+
+        h1 {
+          font-size: 34px;
+          margin-bottom: 10px;
+        }
+
+        p {
+          color: #94a3b8;
+          margin-bottom: 30px;
+        }
+
+        .grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 20px;
+        }
+
+        .card {
+          background: #111827;
+          border: 1px solid #1f2937;
+          border-radius: 16px;
+          padding: 24px;
+          text-decoration: none;
+          color: #e5e7eb;
+          transition: .2s;
+        }
+
+        .card:hover {
+          transform: translateY(-3px);
+          border-color: #2563eb;
+          background: #172554;
+        }
+
+        .icon {
+          font-size: 34px;
+          margin-bottom: 14px;
+        }
+
+        .title {
+          font-size: 20px;
+          font-weight: bold;
+          margin-bottom: 8px;
+        }
+
+        .desc {
+          color: #94a3b8;
+          font-size: 14px;
+          line-height: 1.5;
+        }
+      </style>
+    </head>
+
+    <body>
+      <h1>⚡ Painel Operacional</h1>
+      <p>Central única para análise, CRM, segmentação, retenção e exportação.</p>
+
+      <div class="grid">
+        <a class="card" href="/dashboard-view">
+          <div class="icon">📊</div>
+          <div class="title">Campanhas</div>
+          <div class="desc">Visão geral de performance por campanha.</div>
+        </a>
+
+        <a class="card" href="/dashboard-daily">
+          <div class="icon">📅</div>
+          <div class="title">Por Data</div>
+          <div class="desc">Análise diária de leads, depósitos, FTD e receita.</div>
+        </a>
+
+        <a class="card" href="/dashboard-audience">
+          <div class="icon">👥</div>
+          <div class="title">Público Valioso</div>
+          <div class="desc">Score, nível, segmentação e comportamento dos usuários.</div>
+        </a>
+
+        <a class="card" href="/dashboard-crm">
+          <div class="icon">📲</div>
+          <div class="title">CRM</div>
+          <div class="desc">Listas por segmento, exportação CSV e reativação.</div>
+        </a>
+
+        <a class="card" href="/sheets/audience">
+          <div class="icon">🧠</div>
+          <div class="title">Audience JSON</div>
+          <div class="desc">Dados brutos de audiência, score e CRM.</div>
+        </a>
+
+        <a class="card" href="/health">
+          <div class="icon">⚙️</div>
+          <div class="title">Status</div>
+          <div class="desc">Verificação rápida do middleware/API.</div>
+        </a>
+      </div>
+    </body>
+    </html>
+  `);
 });
 
 app.get("/dashboard-view", async (req, res) => {
