@@ -157,6 +157,40 @@ function classificarSegmentoCRM(user, diasSemAtividade) {
   return "ativo";
 }
 
+function definirOfertaCRM(user) {
+
+  if (user.nivelScore === "whale" && user.segmentoCRM === "d7") {
+    return "BONUS_100";
+  }
+
+  if (user.segmentoCRM === "lead_sem_deposito") {
+    return "PIX_2000";
+  }
+
+  if (
+    user.ticketMedioDeposito <= 20 &&
+    user.segmentoCRM !== "lead_sem_deposito"
+  ) {
+    return "SORTEIO_015";
+  }
+
+  if (
+    user.nivelScore === "vip" ||
+    user.nivelScore === "whale"
+  ) {
+    return "VIP_1500";
+  }
+
+  if (
+    user.segmentoCRM === "d15" ||
+    user.segmentoCRM === "d30_plus"
+  ) {
+    return "REATIVACAO_URGENTE";
+  }
+
+  return "BONUS_PADRAO";
+}
+
 function mascararUsuario(valor) {
   if (!valor) return "sem_identificacao";
   if (valor.includes("@")) {
@@ -850,6 +884,15 @@ app.get("/sheets/audience", async (req, res) => {
         const qualidade = calcularQualidadePublico(ticketMedioDeposito, user.depositos);
         const scoreUsuario = calcularScoreUsuario({ticketMedioDeposito, frequenciaDeposito, depositos: user.depositos, receita: user.receita});
         const segmentoCRM = classificarSegmentoCRM(user, diasSemAtividade);
+        const ofertaCRM = definirOfertaCRM({
+           ...user,
+           score: scoreUsuario.score,
+           nivelScore: scoreUsuario.nivel,
+           diasSemAtividade,
+           segmentoCRM,
+           ticketMedioDeposito,
+           frequenciaDeposito
+     });
         const enviarPixelValioso = qualidade === "ouro" || qualidade === "diamante";
 
         return {
@@ -865,6 +908,7 @@ app.get("/sheets/audience", async (req, res) => {
           nivelScore: scoreUsuario.nivel,
           diasSemAtividade,
           segmentoCRM,
+          ofertaCRM,
           enviarPixelValioso,
         };
       })
@@ -1328,6 +1372,7 @@ app.get("/dashboard-audience", async (req, res) => {
 <td><span class="${u.nivelScore || ""}">${u.nivelScore || "-"}</span></td>
 <td>${u.diasSemAtividade ?? "-"}</td>
 <td class="${u.segmentoCRM || ""}">${u.segmentoCRM || "-"}</td>
+<td class="good-cell">${u.ofertaCRM || "-"}</td>      
 <td>R$ ${u.ticketMedioDeposito.toFixed(2)}</td>
 <td>${u.frequenciaDeposito}x</td>
 <td class="${u.qualidade}">${u.qualidade}</td>
@@ -1398,6 +1443,7 @@ app.get("/dashboard-audience", async (req, res) => {
   <th>Nível <span class="info">?<span class="tooltip">Classificação avançada baseada no score final.</span></span></th>
   <th>Dias sem atividade <span class="info">?<span class="tooltip">Dias desde a última atividade registrada.</span></span></th>
   <th>Segmento CRM <span class="info">?<span class="tooltip">Segmentação automática usada para CRM e reativação.</span></span></th>
+  <th>Oferta CRM <span class="info">?<span class="tooltip">Oferta automaticamente recomendada para este usuário com base em comportamento, score, frequência, ticket e tempo sem atividade.</span></span></th>   
   <th>Ticket Depósito <span class="info">?<span class="tooltip">Valor médio por depósito realizado.</span></span></th>
   <th>Frequência <span class="info">?<span class="tooltip">Quantidade média/total de depósitos do usuário.</span></span></th>
   <th>Segmentação <span class="info">?<span class="tooltip">Qualidade geral do usuário para CRM/pixel.</span></span></th>
