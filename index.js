@@ -1619,7 +1619,7 @@ const briefingImagem = {
           <td>R$ ${dados.receita.toFixed(2)}</td>
           <td>
             <button
-            onclick="exportarCRM('${segmento}')"
+            onclick="exportarCRM(&quot;${segmento}&quot;)"
              style="
               background:#2563eb;
               color:white;
