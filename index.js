@@ -191,6 +191,75 @@ function definirOfertaCRM(user) {
   return "BONUS_PADRAO";
 }
 
+function gerarCopyCRM(user) {
+
+  const nome = user.usuario || "Jogador";
+
+  // WHALE / VIP
+  if (
+    user.nivelScore === "whale" ||
+    user.nivelScore === "vip"
+  ) {
+
+    return {
+      sms:
+        "🔥 Condição VIP liberada hoje + sorteio exclusivo às 22h.",
+
+      imagem:
+        `Headline: ${nome}, condição VIP liberada | Oferta: bônus de 100% + sorteio de R$1.500 | CTA: Entrar agora`
+    };
+  }
+
+  // LEAD SEM DEPÓSITO
+  if (user.segmentoCRM === "lead_sem_deposito") {
+
+    return {
+      sms:
+        "🎁 100% bônus liberado + sorteios de R$2.000 disponíveis hoje.",
+
+      imagem:
+        `Headline: ${nome}, seu bônus ainda está ativo | Oferta: 100% bônus + sorteios até R$2.000 | CTA: Ativar agora`
+    };
+  }
+
+  // USUÁRIO D7+
+  if (
+    user.segmentoCRM === "d7" ||
+    user.segmentoCRM === "d15" ||
+    user.segmentoCRM === "d30_plus"
+  ) {
+
+    return {
+      sms:
+        "⚡ Seu perfil recebeu nova chance de reativação hoje.",
+
+      imagem:
+        `Headline: ${nome}, você recebeu nova chance | Oferta: R$2.000 no PIX + bônus | CTA: Voltar hoje`
+    };
+  }
+
+  // BAIXO TICKET
+  if (user.ticketMedioDeposito <= 20) {
+
+    return {
+      sms:
+        "🎰 Sorteios a partir de R$0,15 liberados hoje.",
+
+      imagem:
+        `Headline: Sorteios a partir de R$0,15 | Oferta: mais de R$50 MIL em prêmios | CTA: Participar agora`
+    };
+  }
+
+  // PADRÃO
+  return {
+    sms:
+      "🔥 Novas promoções liberadas hoje no seu perfil.",
+
+    imagem:
+      `Headline: Promoções liberadas hoje | Oferta: bônus + sorteios | CTA: Entrar agora`
+  };
+}
+
 function mascararUsuario(valor) {
   if (!valor) return "sem_identificacao";
   if (valor.includes("@")) {
@@ -893,6 +962,15 @@ app.get("/sheets/audience", async (req, res) => {
            ticketMedioDeposito,
            frequenciaDeposito
      });
+        const copyCRM = gerarCopyCRM({
+           ...user,
+           score: scoreUsuario.score,
+           nivelScore: scoreUsuario.nivel,
+           diasSemAtividade,
+           segmentoCRM,
+           ticketMedioDeposito,
+           frequenciaDeposito
+     });
         const enviarPixelValioso = qualidade === "ouro" || qualidade === "diamante";
 
         return {
@@ -909,6 +987,8 @@ app.get("/sheets/audience", async (req, res) => {
           diasSemAtividade,
           segmentoCRM,
           ofertaCRM,
+          copySMS: copyCRM.sms,
+          copyImagem: copyCRM.imagem,
           enviarPixelValioso,
         };
       })
@@ -1510,6 +1590,8 @@ const briefingImagem = {
           total: 0,
           receita: 0,
           usuarios: []
+          copySMS: "",
+          copyImagem: "",
         };
       }
 
@@ -1517,6 +1599,14 @@ const briefingImagem = {
       segmentos[segmento].receita += Number(user.receita || 0);
 
       segmentos[segmento].usuarios.push(user);
+
+      if (!segmentos[segmento].copySMS && user.copySMS) {
+     segmentos[segmento].copySMS = user.copySMS;
+     }
+
+     if (!segmentos[segmento].copyImagem && user.copyImagem) {
+    segmentos[segmento].copyImagem = user.copyImagem;
+     }
 
     });
 
@@ -1543,7 +1633,7 @@ const briefingImagem = {
        </button>
         <button
   <button
-  onclick="copiarSMS('${segmento}')"
+  onclick="copiarTexto(`${dados.copySMS || ""}`)"
   style="
     background:#16a34a;
     color:white;
@@ -1558,7 +1648,7 @@ const briefingImagem = {
 </button>
 
 <button
-  onclick="copiarImagem('${segmento}')"
+  onclick="copiarTexto(`${dados.copyImagem || ""}`)"
   style="
     background:#9333ea;
     color:white;
@@ -1679,11 +1769,11 @@ function copiarTexto(texto) {
 }
 
 function copiarSMS(segmento) {
-  copiarTexto(mensagensSMS[segmento] || "");
+  copiarTexto(dados.copySMS] || "");
 }
 
 function copiarImagem(segmento) {
-  copiarTexto(briefingImagem[segmento] || "");
+  copiarTexto(dados.copyImagem] || "");
 }
      </script>
 
