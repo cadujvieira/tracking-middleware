@@ -1589,7 +1589,7 @@ const briefingImagem = {
         segmentos[segmento] = {
           total: 0,
           receita: 0,
-          usuarios: []
+          usuarios: [],
           copySMS: "",
           copyImagem: "",
         };
