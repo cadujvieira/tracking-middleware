@@ -1363,8 +1363,6 @@ app.get("/dashboard-audience", async (req, res) => {
       <td>${u.usuario}</td>
 <td>${u.campanhaOrigem}</td>
 <td>${u.campanhas.join("<br>")}</td>
-<td>${u.leads}</td>
-<td>${u.pixGerado}</td>
 <td>${u.depositos}</td>
 <td>${u.ftd}</td>
 <td>R$ ${u.receita.toFixed(2)}</td>
@@ -1434,8 +1432,6 @@ app.get("/dashboard-audience", async (req, res) => {
   <th>Usuário</th>
   <th>Origem <span class="info">?<span class="tooltip">Origem principal identificada do usuário através dos parâmetros UTM.</span></span></th>
   <th>Campanhas tocadas <span class="info">?<span class="tooltip">Lista de campanhas que tiveram interação com este usuário.</span></span></th>
-  <th>Leads <span class="info">?<span class="tooltip">Quantidade de eventos de lead registrados para este usuário.</span></span></th>
-  <th>Pix <span class="info">?<span class="tooltip">Quantidade de eventos de geração de PIX.</span></span></th>
   <th>Depósitos <span class="info">?<span class="tooltip">Quantidade total de depósitos realizados.</span></span></th>
   <th>FTD <span class="info">?<span class="tooltip">First Time Deposit do usuário.</span></span></th>
   <th>Receita <span class="info">?<span class="tooltip">Receita total gerada pelo usuário.</span></span></th>
