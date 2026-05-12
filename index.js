@@ -1428,6 +1428,39 @@ app.get("/dashboard-crm", async (req, res) => {
 
     const segmentos = {};
 
+    const mensagensSMS = {
+  lead_sem_deposito: "🎁 100% bônus liberado + sorteios de R$2.000. Ative agora.",
+  d0: "🔥 Sorteio R$1.500 às 22h + bônus de 100% ativo no seu perfil.",
+  d3: "👀 Seu bônus + sorteio de R$2.000 ainda estão disponíveis.",
+  d7: "⚡ R$2.000 no PIX + bônus liberado hoje.",
+  d15: "🚨 Reativamos seu bônus VIP hoje.",
+  d30_plus: "🔥 Última chance: bônus + R$2.000 disponíveis hoje.",
+  ativo: "✅ Usuário ativo recentemente."
+};
+
+const briefingImagem = {
+  lead_sem_deposito:
+    "Headline: 100% de bônus liberado | Oferta: Sorteios até R$2.000 + prêmios diários | CTA: Ativar bônus agora",
+
+  d0:
+    "Headline: Sorteio R$1.500 hoje às 22h | Oferta: 100% bônus ativo | CTA: Entrar agora",
+
+  d3:
+    "Headline: Sua condição especial ainda está ativa | Oferta: Sorteios + bônus de 100% | CTA: Voltar hoje",
+
+  d7:
+    "Headline: Você recebeu uma nova chance | Oferta: R$2.000 no PIX + bônus | CTA: Reativar agora",
+
+  d15:
+    "Headline: Reativação VIP liberada | Oferta: Sorteios especiais + bônus | CTA: Aproveitar hoje",
+
+  d30_plus:
+    "Headline: Última chance de reativação | Oferta: +50 mil em prêmios hoje | CTA: Voltar agora",
+
+  ativo:
+    "Headline: Usuário ativo | Oferta: Continuidade de campanhas e eventos"
+};
+
     audience.forEach(user => {
 
       const segmento = user.segmentoCRM || "outros";
@@ -1468,6 +1501,35 @@ app.get("/dashboard-crm", async (req, res) => {
            ">
           Exportar CSV
        </button>
+        <button
+  onclick="copiarTexto(`${mensagensSMS[segmento] || ""}`)"
+  style="
+    background:#16a34a;
+    color:white;
+    padding:8px 14px;
+    border-radius:8px;
+    border:none;
+    cursor:pointer;
+    font-weight:bold;
+    margin-left:8px;
+  ">
+  Copiar SMS
+</button>
+
+<button
+  onclick="copiarTexto(`${briefingImagem[segmento] || ""}`)"
+  style="
+    background:#9333ea;
+    color:white;
+    padding:8px 14px;
+    border-radius:8px;
+    border:none;
+    cursor:pointer;
+    font-weight:bold;
+    margin-left:8px;
+  ">
+  Copiar Imagem
+</button>
           </td>
         </tr>
       `).join("");
