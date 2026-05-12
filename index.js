@@ -1618,49 +1618,37 @@ const briefingImagem = {
           <td>${dados.total}</td>
           <td>R$ ${dados.receita.toFixed(2)}</td>
           <td>
-            <button
-            onclick="exportarCRM(&quot;${segmento}&quot;)"
-             style="
-              background:#2563eb;
-              color:white;
-              padding:8px 14px;
-              border-radius:8px;
-              border:none;
-              cursor:pointer;
-              font-weight:bold;
-           ">
-          Exportar CSV
-       </button>
-        <button
-  <button
-  onclick="copiarTexto(`${dados.copySMS || ""}`)"
-  style="
-    background:#16a34a;
-    color:white;
-    padding:8px 14px;
-    border-radius:8px;
-    border:none;
-    cursor:pointer;
-    font-weight:bold;
-    margin-left:8px;
-  ">
-  Copiar SMS
-</button>
+            <button class="btn-exportar" data-segmento="${segmento}" 
+           style="background:#2563eb;
+           color:white;padding:8px 14px;
+           border-radius:8px;
+           border:none;
+           cursor:pointer;
+           font-weight:bold;">
+        Exportar CSV
+        </button>
 
-<button
-  onclick="copiarTexto(`${dados.copyImagem || ""}`)"
-  style="
-    background:#9333ea;
-    color:white;
-    padding:8px 14px;
-    border-radius:8px;
-    border:none;
-    cursor:pointer;
-    font-weight:bold;
-    margin-left:8px;
-  ">
-  Copiar Imagem
-</button>
+           <button class="btn-sms" data-segmento="${segmento}" 
+          style="background:#16a34a;
+          color:white;
+          padding:8px 14px;
+          border-radius:8px;
+          border:none;cursor:pointer;
+          font-weight:bold;
+          margin-left:8px;">
+        Copiar SMS
+        </button>
+
+          <button class="btn-imagem" data-segmento="${segmento}" 
+          style="background:#9333ea;
+          color:white;padding:8px 14px;
+          border-radius:8px;
+          border:none;
+          cursor:pointer;
+          font-weight:bold;
+          margin-left:8px;">
+        Copiar Imagem
+        </button>
           </td>
         </tr>
       `).join("");
