@@ -1731,39 +1731,109 @@ const briefingImagem = {
       "&senha=" +
       encodeURIComponent(senha);
      }
-      const mensagensSMS = {
-  lead_sem_deposito: "🎁 100% bônus liberado + sorteios de R$2.000. Ative agora.",
-  d0: "🔥 Sorteio R$1.500 às 22h + bônus de 100% ativo no seu perfil.",
-  d3: "👀 Seu bônus + sorteio de R$2.000 ainda estão disponíveis.",
-  d7: "⚡ R$2.000 no PIX + bônus liberado hoje.",
-  d15: "🚨 Reativamos seu bônus VIP hoje.",
-  d30_plus: "🔥 Última chance: bônus + R$2.000 disponíveis hoje.",
-  ativo: "✅ Usuário ativo recentemente."
-};
+      <script>
+  const mensagensSMS = {
+    lead_sem_deposito: "🎁 100% bônus liberado + sorteios de R$2.000. Ative agora.",
+    d0: "🔥 Sorteio R$1.500 às 22h + bônus de 100% ativo no seu perfil.",
+    d3: "👀 Seu bônus + sorteio de R$2.000 ainda estão disponíveis.",
+    d7: "⚡ R$2.000 no PIX + bônus liberado hoje.",
+    d15: "🚨 Reativamos seu bônus VIP hoje.",
+    d30_plus: "🔥 Última chance: bônus + R$2.000 disponíveis hoje.",
+    ativo: "✅ Usuário ativo recentemente."
+  };
 
-const briefingImagem = {
-  lead_sem_deposito: "Headline: 100% de bônus liberado | Oferta: Sorteios até R$2.000 + prêmios diários | CTA: Ativar bônus agora",
-  d0: "Headline: Sorteio R$1.500 hoje às 22h | Oferta: 100% bônus ativo | CTA: Entrar agora",
-  d3: "Headline: Sua condição especial ainda está ativa | Oferta: Sorteios + bônus de 100% | CTA: Voltar hoje",
-  d7: "Headline: Você recebeu uma nova chance | Oferta: R$2.000 no PIX + bônus | CTA: Reativar agora",
-  d15: "Headline: Reativação VIP liberada | Oferta: Sorteios especiais + bônus | CTA: Aproveitar hoje",
-  d30_plus: "Headline: Última chance de reativação | Oferta: +50 mil em prêmios hoje | CTA: Voltar agora",
-  ativo: "Headline: Usuário ativo | Oferta: Continuidade de campanhas e eventos"
-};
+  const briefingImagem = {
+    lead_sem_deposito: "Headline: 100% de bônus liberado | Oferta: Sorteios até R$2.000 + prêmios diários | CTA: Ativar bônus agora",
+    d0: "Headline: Sorteio R$1.500 hoje às 22h | Oferta: 100% bônus ativo | CTA: Entrar agora",
+    d3: "Headline: Sua condição especial ainda está ativa | Oferta: Sorteios + bônus de 100% | CTA: Voltar hoje",
+    d7: "Headline: Você recebeu uma nova chance | Oferta: R$2.000 no PIX + bônus | CTA: Reativar agora",
+    d15: "Headline: Reativação VIP liberada | Oferta: Sorteios especiais + bônus | CTA: Aproveitar hoje",
+    d30_plus: "Headline: Última chance de reativação | Oferta: +50 mil em prêmios hoje | CTA: Voltar agora",
+    ativo: "Headline: Usuário ativo | Oferta: Continuidade de campanhas e eventos"
+  };
+
+  function copiarTexto(texto) {
+    navigator.clipboard.writeText(texto || "");
+    alert("Texto copiado!");
+  }
+
+  document.querySelectorAll(".btn-exportar").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const segmento = btn.dataset.segmento;
+      const senha = prompt("Digite a senha para exportar:");
+      if (!senha) return;
+      window.location.href = "/crm/export?segmento=" + encodeURIComponent(segmento) + "&senha=" + encodeURIComponent(senha);
+    });
+  });
+
+  document.querySelectorAll(".btn-sms").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      copiarTexto(mensagensSMS[btn.dataset.segmento]);
+    });
+  });
+
+  document.querySelectorAll(".btn-imagem").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      copiarTexto(briefingImagem[btn.dataset.segmento]);
+    });
+  });
+
+    <script>
 
 function copiarTexto(texto) {
-  navigator.clipboard.writeText(texto);
+  navigator.clipboard.writeText(texto || "");
   alert("Texto copiado!");
 }
 
-function copiarSMS(segmento) {
-  copiarTexto(dados.copySMS] || "");
-}
+document.querySelectorAll(".btn-exportar").forEach((btn) => {
 
-function copiarImagem(segmento) {
-  copiarTexto(dados.copyImagem] || "");
-}
-     </script>
+  btn.addEventListener("click", () => {
+
+    const segmento = btn.dataset.segmento;
+
+    const senha = prompt("Digite a senha para exportar:");
+
+    if (!senha) return;
+
+    window.location.href =
+      "/crm/export?segmento=" +
+      encodeURIComponent(segmento) +
+      "&senha=" +
+      encodeURIComponent(senha);
+
+  });
+
+});
+
+document.querySelectorAll(".btn-sms").forEach((btn) => {
+
+  btn.addEventListener("click", () => {
+
+    const segmento = btn.dataset.segmento;
+
+    const item = segmentos[segmento];
+
+    copiarTexto(item?.copySMS || "");
+
+  });
+
+});
+
+document.querySelectorAll(".btn-imagem").forEach((btn) => {
+
+  btn.addEventListener("click", () => {
+
+    const segmento = btn.dataset.segmento;
+
+    const item = segmentos[segmento];
+
+    copiarTexto(item?.copyImagem || "");
+
+  });
+
+});
+
+</script>
 
       </body>
       </html>
