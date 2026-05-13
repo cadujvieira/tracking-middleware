@@ -1261,9 +1261,9 @@ campanha.lucro =
 
     res.json({ ok: true, total: result.length, resumo, audience: result });
    
-  catch (error) {
+  } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
-}
+  }
 });
 
 app.get("/painel", (req, res) => {
