@@ -705,6 +705,46 @@ app.get("/dashboard-crm-performance", (req, res) => {
 
 });
 
+app.post("/crm/marcar-usuarios", express.json(), (req, res) => {
+
+  try {
+
+    const {
+      campanhaId,
+      usuarios
+    } = req.body;
+
+    const campanha = crmCampaigns.find(c => c.id === campanhaId);
+
+    if (!campanha) {
+
+      return res.status(404).json({
+        ok: false,
+        error: "Campanha não encontrada"
+      });
+
+    }
+
+    campanha.usuariosImpactados = usuarios || [];
+
+    campanha.dataDisparo = new Date();
+
+    res.json({
+      ok: true,
+      campanha
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+
+  }
+
+});
+
 app.get("/", (req, res) => {
   res.json({
     status: "online",
@@ -1097,6 +1137,44 @@ app.get("/sheets/audience", async (req, res) => {
       if (evento === "FTD_WH") user.ftd++;
     });
 
+    const agora = new Date();
+
+crmCampaigns.forEach((campanha) => {
+
+  if (!campanha.usuariosImpactados) return;
+
+  const foiImpactado = campanha.usuariosImpactados.includes(userKey);
+
+  if (!foiImpactado) return;
+
+  if (!campanha.dataDisparo) return;
+
+  const horasDesdeDisparo =
+    (agora - new Date(campanha.dataDisparo)) / 1000 / 60 / 60;
+
+  // janela de atribuição: 72h
+  if (horasDesdeDisparo > 72) return;
+
+  campanha.receita += valor;
+
+  const jaReativado = campanha.usuariosReativados
+  .some((u) => u.user === userKey);
+
+if (!jaReativado) {
+
+  campanha.reativados += 1;
+
+  campanha.usuariosReativados.push({
+    user: userKey,
+    valor,
+    data: agora
+  });
+
+}
+
+campanha.lucro =
+  campanha.receita - campanha.custo;
+  
     const result = Object.values(audience)
       .map((user) => {
         const ticketMedioDeposito = user.depositos ? user.receita / user.depositos : 0;
