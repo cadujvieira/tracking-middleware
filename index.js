@@ -524,6 +524,23 @@ async function initDb() {
   `);
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS crm_campaigns (
+  id SERIAL PRIMARY KEY,
+  nome TEXT,
+  segmento TEXT,
+  canal TEXT,
+  custo NUMERIC DEFAULT 0,
+  receita NUMERIC DEFAULT 0,
+  lucro NUMERIC DEFAULT 0,
+  reativados INTEGER DEFAULT 0,
+  usuarios_impactados JSONB,
+  usuarios_reativados JSONB,
+  data_disparo TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+`);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS postback_logs (
       id SERIAL PRIMARY KEY,
       event_id TEXT,
@@ -609,6 +626,11 @@ app.get("/dashboard-crm-performance", (req, res) => {
       ? (((c.receita - c.custo) / c.custo) * 100).toFixed(2)
       : 0;
 
+   const taxaReativacao =
+  c.enviados > 0
+    ? ((c.reativados / c.enviados) * 100).toFixed(2)
+    : 0;   
+
     return `
       <tr>
         <td>${c.nome}</td>
@@ -620,6 +642,7 @@ app.get("/dashboard-crm-performance", (req, res) => {
         <td>R$ ${c.receita.toFixed(2)}</td>
         <td>R$ ${c.custo.toFixed(2)}</td>
         <td>${roi}%</td>
+        <td>${taxaReativacao}%</td>
       </tr>
     `;
 
@@ -689,6 +712,7 @@ app.get("/dashboard-crm-performance", (req, res) => {
             <th>Receita</th>
             <th>Custo</th>
             <th>ROI</th>
+            <th>Tx Reativação</th>
           </tr>
         </thead>
 
@@ -1174,7 +1198,7 @@ if (!jaReativado) {
 
 campanha.lucro =
   campanha.receita - campanha.custo;
-  
+
   });
 
     const result = Object.values(audience)
