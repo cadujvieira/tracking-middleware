@@ -1221,7 +1221,7 @@ campanha.lucro =
           copyImagem: copyCRM.imagem,
           enviarPixelValioso,
         };
-      })
+      });
       .sort((a, b) => {
         if (b.receita !== a.receita) return b.receita - a.receita;
         return b.depositos - a.depositos;
