@@ -1174,7 +1174,7 @@ if (!jaReativado) {
 
 campanha.lucro =
   campanha.receita - campanha.custo;
-  
+
     const result = Object.values(audience)
       .map((user) => {
         const ticketMedioDeposito = user.depositos ? user.receita / user.depositos : 0;
@@ -1260,9 +1260,10 @@ campanha.lucro =
     );
 
     res.json({ ok: true, total: result.length, resumo, audience: result });
-  } catch (error) {
+  } 
+  catch (error) {
     res.status(500).json({ ok: false, error: error.message });
-  }
+}
 });
 
 app.get("/painel", (req, res) => {
