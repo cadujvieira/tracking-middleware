@@ -1174,6 +1174,8 @@ if (!jaReativado) {
 
 campanha.lucro =
   campanha.receita - campanha.custo;
+  
+  });
 
     const result = Object.values(audience)
       .map((user) => {
