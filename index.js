@@ -1204,28 +1204,26 @@ campanha.lucro =
         const enviarPixelValioso = qualidade === "ouro" || qualidade === "diamante";
 
         return {
-          ...user,
-          campanhas: Array.from(user.campanhas),
-          sources: Array.from(user.sources),
-          mediums: Array.from(user.mediums),
-          contents: Array.from(user.contents),
-          ticketMedioDeposito,
-          frequenciaDeposito,
-          qualidade,
-          score: scoreUsuario.score,
-          nivelScore: scoreUsuario.nivel,
-          diasSemAtividade,
-          segmentoCRM,
-          ofertaCRM,
-          copySMS: copyCRM.sms,
-          copyImagem: copyCRM.imagem,
-          enviarPixelValioso,
-        }
-      })
-      .sort((a, b) => {
-        if (b.receita !== a.receita) return b.receita - a.receita;
-        return b.depositos - a.depositos;
-      });
+  ...user,
+  campanhas: Array.from(user.campanhas),
+  sources: Array.from(user.sources),
+  mediums: Array.from(user.mediums),
+  contents: Array.from(user.contents),
+  ticketMedioDeposito,
+  frequenciaDeposito,
+  qualidade,
+  score: scoreUsuario.score,
+  nivelScore: scoreUsuario.nivel,
+  diasSemAtividade,
+  segmentoCRM,
+  ofertaCRM,
+  enviarPixelValioso,
+};
+})
+.sort((a, b) => {
+  if (b.receita !== a.receita) return b.receita - a.receita;
+  return b.depositos - a.depositos;
+});
 
     const resumo = result.reduce(
       (acc, user) => {
