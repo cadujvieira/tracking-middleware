@@ -18,6 +18,8 @@ app.use(cors());
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+const crmCampaigns = [];
+
 const PORT = process.env.PORT || 3000;
 const FINAL_DESTINATION_URL = process.env.FINAL_DESTINATION_URL || "https://seudestino.com";
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -552,6 +554,156 @@ async function initDb() {
     );
   `);
 }
+
+app.post("/crm/nova-campanha", express.json(), (req, res) => {
+
+  try {
+
+    const {
+      nome,
+      segmento,
+      canal,
+      oferta,
+      custo,
+      enviados
+    } = req.body;
+
+    const campanha = {
+      id: Date.now().toString(),
+      nome,
+      segmento,
+      canal,
+      oferta,
+      custo: Number(custo || 0),
+      enviados: Number(enviados || 0),
+      data: new Date(),
+      reativados: 0,
+      receita: 0,
+      lucro: 0,
+      usuariosReativados: []
+    };
+
+    crmCampaigns.push(campanha);
+
+    res.json({
+      ok: true,
+      campanha
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+
+  }
+
+});
+
+app.get("/dashboard-crm-performance", (req, res) => {
+
+  const rows = crmCampaigns.map((c) => {
+
+    const roi = c.custo > 0
+      ? (((c.receita - c.custo) / c.custo) * 100).toFixed(2)
+      : 0;
+
+    return `
+      <tr>
+        <td>${c.nome}</td>
+        <td>${c.segmento}</td>
+        <td>${c.canal}</td>
+        <td>${c.oferta}</td>
+        <td>${c.enviados}</td>
+        <td>${c.reativados}</td>
+        <td>R$ ${c.receita.toFixed(2)}</td>
+        <td>R$ ${c.custo.toFixed(2)}</td>
+        <td>${roi}%</td>
+      </tr>
+    `;
+
+  }).join("");
+
+  res.send(`
+    <html>
+
+    <head>
+
+      <title>CRM Performance</title>
+
+      <style>
+
+        body {
+          font-family: Arial;
+          background:#0f172a;
+          color:#e5e7eb;
+          padding:30px;
+        }
+
+        h1 {
+          margin-bottom:20px;
+        }
+
+        table {
+          width:100%;
+          border-collapse:collapse;
+          background:#111827;
+          border-radius:12px;
+          overflow:hidden;
+        }
+
+        th, td {
+          padding:14px;
+          border-bottom:1px solid #1f2937;
+          text-align:left;
+        }
+
+        th {
+          background:#1e293b;
+          color:#93c5fd;
+        }
+
+        tr:hover {
+          background:#1f2937;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h1>📈 Dashboard CRM Performance</h1>
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Campanha</th>
+            <th>Segmento</th>
+            <th>Canal</th>
+            <th>Oferta</th>
+            <th>Enviados</th>
+            <th>Reativados</th>
+            <th>Receita</th>
+            <th>Custo</th>
+            <th>ROI</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${rows}
+        </tbody>
+
+      </table>
+
+    </body>
+
+    </html>
+  `);
+
+});
 
 app.get("/", (req, res) => {
   res.json({
