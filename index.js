@@ -1228,42 +1228,55 @@ campanha.lucro =
       });
 
     const resumo = result.reduce(
-      (acc, user) => {
-        acc.totalUsuarios++;
-        acc.receita += user.receita;
-        acc.depositos += user.depositos;
-        acc.ftd += user.ftd;
-        acc[user.qualidade] = (acc[user.qualidade] || 0) + 1;
-        acc[user.segmentoCRM] = (acc[user.segmentoCRM] || 0) + 1;
-        if (user.enviarPixelValioso) acc.publicosValiosos++;
-        return acc;
-      },
-      { totalUsuarios: 0, 
-        publicosValiosos: 0, 
-        receita: 0, 
-        depositos: 0, 
-        ftd: 0, 
-        diamante: 0, 
-        ouro: 0, 
-        muito_bom: 0, 
-        bom: 0, 
-        ruim: 0, 
-        sem_deposito: 0, 
-        lead_sem_ftd: 0,
-        d0: 0,
-        d3: 0,
-        d7: 0,
-        d15: 0,
-        d30_plus: 0,
-        ativo: 0
-      }
-    );
+  (acc, user) => {
+    acc.totalUsuarios++;
+    acc.receita += user.receita;
+    acc.depositos += user.depositos;
+    acc.ftd += user.ftd;
 
-    res.json({ ok: true, total: result.length, resumo, audience: result });
-   
-  } catch (error) {
-    res.status(500).json({ ok: false, error: error.message });
+    acc[user.qualidade] = (acc[user.qualidade] || 0) + 1;
+    acc[user.segmentoCRM] = (acc[user.segmentoCRM] || 0) + 1;
+
+    if (user.enviarPixelValioso) acc.publicosValiosos++;
+
+    return acc;
+  },
+  {
+    totalUsuarios: 0,
+    publicosValiosos: 0,
+    receita: 0,
+    depositos: 0,
+    ftd: 0,
+    diamante: 0,
+    ouro: 0,
+    muito_bom: 0,
+    bom: 0,
+    ruim: 0,
+    sem_deposito: 0,
+    lead_sem_deposito: 0,
+    d0: 0,
+    d3: 0,
+    d7: 0,
+    d15: 0,
+    d30_plus: 0,
+    ativo: 0
   }
+);
+
+return res.json({
+  ok: true,
+  total: result.length,
+  resumo,
+  audience: result
+});
+
+} catch (error) {
+  return res.status(500).json({
+    ok: false,
+    error: error.message
+  });
+}
+
 });
 
 app.get("/painel", (req, res) => {
