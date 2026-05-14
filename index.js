@@ -426,6 +426,19 @@ async function getMetaCosts(sinceParam, untilParam) {
   }
 }
 
+async function getDefaultTenantId() {
+  const result = await pool.query(
+    "SELECT id FROM tenants WHERE slug = $1 LIMIT 1",
+    ["bola-da-sorte"]
+  );
+
+  if (!result.rows.length) {
+    throw new Error("Tenant padrão não encontrado.");
+  }
+
+  return result.rows[0].id;
+}
+
 async function getSheetData() {
   const auth = new google.auth.GoogleAuth({
     keyFile: "/etc/secrets/credentials.json",
@@ -544,23 +557,6 @@ async function initDb() {
   `);
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS crm_campaigns (
-  id SERIAL PRIMARY KEY,
-  nome TEXT,
-  segmento TEXT,
-  canal TEXT,
-  custo NUMERIC DEFAULT 0,
-  receita NUMERIC DEFAULT 0,
-  lucro NUMERIC DEFAULT 0,
-  reativados INTEGER DEFAULT 0,
-  usuarios_impactados JSONB,
-  usuarios_reativados JSONB,
-  data_disparo TIMESTAMP DEFAULT NOW(),
-  created_at TIMESTAMP DEFAULT NOW()
-);
-`);
-
-  await pool.query(`
     CREATE TABLE IF NOT EXISTS postback_logs (
       id SERIAL PRIMARY KEY,
       event_id TEXT,
@@ -594,6 +590,7 @@ async function initDb() {
   await pool.query(`
 CREATE TABLE IF NOT EXISTS crm_campaigns (
   id SERIAL PRIMARY KEY,
+  tenant_id INTEGER REFERENCES tenants(id),
   nome TEXT,
   segmento TEXT,
   canal TEXT,
@@ -622,8 +619,11 @@ app.post("/crm/nova-campanha", express.json(), (req, res) => {
       enviados
     } = req.body;
 
+    const tenantId = await getDefaultTenantId();
+
     const campanha = {
       id: Date.now().toString(),
+      tenant_id: tenantId,
       nome,
       segmento,
       canal,
