@@ -1417,6 +1417,12 @@ app.get("/painel", (req, res) => {
           <div class="desc">Listas por segmento, exportação CSV e reativação.</div>
         </a>
 
+        <a class="card" href="/dashboard-crm-performance">
+          <div class="icon">📈</div>
+          <div class="title">Performance CRM</div>
+          <div class="desc">Acompanhar resultado dos disparos, ROI, reativados, custo e receita líquida.</div>
+        </a>
+
         <a class="card" href="/sheets/audience">
           <div class="icon">🧠</div>
           <div class="title">Audience JSON</div>
