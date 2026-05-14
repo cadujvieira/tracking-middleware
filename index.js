@@ -639,6 +639,130 @@ app.post("/crm/nova-campanha", express.json(), (req, res) => {
 
 });
 
+app.post("/crm/upload-lista", upload.single("file"), async (req, res) => {
+  try {
+    const fs = require("fs");
+
+    const results = [];
+
+    fs.createReadStream(req.file.path)
+      .pipe(csv())
+      .on("data", (data) => {
+        const telefone = String(
+          data.telefone ||
+          data.phone ||
+          ""
+        ).replace(/\D/g, "");
+
+        const diasSemLogar = Number(
+          data.dias_sem_logar || 0
+        );
+
+        let temperatura = "frio";
+
+        if (diasSemLogar <= 30) {
+          temperatura = "quente";
+        } else if (diasSemLogar <= 90) {
+          temperatura = "morno";
+        }
+
+        results.push({
+          telefone,
+          diasSemLogar,
+          temperatura,
+          tempoCadastro: data.tempo_cadastro || "",
+          status: data.status || ""
+        });
+      })
+      .on("end", async () => {
+
+        const audienceResponse = await fetch(
+          "https://tracking-middleware.onrender.com/sheets/audience"
+        );
+
+        const audienceJson = await audienceResponse.json();
+
+        const audience = audienceJson.audience || [];
+
+        const comparados = results.map((lead) => {
+
+          const encontrado = audience.find((u) => {
+            const telefoneAudience = String(
+              u.telefone || u.phone || ""
+            ).replace(/\D/g, "");
+
+            return telefoneAudience.includes(lead.telefone)
+              || lead.telefone.includes(telefoneAudience);
+          });
+
+          return {
+            ...lead,
+
+            existeNaBola: !!encontrado,
+
+            depositou:
+              encontrado?.depositos > 0,
+
+            receita:
+              encontrado?.receita || 0,
+
+            depositos:
+              encontrado?.depositos || 0,
+
+            segmentoCRM:
+              encontrado?.segmentoCRM || null,
+
+            qualidade:
+              encontrado?.qualidade || null,
+
+            prioridade:
+              encontrado?.depositos > 0
+                ? "extrema"
+                : lead.temperatura === "quente"
+                ? "alta"
+                : lead.temperatura === "morno"
+                ? "media"
+                : "baixa"
+          };
+        });
+
+        const resumo = {
+          total: comparados.length,
+
+          cadastrados:
+            comparados.filter(x => x.existeNaBola).length,
+
+          naoCadastrados:
+            comparados.filter(x => !x.existeNaBola).length,
+
+          depositantes:
+            comparados.filter(x => x.depositou).length,
+
+          quentes:
+            comparados.filter(x => x.temperatura === "quente").length,
+
+          mornos:
+            comparados.filter(x => x.temperatura === "morno").length,
+
+          frios:
+            comparados.filter(x => x.temperatura === "frio").length
+        };
+
+        res.json({
+          ok: true,
+          resumo,
+          leads: comparados
+        });
+      });
+
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
 app.get("/dashboard-crm-performance", (req, res) => {
 
   const rows = crmCampaigns.map((c) => {
