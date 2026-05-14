@@ -817,6 +817,15 @@ app.post("/crm/upload-lista", upload.single("file"), async (req, res) => {
   }
 });
 
+app.get("/health", (req, res) => {
+  res.json({
+    ok: true,
+    status: "online",
+    service: "tracking-middleware",
+    time: new Date()
+  });
+});
+
 app.get("/dashboard-crm-performance", (req, res) => {
 
   const rows = crmCampaigns.map((c) => {
