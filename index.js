@@ -479,6 +479,22 @@ function normalizeEvent(body) {
 
 async function initDb() {
   await pool.query(`
+  CREATE TABLE IF NOT EXISTS tenants (
+    id SERIAL PRIMARY KEY,
+    nome TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    status TEXT DEFAULT 'ativo',
+    created_at TIMESTAMP DEFAULT NOW()
+  );
+`);
+
+  await pool.query(`
+  INSERT INTO tenants (nome, slug)
+  VALUES ('Bola da Sorte', 'bola-da-sorte')
+  ON CONFLICT (slug) DO NOTHING;
+`);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS clicks (
       id SERIAL PRIMARY KEY,
       click_id TEXT UNIQUE NOT NULL,
