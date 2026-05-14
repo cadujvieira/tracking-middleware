@@ -2,10 +2,14 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const multer = require("multer");
+const csv = require("csv-parser");
 const crypto = require("crypto");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const { google } = require("googleapis");
+
+const upload = multer({ dest: "uploads/" });
 
 const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
 const META_AD_ACCOUNT_IDS = process.env.META_AD_ACCOUNT_IDS
