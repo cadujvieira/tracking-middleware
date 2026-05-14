@@ -1515,6 +1515,48 @@ app.get("/painel", (req, res) => {
         }
       </style>
     </head>
+    
+    <script>
+document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const fileInput = document.getElementById("csvFile");
+  const resultado = document.getElementById("uploadResultado");
+
+  if (!fileInput.files.length) {
+    resultado.innerHTML = "Selecione um arquivo CSV.";
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", fileInput.files[0]);
+
+  resultado.innerHTML = "Processando lista...";
+
+  const response = await fetch("/crm/upload-lista", {
+    method: "POST",
+    body: formData
+  });
+
+  const json = await response.json();
+
+  if (!json.ok) {
+    resultado.innerHTML = "Erro: " + json.error;
+    return;
+  }
+
+  resultado.innerHTML = `
+    <strong>Lista processada com sucesso.</strong><br><br>
+    Total: ${json.resumo.total}<br>
+    Já cadastrados na Bola: ${json.resumo.cadastrados}<br>
+    Não cadastrados: ${json.resumo.naoCadastrados}<br>
+    Depositantes: ${json.resumo.depositantes}<br>
+    Quentes: ${json.resumo.quentes}<br>
+    Mornos: ${json.resumo.mornos}<br>
+    Frios: ${json.resumo.frios}
+  `;
+});
+</script>
 
     <body>
       <h1>⚡ Painel Operacional</h1>
