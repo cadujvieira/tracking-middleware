@@ -637,23 +637,47 @@ app.post("/crm/nova-campanha", express.json(), async (req, res) => {
       usuariosReativados: []
     };
 
-    crmCampaigns.push(campanha);
+    await pool.query(`
+  INSERT INTO crm_campaigns (
+    tenant_id,
+    nome,
+    segmento,
+    canal,
+    custo,
+    receita,
+    lucro,
+    reativados,
+    usuarios_impactados,
+    usuarios_reativados
+  )
+  VALUES (
+    $1,$2,$3,$4,$5,$6,$7,$8,$9,$10
+  )
+`, [
+  campanha.tenant_id,
+  campanha.nome,
+  campanha.segmento,
+  campanha.canal,
+  campanha.custo,
+  campanha.receita,
+  campanha.lucro,
+  campanha.reativados,
+  JSON.stringify(campanha.enviados || []),
+  JSON.stringify(campanha.usuariosReativados || [])
+]);
 
-    res.json({
-      ok: true,
-      campanha
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      ok: false,
-      error: error.message
-    });
-
-  }
-
+res.json({
+  ok: true,
+  campanha
 });
+
+} catch (error) {
+  res.status(500).json({
+    ok: false,
+    error: error.message
+  });
+}
+});    
 
 app.post("/crm/upload-lista", upload.single("file"), async (req, res) => {
   try {
