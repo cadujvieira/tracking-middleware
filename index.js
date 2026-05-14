@@ -606,7 +606,7 @@ CREATE TABLE IF NOT EXISTS crm_campaigns (
 `);
 }  
 
-app.post("/crm/nova-campanha", express.json(), (req, res) => {
+app.post("/crm/nova-campanha", express.json(), async (req, res) => {
 
   try {
 
