@@ -570,7 +570,24 @@ async function initDb() {
       UNIQUE(user_key_hash, event_name)
     );
   `);
-}
+
+  await pool.query(`
+CREATE TABLE IF NOT EXISTS crm_campaigns (
+  id SERIAL PRIMARY KEY,
+  nome TEXT,
+  segmento TEXT,
+  canal TEXT,
+  custo NUMERIC DEFAULT 0,
+  receita NUMERIC DEFAULT 0,
+  lucro NUMERIC DEFAULT 0,
+  reativados INTEGER DEFAULT 0,
+  usuarios_impactados JSONB,
+  usuarios_reativados JSONB,
+  data_disparo TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+`);
+}  
 
 app.post("/crm/nova-campanha", express.json(), (req, res) => {
 
