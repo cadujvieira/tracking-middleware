@@ -5,6 +5,8 @@ const cors = require("cors");
 const multer = require("multer");
 const csv = require("csv-parser");
 const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const { google } = require("googleapis");
@@ -499,6 +501,18 @@ async function initDb() {
     status TEXT DEFAULT 'ativo',
     created_at TIMESTAMP DEFAULT NOW()
   );
+`);
+
+  await pool.query(`
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  tenant_id INTEGER REFERENCES tenants(id),
+  nome TEXT,
+  email TEXT UNIQUE,
+  senha TEXT,
+  plano TEXT DEFAULT 'starter',
+  created_at TIMESTAMP DEFAULT NOW()
+);
 `);
 
   await pool.query(`
