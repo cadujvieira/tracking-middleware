@@ -1602,59 +1602,44 @@ document.getElementById("uploadForm").addEventListener("submit", async function(
           <div class="icon">⚙️</div>
           <div class="title">Status</div>
           <div class="desc">Verificação rápida do middleware/API.</div>
-        <div style="
-background:#111827;
-padding:20px;
-border-radius:12px;
-margin-bottom:20px;
-border:1px solid #374151;
-">
-
-<h2 style="margin-top:0;color:white;">
-Upload Lista Externa CRM
-</h2>
-
-<form id="uploadForm">
-
-<input
-type="file"
-id="csvFile"
-accept=".csv"
-style="
-margin-bottom:12px;
-color:white;
-"
-/>
-
-<br/>
-
-<button
-type="submit"
-style="
-background:#2563eb;
-color:white;
-padding:10px 18px;
-border:none;
-border-radius:8px;
-font-weight:bold;
-cursor:pointer;
-"
->
-Processar Lista
-</button>
-
-</form>
-
-<div
-id="uploadResultado"
-style="
-margin-top:20px;
-color:white;
-"
-></div>
-
-</div>
         </a>
+
+<div style="
+background:#09162b;
+border:1px solid #1e2f52;
+border-radius:18px;
+padding:20px;
+margin-top:20px;
+">
+  <h2 style="margin-top:0;">Upload Lista Externa CRM</h2>
+
+  <form id="uploadForm">
+    <input
+      type="file"
+      id="csvFile"
+      accept=".csv"
+      style="margin-bottom:12px;"
+    />
+
+    <br>
+
+    <button type="submit" style="
+      background:#2563eb;
+      color:white;
+      border:none;
+      padding:10px 18px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:bold;
+    ">
+      Processar Lista
+    </button>
+  </form>
+
+  <div id="uploadResultado" style="
+    margin-top:16px;
+    color:#cbd5e1;
+    line-height:1.7;
       </div>
     </body>
     </html>
