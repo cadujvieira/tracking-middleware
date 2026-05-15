@@ -441,6 +441,33 @@ async function getDefaultTenantId() {
   return result.rows[0].id;
 }
 
+function authMiddleware(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization || "";
+    const token = authHeader.replace("Bearer ", "");
+
+    if (!token) {
+      return res.status(401).json({
+        ok: false,
+        error: "Token não enviado"
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.user = decoded;
+    req.tenantId = decoded.tenantId;
+
+    next();
+
+  } catch (error) {
+    return res.status(401).json({
+      ok: false,
+      error: "Token inválido"
+    });
+  }
+}
+
 async function getSheetData() {
   const auth = new google.auth.GoogleAuth({
     keyFile: "/etc/secrets/credentials.json",
@@ -1694,7 +1721,7 @@ app.get("/login", (req, res) => {
   `);
 });
 
-app.get("/painel", (req, res) => {
+app.get("/painel", authMiddleware, (req, res) => {
   res.send(`
     <!DOCTYPE html>
     <html lang="pt-BR">
