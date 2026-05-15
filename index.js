@@ -598,6 +598,11 @@ CREATE TABLE IF NOT EXISTS users (
   `);
 
   await pool.query(`
+    ALTER TABLE events
+      ADD COLUMN IF NOT EXISTS tenant_id INTEGER REFERENCES tenants(id);
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS postback_logs (
       id SERIAL PRIMARY KEY,
       event_id TEXT,
@@ -2889,6 +2894,8 @@ app.post("/event", async (req, res) => {
     const body = req.body || {};
     const normalized = normalizeEvent(body);
 
+    const tenantId = body.tenant_id || 1;
+
     if (!normalized) {
       return res.status(400).json({ error: "payload não reconhecido", received: body });
     }
@@ -2900,9 +2907,9 @@ app.post("/event", async (req, res) => {
     if (!is_duplicate) {
       await pool.query(
         `INSERT INTO events
-        (click_id, event_id, event_name, value, currency, page_url, referrer, user_agent, ip_hash, is_duplicate, raw_payload)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
-        [click_id, event_id, event_name, value, currency, body.page_url || "", body.referrer || "", req.headers["user-agent"] || "", hashIp(getClientIp(req)), false, body]
+        (tenant_id, click_id, event_id, event_name, value, currency, page_url, referrer, user_agent, ip_hash, is_duplicate, raw_payload)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+        [tenantId, click_id, event_id, event_name, value, currency, body.page_url || "", body.referrer || "", req.headers["user-agent"] || "", hashIp(getClientIp(req)), false, body]
       );
     } else {
       await pool.query(
