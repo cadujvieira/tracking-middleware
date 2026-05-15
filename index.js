@@ -691,6 +691,138 @@ res.json({
     error: error.message
   });
 }
+});
+
+app.post("/auth/register", express.json(), async (req, res) => {
+  try {
+    const { nome, email, senha } = req.body;
+
+    if (!nome || !email || !senha) {
+      return res.status(400).json({
+        ok: false,
+        error: "Nome, email e senha são obrigatórios"
+      });
+    }
+
+    const senhaHash = await bcrypt.hash(senha, 10);
+
+    const tenantResult = await pool.query(`
+      INSERT INTO tenants (nome, slug)
+      VALUES ($1, $2)
+      RETURNING id, nome, slug
+    `, [
+      nome,
+      email.toLowerCase().replace(/[^a-z0-9]/g, "-")
+    ]);
+
+    const tenant = tenantResult.rows[0];
+
+    const userResult = await pool.query(`
+      INSERT INTO users (
+        tenant_id,
+        nome,
+        email,
+        senha
+      )
+      VALUES ($1, $2, $3, $4)
+      RETURNING id, tenant_id, nome, email, plano
+    `, [
+      tenant.id,
+      nome,
+      email.toLowerCase(),
+      senhaHash
+    ]);
+
+    const user = userResult.rows[0];
+
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        tenantId: user.tenant_id
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "30d" }
+    );
+
+    res.json({
+      ok: true,
+      token,
+      user
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
+app.post("/auth/login", express.json(), async (req, res) => {
+  try {
+    const { email, senha } = req.body;
+
+    if (!email || !senha) {
+      return res.status(400).json({
+        ok: false,
+        error: "Email e senha são obrigatórios"
+      });
+    }
+
+    const result = await pool.query(`
+      SELECT *
+      FROM users
+      WHERE email = $1
+      LIMIT 1
+    `, [
+      email.toLowerCase()
+    ]);
+
+    if (!result.rows.length) {
+      return res.status(401).json({
+        ok: false,
+        error: "Usuário não encontrado"
+      });
+    }
+
+    const user = result.rows[0];
+
+    const senhaValida = await bcrypt.compare(senha, user.senha);
+
+    if (!senhaValida) {
+      return res.status(401).json({
+        ok: false,
+        error: "Senha inválida"
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        tenantId: user.tenant_id
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "30d" }
+    );
+
+    res.json({
+      ok: true,
+      token,
+      user: {
+        id: user.id,
+        tenant_id: user.tenant_id,
+        nome: user.nome,
+        email: user.email,
+        plano: user.plano
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
 });    
 
 app.post("/crm/upload-lista", upload.single("file"), async (req, res) => {
