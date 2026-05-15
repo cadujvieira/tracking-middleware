@@ -1713,7 +1713,7 @@ app.get("/login", (req, res) => {
       }
 
       localStorage.setItem("token", json.token);
-      window.location.href = "/painel";
+      window.location.href = "/painel-auth";
     }
   </script>
 </body>
@@ -1914,6 +1914,53 @@ margin-top:20px;
       </div>
     </body>
     </html>
+  `);
+});
+
+app.get("/painel-auth", (req, res) => {
+  res.send(`
+<html>
+<head>
+  <title>Entrando...</title>
+</head>
+<body style="
+background:#0f172a;
+color:white;
+font-family:Arial;
+display:flex;
+align-items:center;
+justify-content:center;
+height:100vh;
+">
+  <div>Validando sessão...</div>
+
+  <script>
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      window.location.href = "/login";
+    } else {
+
+      fetch("/painel", {
+        headers: {
+          Authorization: "Bearer " + token
+        }
+      })
+      .then(res => res.text())
+      .then(html => {
+        document.open();
+        document.write(html);
+        document.close();
+      })
+      .catch(() => {
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+      });
+
+    }
+  </script>
+</body>
+</html>
   `);
 });
 
