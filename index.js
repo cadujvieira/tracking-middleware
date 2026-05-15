@@ -1645,6 +1645,55 @@ return res.json({
 
 });
 
+app.get("/login", (req, res) => {
+  res.send(`
+<html>
+<head>
+  <title>Login</title>
+  <style>
+    body { font-family: Arial; background:#0f172a; color:white; padding:40px; }
+    .box { max-width:400px; margin:80px auto; background:#111827; padding:30px; border-radius:16px; }
+    input { width:100%; padding:12px; margin-bottom:12px; border-radius:8px; border:none; }
+    button { width:100%; padding:12px; background:#2563eb; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
+    .erro { color:#f87171; margin-top:12px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Login</h1>
+    <input id="email" placeholder="Email" />
+    <input id="senha" type="password" placeholder="Senha" />
+    <button onclick="login()">Entrar</button>
+    <div id="msg" class="erro"></div>
+  </div>
+
+  <script>
+    async function login() {
+      const email = document.getElementById("email").value;
+      const senha = document.getElementById("senha").value;
+
+      const response = await fetch("/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, senha })
+      });
+
+      const json = await response.json();
+
+      if (!json.ok) {
+        document.getElementById("msg").innerText = json.error;
+        return;
+      }
+
+      localStorage.setItem("token", json.token);
+      window.location.href = "/painel";
+    }
+  </script>
+</body>
+</html>
+  `);
+});
+
 app.get("/painel", (req, res) => {
   res.send(`
     <!DOCTYPE html>
