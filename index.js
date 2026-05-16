@@ -2369,7 +2369,14 @@ app.get("/dashboard-daily", async (req, res) => {
 
 app.get("/dashboard-audience", async (req, res) => {
   try {
-    const response = await fetch("https://tracking-middleware.onrender.com/sheets/audience");
+    const token = localStorage.getItem("token");
+
+const response = await fetch("https://tracking-middleware.onrender.com/sheets/audience", {
+  headers: {
+    Authorization: "Bearer " + token
+  }
+});
+
     const json = await response.json();
     const audience = json.audience || [];
     const resumo = json.resumo || {};
