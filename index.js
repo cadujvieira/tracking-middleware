@@ -1916,9 +1916,8 @@ Sistema Online
 Tracking
 </div>
 
-<div class="card-value">
-Ativo
-</div>
+<div class="card-value" 
+id="trackingStatus">...
 </div>
 
 <div class="card">
@@ -1926,9 +1925,8 @@ Ativo
 Eventos
 </div>
 
-<div class="card-value">
-247
-</div>
+<div class="card-value" 
+id="totalEventos">0
 </div>
 
 <div class="card">
@@ -1936,9 +1934,8 @@ Eventos
 Audiências
 </div>
 
-<div class="card-value">
-18
-</div>
+<div class="card-value" 
+id="totalAudiencias">0
 </div>
 
 <div class="card">
@@ -1946,9 +1943,8 @@ Audiências
 Revenue
 </div>
 
-<div class="card-value">
-R$ 18K
-</div>
+<div class="card-value" 
+id="totalRevenue">R$0
 </div>
 
 </div>
@@ -1981,6 +1977,59 @@ pixel valioso, retenção e análise avançada de audiência.
 
 </div>
 
+<script>
+
+async function carregarDashboard(){
+
+  try{
+
+    const token = localStorage.getItem("token");
+
+    const response = await fetch("/dashboard/summary",{
+      headers:{
+        Authorization:`Bearer ${token}`
+      }
+    });
+
+    const json = await response.json();
+
+    console.log(json);
+
+    // TOTAL EVENTOS
+    let totalEventos = 0;
+
+    if(json.events){
+      json.events.forEach(evento=>{
+        totalEventos += Number(evento.total || 0);
+      });
+    }
+
+    document.getElementById("totalEventos").innerText = totalEventos;
+
+    // REVENUE
+    document.getElementById("totalRevenue").innerText =
+      "R$ " + Number(json.revenue || 0).toLocaleString("pt-BR");
+
+    // AUDIENCIAS
+    document.getElementById("totalAudiencias").innerText =
+      json.events ? json.events.length : 0;
+
+    // STATUS
+    document.getElementById("trackingStatus").innerText = "Online";
+
+  }catch(err){
+
+    console.log(err);
+
+    document.getElementById("trackingStatus").innerText = "Erro";
+
+  }
+
+}
+
+carregarDashboard();
+
+</script>
 </body>
 </html>
 `);
