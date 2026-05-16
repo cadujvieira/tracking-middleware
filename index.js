@@ -8,33 +8,6 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-function authMiddleware(req, res, next) {
-  try {
-    const auth = req.headers.authorization;
-
-    if (!auth) {
-      return res.status(401).json({
-        ok: false,
-        error: "Token não enviado"
-      });
-    }
-
-    const token = auth.split(" ")[1];
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    req.user = decoded;
-
-    next();
-
-  } catch (error) {
-    return res.status(401).json({
-      ok: false,
-      error: "Token inválido"
-    });
-  }
-}
-
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const { google } = require("googleapis");
@@ -963,8 +936,13 @@ app.post("/crm/upload-lista", authMiddleware, upload.single("file"), async (req,
       .on("end", async () => {
 
         const audienceResponse = await fetch(
-          "https://tracking-middleware.onrender.com/sheets/audience"
-        );
+  "https://tracking-middleware.onrender.com/sheets/audience",
+  {
+    headers: {
+      Authorization: req.headers.authorization
+    }
+  }
+);
 
         const audienceJson = await audienceResponse.json();
 
@@ -1602,46 +1580,6 @@ app.get("/sheets/audience", authMiddleware, async (req, res) => {
       if (evento === "FTD_WH") user.ftd++;
     });
 
-    const agora = new Date();
-
-crmCampaigns.forEach((campanha) => {
-
-  if (!campanha.usuariosImpactados) return;
-
-  const foiImpactado = campanha.usuariosImpactados.includes(userKey);
-
-  if (!foiImpactado) return;
-
-  if (!campanha.dataDisparo) return;
-
-  const horasDesdeDisparo =
-    (agora - new Date(campanha.dataDisparo)) / 1000 / 60 / 60;
-
-  // janela de atribuição: 72h
-  if (horasDesdeDisparo > 72) return;
-
-  campanha.receita += valor;
-
-  const jaReativado = campanha.usuariosReativados
-  .some((u) => u.user === userKey);
-
-if (!jaReativado) {
-
-  campanha.reativados += 1;
-
-  campanha.usuariosReativados.push({
-    user: userKey,
-    valor,
-    data: agora
-  });
-
-}
-
-campanha.lucro =
-  campanha.receita - campanha.custo;
-
-  });
-
     const result = Object.values(audience)
       .map((user) => {
         const ticketMedioDeposito = user.depositos ? user.receita / user.depositos : 0;
@@ -1860,48 +1798,6 @@ app.get("/painel", authMiddleware, (req, res) => {
         }
       </style>
     </head>
-    
-    <script>
-document.getElementById("uploadForm").addEventListener("submit", async function(e) {
-  e.preventDefault();
-
-  const fileInput = document.getElementById("csvFile");
-  const resultado = document.getElementById("uploadResultado");
-
-  if (!fileInput.files.length) {
-    resultado.innerHTML = "Selecione um arquivo CSV.";
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("file", fileInput.files[0]);
-
-  resultado.innerHTML = "Processando lista...";
-
-  const response = await fetch("/crm/upload-lista", {
-    method: "POST",
-    body: formData
-  });
-
-  const json = await response.json();
-
-  if (!json.ok) {
-    resultado.innerHTML = "Erro: " + json.error;
-    return;
-  }
-
-  resultado.innerHTML =
-  "<strong>Lista processada com sucesso.</strong><br><br>" +
-  "Total: " + json.resumo.total + "<br>" +
-  "Já cadastrados na Bola: " + json.resumo.cadastrados + "<br>" +
-  "Não cadastrados: " + json.resumo.naoCadastrados + "<br>" +
-  "Depositantes: " + json.resumo.depositantes + "<br>" +
-  "Quentes: " + json.resumo.quentes + "<br>" +
-  "Mornos: " + json.resumo.mornos + "<br>" +
-  "Frios: " + json.resumo.frios;
-
-    </script>
-
     <body>
       <h1>⚡ Painel Operacional</h1>
       <p>Central única para análise, CRM, segmentação, retenção e exportação.</p>
@@ -1982,10 +1878,10 @@ margin-top:20px;
   </form>
 
   <div id="uploadResultado" style="
-    margin-top:16px;
-    color:#cbd5e1;
-    line-height:1.7;
-      </div>
+  margin-top:16px;
+  color:#cbd5e1;
+  line-height:1.7;
+  "></div>
     <script>
 document.getElementById("uploadForm").addEventListener("submit", async function(e) {
   e.preventDefault();
@@ -2369,8 +2265,6 @@ app.get("/dashboard-daily", async (req, res) => {
 
 app.get("/dashboard-audience", async (req, res) => {
   try {
-    const token = localStorage.getItem("token");
-
 const response = await fetch("https://tracking-middleware.onrender.com/sheets/audience", {
   headers: {
     Authorization: "Bearer " + token
