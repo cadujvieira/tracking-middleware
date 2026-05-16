@@ -1694,7 +1694,7 @@ app.get("/login", (req, res) => {
     input { width:100%; padding:12px; margin-bottom:12px; border-radius:8px; border:none; }
     button { width:100%; padding:12px; background:#2563eb; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
     .erro { color:#f87171; margin-top:12px; }
-  </style>
+  </style> 
 </head>
 <body>
   <div class="box">
@@ -1735,6 +1735,9 @@ app.get("/login", (req, res) => {
 app.get("/painel", authMiddleware, (req, res) => {
   res.send(`
 <html>
+<script 
+  src="https://cdn.jsdelivr.net/npm/chart.js">
+</script>     
 <head>
 <title>RetentionOS</title>
 
@@ -1956,6 +1959,36 @@ pixel valioso, retenção e análise avançada de audiência.
 </div>
 
 </div>
+
+<div class="card" style="margin-top:24px;">
+  <div style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+  ">
+    
+    <div>
+      <div style="
+        color:var(--muted);
+        font-size:14px;
+        margin-bottom:4px;
+      ">
+        Analytics
+      </div>
+
+      <div style="
+        font-size:28px;
+        font-weight:800;
+      ">
+        Eventos por dia
+      </div>
+    </div>
+
+  </div>
+
+  <canvas id="eventsChart" height="90"></canvas>
+</div>    
 
 </div>
 
