@@ -1987,7 +1987,7 @@ async function carregarDashboard(){
 
     const response = await fetch("/dashboard/summary",{
       headers:{
-        Authorization:`Bearer ${token}`
+        Authorization:"Bearer " + token
       }
     });
 
