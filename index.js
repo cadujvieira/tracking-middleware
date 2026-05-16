@@ -2039,10 +2039,10 @@ async function carregarDashboard(){
 new Chart(ctx, {
   type: 'line',
   data: {
-    labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'],
+    labels: json.events?.map(e => e.event_name) || [],
     datasets: [{
       label: 'Eventos',
-      data: [12, 19, 8, 15, 22, 18, 27],
+      data: json.events?.map(e => Number(e.total)) || [],
       borderColor: '#3b82f6',
       backgroundColor: 'rgba(59,130,246,0.15)',
       tension: 0.4,
