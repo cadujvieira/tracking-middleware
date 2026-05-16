@@ -1505,7 +1505,7 @@ app.get("/sheets/daily", async (req, res) => {
   }
 });
 
-app.get("/sheets/audience", authMiddleware, async (req, res) => {
+app.get("/sheets/audience", async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const data = await getSheetData();
@@ -2265,12 +2265,7 @@ app.get("/dashboard-daily", async (req, res) => {
 
 app.get("/dashboard-audience", async (req, res) => {
   try {
-const response = await fetch("https://tracking-middleware.onrender.com/sheets/audience", {
-  headers: {
-    Authorization: "Bearer " + token
-  }
-});
-
+    const response = await fetch("https://tracking-middleware.onrender.com/sheets/audience");
     const json = await response.json();
     const audience = json.audience || [];
     const resumo = json.resumo || {};
