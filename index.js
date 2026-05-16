@@ -1734,13 +1734,11 @@ app.get("/login", (req, res) => {
 
 app.get("/painel", authMiddleware, (req, res) => {
   res.send(`
-<!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Painel Operacional</title>
+<title>RetentionOS</title>
 
-  <style>
+<style>
 :root{
   --bg:#081225;
   --bg2:#0f172a;
@@ -1762,7 +1760,6 @@ body{
   background:var(--bg);
   color:var(--text);
   font-family:Inter,sans-serif;
-  min-height:100vh;
 }
 
 .container{
@@ -1778,7 +1775,7 @@ body{
 }
 
 .logo{
-  font-size:28px;
+  font-size:30px;
   font-weight:800;
   margin-bottom:40px;
 }
@@ -1786,7 +1783,7 @@ body{
 .menu{
   display:flex;
   flex-direction:column;
-  gap:12px;
+  gap:10px;
 }
 
 .menu a{
@@ -1795,7 +1792,6 @@ body{
   color:var(--muted);
   text-decoration:none;
   font-weight:600;
-  transition:0.2s;
 }
 
 .menu a:hover{
@@ -1816,7 +1812,7 @@ body{
 }
 
 .page-title{
-  font-size:32px;
+  font-size:34px;
   font-weight:800;
 }
 
@@ -1830,7 +1826,7 @@ body{
 .card{
   background:var(--card);
   border:1px solid var(--border);
-  border-radius:22px;
+  border-radius:24px;
   padding:24px;
 }
 
@@ -1840,28 +1836,22 @@ body{
 }
 
 .card-value{
-  font-size:36px;
+  font-size:38px;
   font-weight:800;
 }
 
-.table{
-  width:100%;
-  border-collapse:collapse;
+.big-card{
   background:var(--card);
-  border-radius:18px;
-  overflow:hidden;
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:30px;
+  margin-top:20px;
 }
 
-.table th{
-  background:var(--card2);
-  padding:18px;
-  text-align:left;
-}
-
-.table td{
-  padding:18px;
-  border-top:1px solid var(--border);
-  color:var(--muted);
+.big-title{
+  font-size:24px;
+  font-weight:700;
+  margin-bottom:20px;
 }
 
 .btn{
@@ -1877,165 +1867,123 @@ body{
 </head>
 
 <body>
-  <div class="layout">
 
-    <aside class="sidebar">
-      <div class="brand">Retention<span>OS</span></div>
-      <div class="subtitle">
-        Central de tracking, CRM, audiência e performance operacional.
-      </div>
+<div class="container">
 
-      <div class="nav-label">Navegação</div>
-      <a class="nav-item" href="/dashboard-view">📊 Campanhas</a>
-      <a class="nav-item" href="/dashboard-daily">📅 Por Data</a>
-      <a class="nav-item" href="/dashboard-audience">👥 Público Valioso</a>
-      <a class="nav-item" href="/dashboard-crm">📲 CRM</a>
-      <a class="nav-item" href="/dashboard-crm-performance">📈 Performance CRM</a>
-      <a class="nav-item" href="/health">⚙️ Status</a>
-    </aside>
+<div class="sidebar">
 
-    <main class="main">
+<div class="logo">
+RetentionOS
+</div>
 
-      <div class="topbar">
-        <div class="headline">
-          <h1>Painel Operacional</h1>
-          <p>Visão central para análise, CRM, segmentação, retenção e exportação.</p>
-        </div>
+<div class="menu">
+<a href="/dashboard-campaigns">📊 Campanhas</a>
+<a href="/dashboard-daily">📅 Por Data</a>
+<a href="/dashboard-audience">🧠 Público</a>
+<a href="/dashboard-crm">📬 CRM</a>
+<a href="/dashboard-performance">📈 Performance</a>
+<a href="/dashboard-status">⚙️ Status</a>
+</div>
 
-        <div class="badge">● Sistema online</div>
-      </div>
+</div>
 
-      <div class="kpis">
-        <div class="kpi">
-          <span>Tracking</span>
-          <strong>Ativo</strong>
-          <small>Eventos recebendo</small>
-        </div>
+<div class="main">
 
-        <div class="kpi">
-          <span>CRM</span>
-          <strong>Inteligente</strong>
-          <small>Score + segmentação</small>
-        </div>
+<div class="topbar">
 
-        <div class="kpi">
-          <span>Audience</span>
-          <strong>Qualificada</strong>
-          <small>Públicos valiosos</small>
-        </div>
+<div>
+<div style="color:var(--muted);margin-bottom:8px;">
+RetentionOS Platform
+</div>
 
-        <div class="kpi">
-          <span>Upload Externo</span>
-          <strong>CSV</strong>
-          <small>Quente / Morno / Frio</small>
-        </div>
-      </div>
+<div class="page-title">
+Painel Operacional
+</div>
+</div>
 
-      <div class="section-title">Módulos principais</div>
+<div>
+<button class="btn">
+Sistema Online
+</button>
+</div>
 
-      <div class="grid">
-        <a class="card" href="/dashboard-view">
-          <div class="icon">📊</div>
-          <div class="title">Campanhas</div>
-          <div class="desc">Acompanhe performance por campanha, receita, leads, FTDs e qualidade de tráfego.</div>
-        </a>
+</div>
 
-        <a class="card" href="/dashboard-daily">
-          <div class="icon">📅</div>
-          <div class="title">Análise por Data</div>
-          <div class="desc">Entenda a evolução diária de leads, depósitos, FTDs, receita e comportamento.</div>
-        </a>
+<div class="cards">
 
-        <a class="card" href="/dashboard-audience">
-          <div class="icon">👥</div>
-          <div class="title">Público Valioso</div>
-          <div class="desc">Veja score, nível, segmentação, comportamento e usuários com maior valor.</div>
-        </a>
+<div class="card">
+<div class="card-title">
+Tracking
+</div>
 
-        <a class="card" href="/dashboard-crm">
-          <div class="icon">📲</div>
-          <div class="title">CRM</div>
-          <div class="desc">Exporte listas, copie mensagens e organize públicos por estágio de reativação.</div>
-        </a>
+<div class="card-value">
+Ativo
+</div>
+</div>
 
-        <a class="card" href="/dashboard-crm-performance">
-          <div class="icon">📈</div>
-          <div class="title">Performance CRM</div>
-          <div class="desc">Acompanhe disparos, ROI, custo, receita, lucro líquido e usuários reativados.</div>
-        </a>
+<div class="card">
+<div class="card-title">
+Eventos
+</div>
 
-        <a class="card" href="/sheets/audience">
-          <div class="icon">🧠</div>
-          <div class="title">Audience JSON</div>
-          <div class="desc">Acesse os dados brutos de audiência, score, CRM, campanhas e comportamento.</div>
-        </a>
-      </div>
+<div class="card-value">
+247
+</div>
+</div>
 
-      <div class="upload-box">
-        <h2>Upload Lista Externa CRM</h2>
-        <p>Suba uma lista CSV para classificar leads como quentes, mornos ou frios e cruzar com a base atual.</p>
+<div class="card">
+<div class="card-title">
+Audiências
+</div>
 
-        <form id="uploadForm">
-          <input type="file" id="csvFile" accept=".csv" />
-          <br />
-          <button type="submit">Processar Lista</button>
-        </form>
+<div class="card-value">
+18
+</div>
+</div>
 
-        <div id="uploadResultado"></div>
-      </div>
+<div class="card">
+<div class="card-title">
+Revenue
+</div>
 
-    </main>
-  </div>
+<div class="card-value">
+R$ 18K
+</div>
+</div>
 
-  <script>
-    document.getElementById("uploadForm").addEventListener("submit", async function(e) {
-      e.preventDefault();
+</div>
 
-      const fileInput = document.getElementById("csvFile");
-      const resultado = document.getElementById("uploadResultado");
-      const token = localStorage.getItem("token");
+<div class="big-card">
 
-      resultado.style.display = "block";
+<div class="big-title">
+Central de inteligência operacional
+</div>
 
-      if (!fileInput.files.length) {
-        resultado.innerHTML = "Selecione um arquivo CSV.";
-        return;
-      }
+<div style="color:var(--muted);line-height:28px;font-size:17px;">
 
-      const formData = new FormData();
-      formData.append("file", fileInput.files[0]);
+Sistema centralizado de tracking, CRM, segmentação,
+pixel valioso, retenção e análise avançada de audiência.
 
-      resultado.innerHTML = "Processando lista...";
+<br><br>
 
-      const response = await fetch("/crm/upload-lista", {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer " + token
-        },
-        body: formData
-      });
+• Tracking avançado  
+• CRM inteligente  
+• Segmentação automática  
+• Público valioso  
+• Revenue attribution  
+• Retenção operacional  
 
-      const json = await response.json();
+</div>
 
-      if (!json.ok) {
-        resultado.innerHTML = "Erro: " + json.error;
-        return;
-      }
+</div>
 
-      resultado.innerHTML =
-        "<strong>Lista processada com sucesso.</strong><br><br>" +
-        "Total: " + json.resumo.total + "<br>" +
-        "Já cadastrados na Bola: " + json.resumo.cadastrados + "<br>" +
-        "Não cadastrados: " + json.resumo.naoCadastrados + "<br>" +
-        "Depositantes: " + json.resumo.depositantes + "<br>" +
-        "Quentes: " + json.resumo.quentes + "<br>" +
-        "Mornos: " + json.resumo.mornos + "<br>" +
-        "Frios: " + json.resumo.frios;
-    });
-  </script>
+</div>
+
+</div>
+
 </body>
 </html>
-  `);
+`);
 });
 
 app.get("/painel-auth", (req, res) => {
