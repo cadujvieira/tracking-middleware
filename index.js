@@ -636,6 +636,11 @@ CREATE TABLE IF NOT EXISTS users (
   `);
 
   await pool.query(`
+    ALTER TABLE events
+      ADD COLUMN IF NOT EXISTS tenant_id INTEGER DEFAULT 1
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS postback_logs (
       id SERIAL PRIMARY KEY,
       event_id TEXT,
@@ -2898,9 +2903,9 @@ app.get("/redirect", async (req, res) => {
 
     await pool.query(
       `INSERT INTO clicks
-      (click_id, utm_source, utm_medium, utm_campaign, utm_content, utm_term, campaign_id, adset_id, ad_id, creative_id, page_url, referrer, user_agent, ip_hash, raw_payload)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
-      [data.click_id, data.utm_source, data.utm_medium, data.utm_campaign, data.utm_content, data.utm_term, data.campaign_id, data.adset_id, data.ad_id, data.creative_id, data.page_url, data.referrer, data.user_agent, data.ip_hash, data.raw_payload]
+      (tenant_id, click_id, utm_source, utm_medium, utm_campaign, utm_content, utm_term, campaign_id, adset_id, ad_id, creative_id, page_url, referrer, user_agent, ip_hash, raw_payload)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
+      [data.tenant_id || 1, data.click_id, data.utm_source, data.utm_medium, data.utm_campaign, data.utm_content, data.utm_term, data.campaign_id, data.adset_id, data.ad_id, data.creative_id, data.page_url, data.referrer, data.user_agent, data.ip_hash, data.raw_payload]
     );
 
     const destination = buildUrlWithParams(FINAL_DESTINATION_URL, {
@@ -2967,25 +2972,28 @@ app.get("/dashboard/summary", authMiddleware, async (req, res) => {
     const clicks = await pool.query(`
       SELECT COUNT(*)::int AS total
       FROM clicks
-    `);
+      WHERE tenant_id = $1
+    `, [tenantId]);
 
     const events = await pool.query(`
-      SELECT
-        event_name,
-        COUNT(*)::int AS total,
-        COALESCE(SUM(value), 0)::float AS value
-      FROM events
-      WHERE is_duplicate = false
-      GROUP BY event_name
-      ORDER BY total DESC
-    `);
+     SELECT
+      event_name,
+      COUNT(*)::int AS total,
+      COALESCE(SUM(value), 0)::float AS value
+     FROM events
+     WHERE is_duplicate = false
+     AND tenant_id = $1
+     GROUP BY event_name
+     ORDER BY total DESC
+  `, [tenantId]);
 
     const revenue = await pool.query(`
       SELECT COALESCE(SUM(value), 0)::float AS total
       FROM events
       WHERE is_duplicate = false
+      WHERE tenant_id = $1
       AND event_name IN ('purchase', 'deposit_success')
-    `);
+    `, [tenantId]);
 
     res.json({
       tenantId,
