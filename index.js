@@ -2034,6 +2034,48 @@ async function carregarDashboard(){
     // STATUS
     document.getElementById("trackingStatus").innerText = "Online";
 
+    const ctx = document.getElementById('eventsChart');
+
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'],
+    datasets: [{
+      label: 'Eventos',
+      data: [12, 19, 8, 15, 22, 18, 27],
+      borderColor: '#3b82f6',
+      backgroundColor: 'rgba(59,130,246,0.15)',
+      tension: 0.4,
+      fill: true
+    }]
+  },
+  options: {
+    plugins: {
+      legend: {
+        display: false
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: '#94a3b8'
+        },
+        grid: {
+          color: '#1e293b'
+        }
+      },
+      y: {
+        ticks: {
+          color: '#94a3b8'
+        },
+        grid: {
+          color: '#1e293b'
+        }
+      }
+    }
+  }
+});
+
   }catch(err){
 
     console.log(err);
