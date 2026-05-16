@@ -626,6 +626,36 @@ CREATE TABLE IF NOT EXISTS users (
   `);
 
   await pool.query(`
+CREATE TABLE IF NOT EXISTS audience (
+  id SERIAL PRIMARY KEY,
+  tenant_id INTEGER DEFAULT 1,
+
+  click_id TEXT,
+  user_id TEXT,
+  telefone TEXT,
+  email TEXT,
+
+  receita NUMERIC DEFAULT 0,
+  depositos INTEGER DEFAULT 0,
+  ftd INTEGER DEFAULT 0,
+
+  ultimo_evento TEXT,
+  ultimo_evento_at TIMESTAMP,
+
+  utm_source TEXT,
+  utm_medium TEXT,
+  utm_campaign TEXT,
+
+  score NUMERIC DEFAULT 0,
+  segmento TEXT,
+  qualidade TEXT,
+
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+`);
+
+  await pool.query(`
     ALTER TABLE events
       ADD COLUMN IF NOT EXISTS tenant_id INTEGER REFERENCES tenants(id);
   `);
@@ -1497,8 +1527,9 @@ app.get("/sheets/daily", async (req, res) => {
   }
 });
 
-app.get("/sheets/audience", async (req, res) => {
+app.get("/sheets/audience", authMiddleware, async (req, res) => {
   try {
+    const tenantId = req.user.tenantId;
     const data = await getSheetData();
     const headers = data[0];
     const rows = data.slice(1);
@@ -1955,6 +1986,50 @@ margin-top:20px;
     color:#cbd5e1;
     line-height:1.7;
       </div>
+    <script>
+document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const fileInput = document.getElementById("csvFile");
+  const resultado = document.getElementById("uploadResultado");
+  const token = localStorage.getItem("token");
+
+  if (!fileInput.files.length) {
+    resultado.innerHTML = "Selecione um arquivo CSV.";
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", fileInput.files[0]);
+
+  resultado.innerHTML = "Processando lista...";
+
+  const response = await fetch("/crm/upload-lista", {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + token
+    },
+    body: formData
+  });
+
+  const json = await response.json();
+
+  if (!json.ok) {
+    resultado.innerHTML = "Erro: " + json.error;
+    return;
+  }
+
+  resultado.innerHTML =
+    "<strong>Lista processada com sucesso.</strong><br><br>" +
+    "Total: " + json.resumo.total + "<br>" +
+    "Já cadastrados na Bola: " + json.resumo.cadastrados + "<br>" +
+    "Não cadastrados: " + json.resumo.naoCadastrados + "<br>" +
+    "Depositantes: " + json.resumo.depositantes + "<br>" +
+    "Quentes: " + json.resumo.quentes + "<br>" +
+    "Mornos: " + json.resumo.mornos + "<br>" +
+    "Frios: " + json.resumo.frios;
+});
+</script>
     </body>
     </html>
   `);
