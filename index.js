@@ -895,7 +895,7 @@ app.post("/auth/login", express.json(), async (req, res) => {
   }
 });    
 
-app.post("/crm/upload-lista", upload.single("file"), async (req, res) => {
+app.post("/crm/upload-lista", authMiddleware, upload.single("file"), async (req, res) => {
   try {
     const fs = require("fs");
 
