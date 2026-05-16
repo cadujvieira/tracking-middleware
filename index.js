@@ -1734,243 +1734,429 @@ app.get("/login", (req, res) => {
 
 app.get("/painel", authMiddleware, (req, res) => {
   res.send(`
-    <!DOCTYPE html>
-    <html lang="pt-BR">
-    <head>
-      <meta charset="UTF-8" />
-      <title>Painel Operacional</title>
-      <style>
-        body {
-          font-family: Arial, sans-serif;
-          background: #0f172a;
-          color: #e5e7eb;
-          padding: 40px;
-        }
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Painel Operacional</title>
 
-        h1 {
-          font-size: 34px;
-          margin-bottom: 10px;
-        }
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-        p {
-          color: #94a3b8;
-          margin-bottom: 30px;
-        }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(37,99,235,.18), transparent 35%),
+        radial-gradient(circle at top right, rgba(147,51,234,.14), transparent 35%),
+        #020617;
+      color: #e5e7eb;
+      min-height: 100vh;
+    }
 
-        .grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 20px;
-        }
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
 
-        .card {
-          background: #111827;
-          border: 1px solid #1f2937;
-          border-radius: 16px;
-          padding: 24px;
-          text-decoration: none;
-          color: #e5e7eb;
-          transition: .2s;
-        }
+    .sidebar {
+      background: rgba(15, 23, 42, .88);
+      border-right: 1px solid #1e293b;
+      padding: 24px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
 
-        .card:hover {
-          transform: translateY(-3px);
-          border-color: #2563eb;
-          background: #172554;
-        }
+    .brand {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
 
-        .icon {
-          font-size: 34px;
-          margin-bottom: 14px;
-        }
+    .brand span {
+      color: #60a5fa;
+    }
 
-        .title {
-          font-size: 20px;
-          font-weight: bold;
-          margin-bottom: 8px;
-        }
+    .subtitle {
+      color: #94a3b8;
+      font-size: 13px;
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
 
-        .desc {
-          color: #94a3b8;
-          font-size: 14px;
-          line-height: 1.5;
-        }
-      </style>
-    </head>
-    <body>
-      <h1>⚡ Painel Operacional</h1>
-      <p>Central única para análise, CRM, segmentação, retenção e exportação.</p>
+    .nav-label {
+      color: #64748b;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 10px;
+    }
+
+    .nav-item {
+      display: block;
+      color: #cbd5e1;
+      text-decoration: none;
+      padding: 12px 14px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      background: transparent;
+      transition: .2s;
+      font-size: 14px;
+    }
+
+    .nav-item:hover {
+      background: #172554;
+      color: white;
+    }
+
+    .main {
+      padding: 34px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    .badge {
+      background: rgba(34,197,94,.12);
+      color: #86efac;
+      border: 1px solid rgba(34,197,94,.25);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    h1 {
+      font-size: 34px;
+      margin: 0 0 8px;
+    }
+
+    .headline p {
+      color: #94a3b8;
+      margin: 0;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi {
+      background: rgba(15,23,42,.78);
+      border: 1px solid #1e293b;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.18);
+    }
+
+    .kpi span {
+      display: block;
+      color: #94a3b8;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .kpi strong {
+      font-size: 25px;
+    }
+
+    .kpi small {
+      display: block;
+      margin-top: 8px;
+      color: #22c55e;
+      font-size: 12px;
+    }
+
+    .section-title {
+      margin: 30px 0 14px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(15,23,42,.72));
+      border: 1px solid #1e293b;
+      border-radius: 20px;
+      padding: 22px;
+      text-decoration: none;
+      color: #e5e7eb;
+      transition: .2s;
+      min-height: 155px;
+      box-shadow: 0 24px 70px rgba(0,0,0,.22);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: #3b82f6;
+      box-shadow: 0 24px 80px rgba(37,99,235,.18);
+    }
+
+    .icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(37,99,235,.15);
+      font-size: 25px;
+      margin-bottom: 14px;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .desc {
+      color: #94a3b8;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .upload-box {
+      margin-top: 26px;
+      background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(147,51,234,.10));
+      border: 1px solid #334155;
+      border-radius: 22px;
+      padding: 24px;
+    }
+
+    .upload-box h2 {
+      margin: 0 0 8px;
+      font-size: 22px;
+    }
+
+    .upload-box p {
+      margin: 0 0 18px;
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    input[type="file"] {
+      background: #020617;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    button {
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 14px 35px rgba(37,99,235,.25);
+    }
+
+    #uploadResultado {
+      margin-top: 18px;
+      color: #cbd5e1;
+      line-height: 1.8;
+      background: rgba(2,6,23,.45);
+      border-radius: 14px;
+      padding: 14px;
+      display: none;
+    }
+
+    @media (max-width: 1000px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        height: auto;
+        position: relative;
+      }
+
+      .kpis,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layout">
+
+    <aside class="sidebar">
+      <div class="brand">Retention<span>OS</span></div>
+      <div class="subtitle">
+        Central de tracking, CRM, audiência e performance operacional.
+      </div>
+
+      <div class="nav-label">Navegação</div>
+      <a class="nav-item" href="/dashboard-view">📊 Campanhas</a>
+      <a class="nav-item" href="/dashboard-daily">📅 Por Data</a>
+      <a class="nav-item" href="/dashboard-audience">👥 Público Valioso</a>
+      <a class="nav-item" href="/dashboard-crm">📲 CRM</a>
+      <a class="nav-item" href="/dashboard-crm-performance">📈 Performance CRM</a>
+      <a class="nav-item" href="/health">⚙️ Status</a>
+    </aside>
+
+    <main class="main">
+
+      <div class="topbar">
+        <div class="headline">
+          <h1>Painel Operacional</h1>
+          <p>Visão central para análise, CRM, segmentação, retenção e exportação.</p>
+        </div>
+
+        <div class="badge">● Sistema online</div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi">
+          <span>Tracking</span>
+          <strong>Ativo</strong>
+          <small>Eventos recebendo</small>
+        </div>
+
+        <div class="kpi">
+          <span>CRM</span>
+          <strong>Inteligente</strong>
+          <small>Score + segmentação</small>
+        </div>
+
+        <div class="kpi">
+          <span>Audience</span>
+          <strong>Qualificada</strong>
+          <small>Públicos valiosos</small>
+        </div>
+
+        <div class="kpi">
+          <span>Upload Externo</span>
+          <strong>CSV</strong>
+          <small>Quente / Morno / Frio</small>
+        </div>
+      </div>
+
+      <div class="section-title">Módulos principais</div>
 
       <div class="grid">
         <a class="card" href="/dashboard-view">
           <div class="icon">📊</div>
           <div class="title">Campanhas</div>
-          <div class="desc">Visão geral de performance por campanha.</div>
+          <div class="desc">Acompanhe performance por campanha, receita, leads, FTDs e qualidade de tráfego.</div>
         </a>
 
         <a class="card" href="/dashboard-daily">
           <div class="icon">📅</div>
-          <div class="title">Por Data</div>
-          <div class="desc">Análise diária de leads, depósitos, FTD e receita.</div>
+          <div class="title">Análise por Data</div>
+          <div class="desc">Entenda a evolução diária de leads, depósitos, FTDs, receita e comportamento.</div>
         </a>
 
         <a class="card" href="/dashboard-audience">
           <div class="icon">👥</div>
           <div class="title">Público Valioso</div>
-          <div class="desc">Score, nível, segmentação e comportamento dos usuários.</div>
+          <div class="desc">Veja score, nível, segmentação, comportamento e usuários com maior valor.</div>
         </a>
 
         <a class="card" href="/dashboard-crm">
           <div class="icon">📲</div>
           <div class="title">CRM</div>
-          <div class="desc">Listas por segmento, exportação CSV e reativação.</div>
+          <div class="desc">Exporte listas, copie mensagens e organize públicos por estágio de reativação.</div>
         </a>
 
         <a class="card" href="/dashboard-crm-performance">
           <div class="icon">📈</div>
           <div class="title">Performance CRM</div>
-          <div class="desc">Acompanhar resultado dos disparos, ROI, reativados, custo e receita líquida.</div>
+          <div class="desc">Acompanhe disparos, ROI, custo, receita, lucro líquido e usuários reativados.</div>
         </a>
 
         <a class="card" href="/sheets/audience">
           <div class="icon">🧠</div>
           <div class="title">Audience JSON</div>
-          <div class="desc">Dados brutos de audiência, score e CRM.</div>
+          <div class="desc">Acesse os dados brutos de audiência, score, CRM, campanhas e comportamento.</div>
         </a>
+      </div>
 
-        <a class="card" href="/health">
-          <div class="icon">⚙️</div>
-          <div class="title">Status</div>
-          <div class="desc">Verificação rápida do middleware/API.</div>
-        </a>
+      <div class="upload-box">
+        <h2>Upload Lista Externa CRM</h2>
+        <p>Suba uma lista CSV para classificar leads como quentes, mornos ou frios e cruzar com a base atual.</p>
 
-<div style="
-background:#09162b;
-border:1px solid #1e2f52;
-border-radius:18px;
-padding:20px;
-margin-top:20px;
-">
-  <h2 style="margin-top:0;">Upload Lista Externa CRM</h2>
+        <form id="uploadForm">
+          <input type="file" id="csvFile" accept=".csv" />
+          <br />
+          <button type="submit">Processar Lista</button>
+        </form>
 
-  <form id="uploadForm">
-    <input
-      type="file"
-      id="csvFile"
-      accept=".csv"
-      style="margin-bottom:12px;"
-    />
+        <div id="uploadResultado"></div>
+      </div>
 
-    <br>
-
-    <button type="submit" style="
-      background:#2563eb;
-      color:white;
-      border:none;
-      padding:10px 18px;
-      border-radius:10px;
-      cursor:pointer;
-      font-weight:bold;
-    ">
-      Processar Lista
-    </button>
-  </form>
-
-  <div id="uploadResultado" style="
-  margin-top:16px;
-  color:#cbd5e1;
-  line-height:1.7;
-  "></div>
-    <script>
-document.getElementById("uploadForm").addEventListener("submit", async function(e) {
-  e.preventDefault();
-
-  const fileInput = document.getElementById("csvFile");
-  const resultado = document.getElementById("uploadResultado");
-  const token = localStorage.getItem("token");
-
-  if (!fileInput.files.length) {
-    resultado.innerHTML = "Selecione um arquivo CSV.";
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("file", fileInput.files[0]);
-
-  resultado.innerHTML = "Processando lista...";
-
-  const response = await fetch("/crm/upload-lista", {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + token
-    },
-    body: formData
-  });
-
-  const json = await response.json();
-
-  if (!json.ok) {
-    resultado.innerHTML = "Erro: " + json.error;
-    return;
-  }
-
-  resultado.innerHTML =
-    "<strong>Lista processada com sucesso.</strong><br><br>" +
-    "Total: " + json.resumo.total + "<br>" +
-    "Já cadastrados na Bola: " + json.resumo.cadastrados + "<br>" +
-    "Não cadastrados: " + json.resumo.naoCadastrados + "<br>" +
-    "Depositantes: " + json.resumo.depositantes + "<br>" +
-    "Quentes: " + json.resumo.quentes + "<br>" +
-    "Mornos: " + json.resumo.mornos + "<br>" +
-    "Frios: " + json.resumo.frios;
-});
-</script>
-    </body>
-    </html>
-  `);
-});
-
-app.get("/painel-auth", (req, res) => {
-  res.send(`
-<html>
-<head>
-  <title>Entrando...</title>
-</head>
-<body style="
-background:#0f172a;
-color:white;
-font-family:Arial;
-display:flex;
-align-items:center;
-justify-content:center;
-height:100vh;
-">
-  <div>Validando sessão...</div>
+    </main>
+  </div>
 
   <script>
-    const token = localStorage.getItem("token");
+    document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
 
-    if (!token) {
-      window.location.href = "/login";
-    } else {
+      const fileInput = document.getElementById("csvFile");
+      const resultado = document.getElementById("uploadResultado");
+      const token = localStorage.getItem("token");
 
-      fetch("/painel", {
+      resultado.style.display = "block";
+
+      if (!fileInput.files.length) {
+        resultado.innerHTML = "Selecione um arquivo CSV.";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+
+      resultado.innerHTML = "Processando lista...";
+
+      const response = await fetch("/crm/upload-lista", {
+        method: "POST",
         headers: {
           Authorization: "Bearer " + token
-        }
-      })
-      .then(res => res.text())
-      .then(html => {
-        document.open();
-        document.write(html);
-        document.close();
-      })
-      .catch(() => {
-        localStorage.removeItem("token");
-        window.location.href = "/login";
+        },
+        body: formData
       });
 
-    }
+      const json = await response.json();
+
+      if (!json.ok) {
+        resultado.innerHTML = "Erro: " + json.error;
+        return;
+      }
+
+      resultado.innerHTML =
+        "<strong>Lista processada com sucesso.</strong><br><br>" +
+        "Total: " + json.resumo.total + "<br>" +
+        "Já cadastrados na Bola: " + json.resumo.cadastrados + "<br>" +
+        "Não cadastrados: " + json.resumo.naoCadastrados + "<br>" +
+        "Depositantes: " + json.resumo.depositantes + "<br>" +
+        "Quentes: " + json.resumo.quentes + "<br>" +
+        "Mornos: " + json.resumo.mornos + "<br>" +
+        "Frios: " + json.resumo.frios;
+    });
   </script>
 </body>
 </html>
