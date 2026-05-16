@@ -1912,39 +1912,23 @@ Sistema Online
 <div class="cards">
 
 <div class="card">
-<div class="card-title">
-Tracking
-</div>
-
-<div class="card-value" 
-id="trackingStatus">...
+  <div class="card-title">Tracking</div>
+  <div class="card-value" id="trackingStatus">Online</div>
 </div>
 
 <div class="card">
-<div class="card-title">
-Eventos
-</div>
-
-<div class="card-value" 
-id="totalEventos">0
+  <div class="card-title">Eventos</div>
+  <div class="card-value" id="totalEventos">0</div>
 </div>
 
 <div class="card">
-<div class="card-title">
-Audiências
-</div>
-
-<div class="card-value" 
-id="totalAudiencias">0
+  <div class="card-title">Audiências</div>
+  <div class="card-value" id="totalAudiencias">0</div>
 </div>
 
 <div class="card">
-<div class="card-title">
-Revenue
-</div>
-
-<div class="card-value" 
-id="totalRevenue">R$0
+  <div class="card-title">Revenue</div>
+  <div class="card-value" id="totalRevenue">R$ 0</div>
 </div>
 
 </div>
