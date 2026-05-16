@@ -7,6 +7,34 @@ const csv = require("csv-parser");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+
+function authMiddleware(req, res, next) {
+  try {
+    const auth = req.headers.authorization;
+
+    if (!auth) {
+      return res.status(401).json({
+        ok: false,
+        error: "Token não enviado"
+      });
+    }
+
+    const token = auth.split(" ")[1];
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.user = decoded;
+
+    next();
+
+  } catch (error) {
+    return res.status(401).json({
+      ok: false,
+      error: "Token inválido"
+    });
+  }
+}
+
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const { google } = require("googleapis");
@@ -2926,25 +2954,39 @@ app.post("/event", async (req, res) => {
   }
 });
 
-app.get("/dashboard/summary", async (req, res) => {
+app.get("/dashboard/summary", authMiddleware, async (req, res) => {
   try {
-    const clicks = await pool.query("SELECT COUNT(*)::int AS total FROM clicks");
+    const tenantId = req.user.tenantId;
+
+    const clicks = await pool.query(`
+      SELECT COUNT(*)::int AS total
+      FROM clicks
+      WHERE tenant_id = $1
+    `, [tenantId]);
+
     const events = await pool.query(`
       SELECT event_name, COUNT(*)::int AS total, COALESCE(SUM(value), 0)::float AS value
       FROM events
       WHERE is_duplicate = false
+      AND tenant_id = $1
       GROUP BY event_name
       ORDER BY total DESC
-    `);
+    `, [tenantId]);
 
     const revenue = await pool.query(`
       SELECT COALESCE(SUM(value), 0)::float AS total
       FROM events
       WHERE is_duplicate = false
+      AND tenant_id = $1
       AND event_name IN ('purchase', 'deposit_success')
-    `);
+    `, [tenantId]);
 
-    res.json({ clicks: clicks.rows[0].total, revenue: revenue.rows[0].total, events: events.rows });
+    res.json({
+      clicks: clicks.rows[0].total,
+      revenue: revenue.rows[0].total,
+      events: events.rows
+    });
+
   } catch (error) {
     res.status(500).json({ error: "Erro ao gerar dashboard" });
   }
