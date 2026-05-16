@@ -1507,7 +1507,6 @@ app.get("/sheets/daily", async (req, res) => {
 
 app.get("/sheets/audience", async (req, res) => {
   try {
-    const tenantId = req.user.tenantId;
     const data = await getSheetData();
     const headers = data[0];
     const rows = data.slice(1);
