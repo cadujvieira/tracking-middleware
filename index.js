@@ -690,7 +690,7 @@ CREATE TABLE IF NOT EXISTS users (
 `);
 }  
 
-app.post("/crm/nova-campanha", express.json(), async (req, res) => {
+app.post("/crm/nova-campanha", authMiddleware, express.json(), async (req, res) => {
 
   try {
 
@@ -703,7 +703,7 @@ app.post("/crm/nova-campanha", express.json(), async (req, res) => {
       enviados
     } = req.body;
 
-    const tenantId = await getDefaultTenantId();
+    const tenantId = req.user.tenantId;
 
     const campanha = {
       id: Date.now().toString(),
@@ -3013,8 +3013,10 @@ app.get("/dashboard/summary", authMiddleware, async (req, res) => {
   }
 });
 
-app.get("/dashboard/campaigns", async (req, res) => {
+app.get("/dashboard/campaigns", authMiddleware, async (req, res) => {
   try {
+    const tenantId = req.user.tenantId;
+
     const result = await pool.query(`
       SELECT COALESCE(c.utm_campaign, 'sem_campanha') AS campaign,
         COUNT(DISTINCT c.click_id)::int AS clicks,
@@ -3023,9 +3025,11 @@ app.get("/dashboard/campaigns", async (req, res) => {
         COALESCE(SUM(CASE WHEN e.event_name = 'purchase' THEN e.value ELSE 0 END), 0)::float AS revenue
       FROM clicks c
       LEFT JOIN events e ON e.click_id = c.click_id AND e.is_duplicate = false
+      WHERE c.tenant_id = $1
       GROUP BY campaign
       ORDER BY revenue DESC
-    `);
+     `, [tenantId]
+     );
     res.json(result.rows);
   } catch (error) {
     res.status(500).json({ error: "Erro ao listar campanhas" });
