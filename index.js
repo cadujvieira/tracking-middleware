@@ -631,6 +631,11 @@ CREATE TABLE IF NOT EXISTS users (
   `);
 
   await pool.query(`
+    ALTER TABLE clicks
+      ADD COLUMN IF NOT EXISTS tenant_id INTEGER DEFAULT 1
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS postback_logs (
       id SERIAL PRIMARY KEY,
       event_id TEXT,
@@ -662,7 +667,7 @@ CREATE TABLE IF NOT EXISTS users (
   `);
 
   await pool.query(`
-CREATE TABLE IF NOT EXISTS crm_campaigns (
+    CREATE TABLE IF NOT EXISTS crm_campaigns (
   id SERIAL PRIMARY KEY,
   tenant_id INTEGER REFERENCES tenants(id),
   nome TEXT,
