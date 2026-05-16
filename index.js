@@ -2956,39 +2956,47 @@ app.post("/event", async (req, res) => {
 
 app.get("/dashboard/summary", authMiddleware, async (req, res) => {
   try {
+
     const tenantId = req.user.tenantId;
 
     const clicks = await pool.query(`
       SELECT COUNT(*)::int AS total
       FROM clicks
-      WHERE tenant_id = $1
-    `, [tenantId]);
+    `);
 
     const events = await pool.query(`
-      SELECT event_name, COUNT(*)::int AS total, COALESCE(SUM(value), 0)::float AS value
+      SELECT
+        event_name,
+        COUNT(*)::int AS total,
+        COALESCE(SUM(value), 0)::float AS value
       FROM events
       WHERE is_duplicate = false
-      AND tenant_id = $1
       GROUP BY event_name
       ORDER BY total DESC
-    `, [tenantId]);
+    `);
 
     const revenue = await pool.query(`
       SELECT COALESCE(SUM(value), 0)::float AS total
       FROM events
       WHERE is_duplicate = false
-      AND tenant_id = $1
       AND event_name IN ('purchase', 'deposit_success')
-    `, [tenantId]);
+    `);
 
     res.json({
+      tenantId,
       clicks: clicks.rows[0].total,
       revenue: revenue.rows[0].total,
       events: events.rows
     });
 
   } catch (error) {
-    res.status(500).json({ error: "Erro ao gerar dashboard" });
+
+    console.log(error);
+
+    res.status(500).json({
+      error: "Erro ao gerar dashboard",
+      details: error.message
+    });
   }
 });
 
