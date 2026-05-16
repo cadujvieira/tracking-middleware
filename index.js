@@ -2991,7 +2991,7 @@ app.get("/dashboard/summary", authMiddleware, async (req, res) => {
       SELECT COALESCE(SUM(value), 0)::float AS total
       FROM events
       WHERE is_duplicate = false
-      WHERE tenant_id = $1
+      AND tenant_id = $1
       AND event_name IN ('purchase', 'deposit_success')
     `, [tenantId]);
 
