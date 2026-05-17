@@ -2042,6 +2042,8 @@ async function carregarDashboard(){
 const eventsResponse = await fetch("/sheets/events");
 const eventsJson = await eventsResponse.json();
 
+console.log(eventsJson);
+
 const ultimoDeposito = (eventsJson.events || [])
   .filter(e => e.evento === "DEPOSITO_WH")
   .slice(-1)[0];
@@ -2060,7 +2062,7 @@ feed.innerHTML =
   '</div>';
 
 console.log("feed renderizado");
-    
+
     const ctx = document.getElementById("eventsChart");
 
     new Chart(ctx, {
