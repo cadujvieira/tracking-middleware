@@ -2700,6 +2700,107 @@ margin-bottom:24px;
 
   </div>
 
+      <script>
+async function buscarDados(){
+
+  const dataInicio = document.getElementById("startDate").value;
+  const dataFim = document.getElementById("endDate").value;
+
+  const response = await fetch("/sheets/daily");
+  const json = await response.json();
+
+  let dados = json.daily || [];
+
+  if(dataInicio && dataFim){
+    dados = dados.filter(item => {
+      const [dia, mes, ano] = item.data.split("/");
+      const dataItem = new Date(`${ano}-${mes}-${dia}`);
+
+      const inicio = new Date(dataInicio);
+      const fim = new Date(dataFim);
+
+      return dataItem >= inicio && dataItem <= fim;
+    });
+  }
+
+  const totalLeads = dados.reduce((acc, item) => acc + Number(item.leads || 0), 0);
+  const totalPix = dados.reduce((acc, item) => acc + Number(item.pixGerado || 0), 0);
+  const totalDepositos = dados.reduce((acc, item) => acc + Number(item.depositos || 0), 0);
+  const totalRevenue = dados.reduce((acc, item) => acc + Number(item.receita || 0), 0);
+
+  document.getElementById("totalLeads").innerText = totalLeads.toLocaleString("pt-BR");
+  document.getElementById("totalPix").innerText = totalPix.toLocaleString("pt-BR");
+  document.getElementById("totalDepositos").innerText = totalDepositos.toLocaleString("pt-BR");
+  document.getElementById("totalRevenue").innerText = "R$ " + totalRevenue.toLocaleString("pt-BR");
+
+  document.getElementById("eventsTable").innerHTML = dados.map(item => `
+    <div style="
+      background:#081428;
+      border:1px solid #13203a;
+      border-radius:16px;
+      padding:18px;
+      margin-bottom:12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    ">
+      <div>
+        <div style="font-weight:800;font-size:16px;">
+          ${item.data} — ${item.campaign}
+        </div>
+        <div style="color:#94a3b8;font-size:14px;margin-top:6px;">
+          Leads: ${item.leads} • Pix: ${item.pixGerado} • Depósitos: ${item.depositos} • FTD: ${item.ftd}
+        </div>
+      </div>
+
+      <div style="
+        background:#16a34a20;
+        color:#4ade80;
+        padding:8px 14px;
+        border-radius:999px;
+        font-weight:800;
+      ">
+        R$ ${Number(item.receita || 0).toLocaleString("pt-BR")}
+      </div>
+    </div>
+  `).join("");
+
+  const ctx = document.getElementById("dailyChart");
+
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: dados.map(item => item.data),
+      datasets: [{
+        label: "Revenue",
+        data: dados.map(item => Number(item.receita || 0)),
+        borderColor: "#3b82f6",
+        backgroundColor: "rgba(59,130,246,0.18)",
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          ticks: { color: "#94a3b8" },
+          grid: { color: "#13203a" }
+        },
+        y: {
+          ticks: { color: "#94a3b8" },
+          grid: { color: "#13203a" }
+        }
+      }
+    }
+  });
+}
+
+buscarDados();
+</script>
+
 </div>
       </html>
     `);
