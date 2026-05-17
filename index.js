@@ -2048,8 +2048,6 @@ const ultimoDeposito = (eventsJson.events || [])
   .filter(e => e.evento === "DEPOSITO_WH")
   .slice(-1)[0];
 
-const feed = document.getElementById("liveFeed");
-
 feed.innerHTML =
   '<div style="background:#081428;border:1px solid #1e3a5f;padding:18px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;">' +
     '<div>' +
