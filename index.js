@@ -1268,7 +1268,7 @@ app.get("/sheets/events", async (req, res) => {
       summary[item.evento].valor += item.valor;
     });
 
-    res.json({ ok: true, totalRows: events.length, summary, events: events.slice(0, 100) });
+    res.json({ ok: true, totalRows: events.length, summary, events: events.slice(-100) });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
