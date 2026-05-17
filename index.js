@@ -2187,7 +2187,7 @@ app.get("/dashboard-view", async (req, res) => {
       .filter((c) => c.leads >= 10)
       .map(enrichCampaign)
       .sort((a, b) => b.receita - a.receita)
-      .slice(0, 20);
+      .slice(0, 100);
 
     const totalReceita = result.reduce((acc, c) => acc + c.receita, 0);
     const totalLeads = result.reduce((acc, c) => acc + c.leads, 0);
@@ -2226,70 +2226,310 @@ app.get("/dashboard-view", async (req, res) => {
     }).join("");
 
     res.send(`
-      <!DOCTYPE html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="UTF-8" />
-        <title>Dashboard Meta Ads</title>
-        <style>
-          body { font-family: Arial, sans-serif; background: #0f172a; color: #e5e7eb; padding: 30px; }
-          h1 { margin-bottom: 20px; }
-          .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
-          .card { background: #111827; padding: 20px; border-radius: 12px; border: 1px solid #1f2937; }
-          .card span { color: #94a3b8; font-size: 14px; }
-          .card strong { display: block; font-size: 26px; margin-top: 8px; }
-          table { width:100%; border-collapse: collapse; background: #111827; border-radius:12px; }
-          th, td { padding: 12px; border-bottom: 1px solid #1f2937; text-align: left; font-size: 14px; }
-          th { background: #1e293b; color: #93c5fd; }
-          tr:hover { background: #1f2937; }
-          .info { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-left: 4px; border-radius: 50%; background: #334155; color: #bfdbfe; font-size: 11px; font-weight: bold; cursor: pointer; }
-          .tooltip { position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: #020617; color: #e5e7eb; padding: 8px 10px; border-radius: 6px; font-size: 12px; white-space: nowrap; opacity: 0; pointer-events: none; transition: 0.2s; border: 1px solid #1f2937; z-index: 10; }
-          .info:hover .tooltip { opacity: 1; }
-          .good-cell { color: #22c55e; font-weight: bold; }
-          .medium-cell { color: #eab308; font-weight: bold; }
-          .bad-cell { color: #ef4444; font-weight: bold; }
-          .diamante { color: #60a5fa; font-weight: bold; }
-          .ouro { color: #22c55e; font-weight: bold; }
-          .muito_bom { color: #4ade80; font-weight: bold; }
-          .bom { color: #eab308; font-weight: bold; }
-          .ruim { color: #ef4444; font-weight: bold; }
-          .sem_ftd { color: #6b7280; font-weight: bold; }
-        </style>
-      </head>
-      <body>
-        <h1>Dashboard Meta Ads</h1>
-        <div class="cards">
-          <div class="card"><span>Receita Top 20</span><strong>R$ ${totalReceita.toFixed(2)}</strong></div>
-          <div class="card"><span>Leads</span><strong>${totalLeads}</strong></div>
-          <div class="card"><span>Depósitos</span><strong>${totalDepositos}</strong></div>
-          <div class="card"><span>FTDs</span><strong>${totalFtd}</strong></div>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Campanha</th>
-              <th>Leads <span class="info">?<span class="tooltip">Quantidade total de leads capturados pela campanha.</span></span></th>
-              <th>Leads Únicos <span class="info">?<span class="tooltip">Quantidade de usuários únicos que geraram lead nessa campanha.</span></span></th>
-              <th>Pix <span class="info">?<span class="tooltip">Quantidade de Pix gerados pelos usuários vindos dessa campanha.</span></span></th>
-              <th>Depósitos <span class="info">?<span class="tooltip">Quantidade total de depósitos realizados. Um usuário pode depositar mais de uma vez.</span></span></th>
-              <th>Depositantes <span class="info">?<span class="tooltip">Quantidade total de pessoas que depositaram na casa.</span></span></th>
-              <th>FTD <span class="info">?<span class="tooltip">First Time Deposit: quantidade de usuários que fizeram o primeiro depósito.</span></span></th>
-              <th>Receita <span class="info">?<span class="tooltip">Soma total dos valores depositados pelos usuários dessa campanha.</span></span></th>
-              <th>EPL <span class="info">?<span class="tooltip">Receita média por lead. Fórmula: receita / leads.</span></span></th>
-              <th>EPL Real <span class="info">?<span class="tooltip">Receita média por lead único. Fórmula: receita / leads únicos.</span></span></th>
-              <th>Valor/FTD <span class="info">?<span class="tooltip">Receita média por FTD. Fórmula: receita / FTD.</span></span></th>
-              <th>Taxa FTD <span class="info">?<span class="tooltip">Percentual de leads que viraram FTD. Fórmula: FTD / leads.</span></span></th>
-              <th>Taxa FTD Real <span class="info">?<span class="tooltip">Percentual de leads únicos que viraram FTD. Fórmula: FTD / leads únicos.</span></span></th>
-              <th>Ticket Depósito <span class="info">?<span class="tooltip">Valor médio por depósito. Fórmula: receita / depósitos.</span></span></th>
-              <th>Frequência <span class="info">?<span class="tooltip">Média de depósitos por FTD. Fórmula: depósitos / FTD.</span></span></th>
-              <th>Segmentação <span class="info">?<span class="tooltip">Diamante = ticket >= 50 e frequência >= 2x; Ouro = ticket >= 50; Muito bom = ticket >= 30; Bom = ticket >= 20.</span></span></th>
-            </tr>
-          </thead>
-          <tbody>${rowsHtml}</tbody>
-        </table>
-      </body>
-      </html>
-    `);
+<html>
+<head>
+
+<title>Dashboard Campanhas</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+:root{
+  --bg:#081225;
+  --card:#081428;
+  --border:#13203a;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --primary:#2563eb;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,sans-serif;
+}
+
+.container{
+  display:flex;
+  min-height:100vh;
+}
+
+.sidebar{
+  width:240px;
+  background:#07101f;
+  border-right:1px solid var(--border);
+  padding:30px 22px;
+}
+
+.logo{
+  font-size:36px;
+  font-weight:800;
+  margin-bottom:40px;
+}
+
+.nav-item{
+  display:block;
+  padding:14px 18px;
+  border-radius:14px;
+  color:#94a3b8;
+  text-decoration:none;
+  margin-bottom:10px;
+  font-weight:700;
+}
+
+.nav-item:hover{
+  background:#13203a;
+  color:white;
+}
+
+.active{
+  background:#2563eb;
+  color:white;
+}
+
+.main{
+  flex:1;
+  padding:32px;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:30px;
+}
+
+.page-title{
+  font-size:42px;
+  font-weight:800;
+}
+
+.badge{
+  background:#2563eb;
+  padding:12px 18px;
+  border-radius:14px;
+  font-weight:700;
+}
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:20px;
+  margin-bottom:24px;
+}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:24px;
+}
+
+.card-label{
+  color:var(--muted);
+  margin-bottom:12px;
+}
+
+.card-value{
+  font-size:36px;
+  font-weight:800;
+}
+
+.big-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:24px;
+  margin-top:24px;
+}
+
+.big-title{
+  font-size:28px;
+  font-weight:800;
+  margin-bottom:24px;
+}
+
+.table-header{
+  display:grid;
+  grid-template-columns:2fr .7fr .7fr .7fr .7fr .9fr .9fr;
+  gap:12px;
+  background:#0f172a;
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:16px;
+  color:#94a3b8;
+  font-size:13px;
+  font-weight:800;
+  margin-bottom:12px;
+}
+
+.table-row{
+  display:grid;
+  grid-template-columns:2fr .7fr .7fr .7fr .7fr .9fr .9fr;
+  gap:12px;
+  align-items:center;
+  background:#081428;
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:18px;
+  margin-bottom:10px;
+}
+
+.revenue{
+  background:#16a34a20;
+  color:#4ade80;
+  padding:8px 12px;
+  border-radius:999px;
+  text-align:center;
+  font-weight:800;
+}
+
+.ftd{
+  color:#60a5fa;
+  font-weight:800;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="sidebar">
+
+<div class="logo">
+RetentionOS
+</div>
+
+<a href="/painel-auth" class="nav-item">📊 Painel</a>
+<a href="/dashboard-view" class="nav-item active">🚀 Campanhas</a>
+<a href="/dashboard-daily" class="nav-item">📅 Por Data</a>
+<a href="/dashboard-audience" class="nav-item">🧠 Público</a>
+<a href="/dashboard-crm" class="nav-item">📬 CRM</a>
+
+</div>
+
+<div class="main">
+
+<div class="topbar">
+
+<div>
+<div style="color:#94a3b8;margin-bottom:6px;">
+RetentionOS Platform
+</div>
+
+<div class="page-title">
+Campanhas
+</div>
+</div>
+
+<div class="badge">
+Google Sheets Live
+</div>
+
+</div>
+
+<div class="cards">
+
+<div class="card">
+<div class="card-label">Receita</div>
+<div class="card-value">
+R$ ${totalReceita.toLocaleString("pt-BR")}
+</div>
+</div>
+
+<div class="card">
+<div class="card-label">Leads</div>
+<div class="card-value">
+${totalLeads}
+</div>
+</div>
+
+<div class="card">
+<div class="card-label">Depósitos</div>
+<div class="card-value">
+${totalDepositos}
+</div>
+</div>
+
+<div class="card">
+<div class="card-label">FTD</div>
+<div class="card-value">
+${totalFtd}
+</div>
+</div>
+
+</div>
+
+<div class="big-card">
+
+<div class="big-title">
+Performance das campanhas
+</div>
+
+<div class="table-header">
+<div>Campanha</div>
+<div>Leads</div>
+<div>Depósitos</div>
+<div>FTD</div>
+<div>Taxa FTD</div>
+<div>Ticket</div>
+<div>Receita</div>
+</div>
+
+${result.map(c => `
+
+<div class="table-row">
+
+<div style="font-weight:800;">
+${c.campaign}
+</div>
+
+<div>
+${c.leads}
+</div>
+
+<div>
+${c.depositos}
+</div>
+
+<div class="ftd">
+${c.ftd}
+</div>
+
+<div>
+${(c.taxaFTD * 100).toFixed(1)}%
+</div>
+
+<div>
+R$ ${c.ticketMedioDeposito.toFixed(2)}
+</div>
+
+<div class="revenue">
+R$ ${c.receita.toLocaleString("pt-BR")}
+</div>
+
+</div>
+
+`).join("")}
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>
+`);
   } catch (error) {
     res.status(500).send("Erro ao gerar dashboard: " + error.message);
   }
