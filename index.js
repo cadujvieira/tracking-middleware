@@ -2738,19 +2738,20 @@ async function buscarDados(){
 
   let htmlEventos = "";
 
-htmlEventos += '<div style="display:grid;grid-template-columns:1.2fr 1.5fr .8fr .8fr .8fr .8fr;gap:12px;background:#0f172a;border:1px solid #13203a;border-radius:14px;padding:14px 18px;color:#94a3b8;font-size:13px;font-weight:800;margin-bottom:12px;">';
+htmlEventos += '<div style="display:grid;grid-template-columns:1.1fr 1.5fr .7fr .7fr .7fr .7fr .9fr;gap:12px;background:#0f172a;border:1px solid #13203a;border-radius:14px;padding:14px 18px;color:#94a3b8;font-size:13px;font-weight:800;margin-bottom:12px;">';
 htmlEventos += '<div>Data</div>';
 htmlEventos += '<div>Campanha</div>';
 htmlEventos += '<div>Leads</div>';
 htmlEventos += '<div>Pix</div>';
 htmlEventos += '<div>Depósitos</div>';
+htmlEventos += '<div>FTD</div>';      
 htmlEventos += '<div>Receita</div>';
 htmlEventos += '</div>';
 
 dados.forEach(function(item){
 
-  htmlEventos += '<div style="display:grid;grid-template-columns:1.2fr 1.5fr .8fr .8fr .8fr .8fr;gap:12px;align-items:center;background:#081428;border:1px solid #13203a;border-radius:16px;padding:16px 18px;margin-bottom:10px;">';
-
+  htmlEventos += '<div style="display:grid;grid-template-columns:1.1fr 1.5fr .7fr .7fr .7fr .7fr .9fr;gap:12px;align-items:center;background:#081428;border:1px solid #13203a;border-radius:16px;padding:16px 18px;margin-bottom:10px;">';
+ 
   htmlEventos += '<div style="font-weight:800;">' + item.data + '</div>';
 
   htmlEventos += '<div style="color:#e5e7eb;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + item.campaign + '</div>';
@@ -2760,6 +2761,8 @@ dados.forEach(function(item){
   htmlEventos += '<div style="color:#94a3b8;">' + item.pixGerado + '</div>';
 
   htmlEventos += '<div style="color:#94a3b8;">' + item.depositos + '</div>';
+
+  htmlEventos += '<div style="color:#94a3b8;">' + item.ftd + '</div>';    
 
   htmlEventos += '<div style="background:#16a34a20;color:#4ade80;padding:8px 12px;border-radius:999px;font-weight:800;text-align:center;">R$ ' + Number(item.receita || 0).toLocaleString("pt-BR") + '</div>';
 
