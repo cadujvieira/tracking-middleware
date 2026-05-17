@@ -2667,42 +2667,6 @@ app.get("/dashboard-crm", async (req, res) => {
   `;
 }).join("");
     
-          <div class="crm-grid">
-            <div class="mini-box">
-              <span>Receita</span>
-              <strong>R$ ${item.receita.toLocaleString("pt-BR")}</strong>
-            </div>
-
-            <div class="mini-box">
-              <span>Depósitos</span>
-              <strong>${item.depositos}</strong>
-            </div>
-
-            <div class="mini-box">
-              <span>Usuários</span>
-              <strong>${item.total}</strong>
-            </div>
-          </div>
-
-          <div class="copy-box">
-            <div class="copy-title">COPY SMS</div>
-            <textarea readonly>${item.copySMS || "Sem copy cadastrada."}</textarea>
-          </div>
-
-          <div class="copy-box">
-            <div class="copy-title">COPY IMAGEM</div>
-            <textarea readonly>${item.copyImagem || "Sem copy cadastrada."}</textarea>
-          </div>
-
-          <div class="actions">
-            <a class="btn blue" href="/crm/export?segmento=${encodeURIComponent(key)}&senha=123456">Exportar CSV</a>
-            <button class="btn green" onclick="copiarTexto(\`${String(item.copySMS || "").replace(/`/g, "\\`")}\`)">Copiar SMS</button>
-            <button class="btn purple" onclick="copiarTexto(\`${String(item.copyImagem || "").replace(/`/g, "\\`")}\`)">Copiar Imagem</button>
-          </div>
-        </div>
-      `;
-    }).join("");
-
     res.send(`
 <html>
 <head>
