@@ -2066,6 +2066,9 @@ async function carregarDashboard(){
 }
 
 carregarDashboard();
+setInterval(() => {
+  carregarDashboard();
+}, 15000);    
 </script>
 </body>
 </html>
@@ -2644,7 +2647,7 @@ app.get("/dashboard-crm", async (req, res) => {
     </div>
   `;
 }).join("");
-    
+
     res.send(`
 <html>
 <head>
