@@ -1997,97 +1997,75 @@ pixel valioso, retenção e análise avançada de audiência.
 <script>
 
 async function carregarDashboard(){
-
   try{
+    const dashboardResponse = await fetch("/sheets/dashboard");
+    const dashboardJson = await dashboardResponse.json();
 
-    const token = localStorage.getItem("token");
+    const audienceResponse = await fetch("/sheets/audience");
+    const audienceJson = await audienceResponse.json();
 
-    const response = await fetch("/dashboard/summary",{
-      headers:{
-        Authorization:"Bearer " + token
-      }
-    });
-
-    const json = await response.json();
-
-    console.log(json);
-
-    // TOTAL EVENTOS
-    let totalEventos = 0;
-
-    if(json.events){
-      json.events.forEach(evento=>{
-        totalEventos += Number(evento.total || 0);
-      });
-    }
+    const totalEventos =
+      Number(dashboardJson.leads || 0) +
+      Number(dashboardJson.pixGerado || 0) +
+      Number(dashboardJson.depositos || 0) +
+      Number(dashboardJson.ftd || 0);
 
     document.getElementById("totalEventos").innerText = totalEventos;
 
-    // REVENUE
     document.getElementById("totalRevenue").innerText =
-      "R$ " + Number(json.revenue || 0).toLocaleString("pt-BR");
+      "R$ " + Number(dashboardJson.receita || 0).toLocaleString("pt-BR");
 
-    // AUDIENCIAS
     document.getElementById("totalAudiencias").innerText =
-      json.events ? json.events.length : 0;
+      Number(audienceJson.total || 0);
 
-    // STATUS
     document.getElementById("trackingStatus").innerText = "Online";
 
-    const ctx = document.getElementById('eventsChart');
+    const ctx = document.getElementById("eventsChart");
 
-new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: json.events?.map(e => e.event_name) || [],
-    datasets: [{
-      label: 'Eventos',
-      data: json.events?.map(e => Number(e.total)) || [],
-      borderColor: '#3b82f6',
-      backgroundColor: 'rgba(59,130,246,0.15)',
-      tension: 0.4,
-      fill: true
-    }]
-  },
-  options: {
-    plugins: {
-      legend: {
-        display: false
-      }
-    },
-    scales: {
-      x: {
-        ticks: {
-          color: '#94a3b8'
-        },
-        grid: {
-          color: '#1e293b'
-        }
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: ["Leads", "Pix Gerado", "Depósitos", "FTD"],
+        datasets: [{
+          label: "Eventos",
+          data: [
+            Number(dashboardJson.leads || 0),
+            Number(dashboardJson.pixGerado || 0),
+            Number(dashboardJson.depositos || 0),
+            Number(dashboardJson.ftd || 0)
+          ],
+          borderColor: "#3b82f6",
+          backgroundColor: "rgba(59,130,246,0.15)",
+          tension: 0.4,
+          fill: true
+        }]
       },
-      y: {
-        ticks: {
-          color: '#94a3b8'
+      options: {
+        plugins: {
+          legend: {
+            display: false
+          }
         },
-        grid: {
-          color: '#1e293b'
+        scales: {
+          x: {
+            ticks: { color: "#94a3b8" },
+            grid: { color: "#1e293b" }
+          },
+          y: {
+            ticks: { color: "#94a3b8" },
+            grid: { color: "#1e293b" }
+          }
         }
       }
-    }
-  }
-});
+    });
 
   }catch(err){
-
     console.log(err);
-
     document.getElementById("trackingStatus").innerText = "Erro";
-
   }
-
 }
 
 carregarDashboard();
-
 </script>
 </body>
 </html>
