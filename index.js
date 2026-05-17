@@ -2424,7 +2424,10 @@ app.get("/dashboard-daily", async (req, res) => {
     `;
 
     res.send(`
-      <html><head><style>
+      <html>
+      <head>
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <style>
         body { font-family: Arial, sans-serif; background: #0f172a; color: #e5e7eb; padding: 30px; }
           h1 { margin-bottom: 20px; }
           .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
@@ -2733,26 +2736,38 @@ async function buscarDados(){
   document.getElementById("totalDepositos").innerText = totalDepositos.toLocaleString("pt-BR");
   document.getElementById("totalRevenue").innerText = "R$ " + totalRevenue.toLocaleString("pt-BR");
 
-  document.getElementById("eventsTable").innerHTML = dados.map(function(item) {
-  return (
-    '<div style="background:#081428;border:1px solid #13203a;border-radius:16px;padding:18px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">' +
-      '<div>' +
-        '<div style="font-weight:800;font-size:16px;">' +
-          item.data + ' — ' + item.campaign +
-        '</div>' +
-        '<div style="color:#94a3b8;font-size:14px;margin-top:6px;">' +
-          'Leads: ' + item.leads +
-          ' • Pix: ' + item.pixGerado +
-          ' • Depósitos: ' + item.depositos +
-          ' • FTD: ' + item.ftd +
-        '</div>' +
-      '</div>' +
-      '<div style="background:#16a34a20;color:#4ade80;padding:8px 14px;border-radius:999px;font-weight:800;">' +
-        'R$ ' + Number(item.receita || 0).toLocaleString("pt-BR") +
-      '</div>' +
-    '</div>'
-  );
-}).join("");
+  let htmlEventos = "";
+
+htmlEventos += '<div style="display:grid;grid-template-columns:1.2fr 1.5fr .8fr .8fr .8fr .8fr;gap:12px;background:#0f172a;border:1px solid #13203a;border-radius:14px;padding:14px 18px;color:#94a3b8;font-size:13px;font-weight:800;margin-bottom:12px;">';
+htmlEventos += '<div>Data</div>';
+htmlEventos += '<div>Campanha</div>';
+htmlEventos += '<div>Leads</div>';
+htmlEventos += '<div>Pix</div>';
+htmlEventos += '<div>Depósitos</div>';
+htmlEventos += '<div>Receita</div>';
+htmlEventos += '</div>';
+
+dados.forEach(function(item){
+
+  htmlEventos += '<div style="display:grid;grid-template-columns:1.2fr 1.5fr .8fr .8fr .8fr .8fr;gap:12px;align-items:center;background:#081428;border:1px solid #13203a;border-radius:16px;padding:16px 18px;margin-bottom:10px;">';
+
+  htmlEventos += '<div style="font-weight:800;">' + item.data + '</div>';
+
+  htmlEventos += '<div style="color:#e5e7eb;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + item.campaign + '</div>';
+
+  htmlEventos += '<div style="color:#94a3b8;">' + item.leads + '</div>';
+
+  htmlEventos += '<div style="color:#94a3b8;">' + item.pixGerado + '</div>';
+
+  htmlEventos += '<div style="color:#94a3b8;">' + item.depositos + '</div>';
+
+  htmlEventos += '<div style="background:#16a34a20;color:#4ade80;padding:8px 12px;border-radius:999px;font-weight:800;text-align:center;">R$ ' + Number(item.receita || 0).toLocaleString("pt-BR") + '</div>';
+
+  htmlEventos += '</div>';
+
+});
+
+document.getElementById("eventsTable").innerHTML = htmlEventos;
 
   const ctx = document.getElementById("dailyChart");
 
