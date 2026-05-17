@@ -2053,8 +2053,11 @@ feed.innerHTML =
     '<div>' +
       '<div style="font-weight:700;">🔥 Novo depósito confirmado</div>' +
       '<div style="color:#94a3b8;font-size:14px;margin-top:4px;">' +
-        'Usuário realizou depósito de R$ ' + Number(ultimoDeposito?.valor || 0).toLocaleString("pt-BR") +
-      '</div>' +
+        'Usuário realizou depósito de R$ ' +
+         Number(ultimoDeposito?.valor || 0).toLocaleString("pt-BR") +
+          ' às ' +
+         (ultimoDeposito?.hora || "--:--") +
+    '</div>' +
     '</div>' +
     '<div style="background:#16a34a20;color:#4ade80;padding:8px 12px;border-radius:999px;font-size:13px;font-weight:700;">AGORA</div>' +
   '</div>';
