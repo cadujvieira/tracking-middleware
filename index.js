@@ -2168,6 +2168,10 @@ height:100vh;
   `);
 });
 
+app.get("/dashboard-campaigns", (req, res) => {
+  res.redirect("/dashboard-view");
+});
+
 app.get("/dashboard-view", async (req, res) => {
   try {
     const data = await getSheetData();
