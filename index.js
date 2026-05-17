@@ -1937,12 +1937,31 @@ Sistema Online
 </div>
 
 <div class="big-card">
+  
+  <div class="big-title">
+    Notificações Recentes
+  </div>
+
+  <div id="liveFeed" style="
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    margin-top:24px;
+  ">
+
+  </div>
+
+</div>
+
+<div class="big-card">
 
 <div class="big-title">
 Central de inteligência operacional
 </div>
 
-<div style="color:var(--muted);line-height:28px;font-size:17px;">
+<div style="color:var(--muted);
+line-height:28px;
+font-size:17px;">
 
 Sistema centralizado de tracking, CRM, segmentação,
 pixel valioso, retenção e análise avançada de audiência.
@@ -1988,23 +2007,6 @@ pixel valioso, retenção e análise avançada de audiência.
   </div>
 
   <canvas id="eventsChart" height="90"></canvas>
-</div>    
-
-<div class="big-card">
-  
-  <div class="big-title">
-    Feed Operacional
-  </div>
-
-  <div id="liveFeed" style="
-    display:flex;
-    flex-direction:column;
-    gap:14px;
-    margin-top:24px;
-  ">
-
-  </div>
-
 </div>
 
 </div>
