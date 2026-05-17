@@ -691,6 +691,21 @@ CREATE TABLE IF NOT EXISTS audience (
   created_at TIMESTAMP DEFAULT NOW()
 );
 `);
+
+  await pool.query(`
+  CREATE TABLE IF NOT EXISTS crm_export_logs (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER DEFAULT 1,
+    nome_lista TEXT,
+    segmento TEXT,
+    min_score NUMERIC DEFAULT 0,
+    total_usuarios INTEGER DEFAULT 0,
+    total_com_telefone INTEGER DEFAULT 0,
+    receita_total NUMERIC DEFAULT 0,
+    depositos_total INTEGER DEFAULT 0,
+    data_exportacao TIMESTAMP DEFAULT NOW()
+  );
+`);
 }  
 
 app.post("/crm/nova-campanha", authMiddleware, express.json(), async (req, res) => {
