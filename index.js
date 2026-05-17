@@ -1036,6 +1036,10 @@ app.get("/health", (req, res) => {
   });
 });
 
+app.get("/dashboard-performance", (req, res) => {
+  res.redirect("/dashboard-crm-performance");
+});
+
 app.get("/dashboard-crm-performance", (req, res) => {
 
   const rows = crmCampaigns.map((c) => {
