@@ -2598,7 +2598,6 @@ app.get("/dashboard-crm", async (req, res) => {
               <div class="crm-users">${item.total} usuários</div>
             </div>
 
-            <div>
   <div class="crm-score">
     Score ${item.scoreMedio.toFixed(0)}
   </div>
