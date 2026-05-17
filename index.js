@@ -1416,6 +1416,266 @@ font-weight:800;
 
 });
 
+app.get("/dashboard-listas", async (req, res) => {
+  try {
+
+    const listas = await pool.query(`
+      SELECT *
+      FROM crm_export_logs
+      ORDER BY data_exportacao DESC
+      LIMIT 100
+    `);
+
+    const rows = listas.rows;
+
+    const totalListas = rows.length;
+
+    const totalLeads = rows.reduce(
+      (acc, item) => acc + Number(item.total_usuarios || 0),
+      0
+    );
+
+    const totalTelefones = rows.reduce(
+      (acc, item) => acc + Number(item.total_com_telefone || 0),
+      0
+    );
+
+    const totalReceita = rows.reduce(
+      (acc, item) => acc + Number(item.receita_total || 0),
+      0
+    );
+
+    const totalDepositos = rows.reduce(
+      (acc, item) => acc + Number(item.depositos_total || 0),
+      0
+    );
+
+    res.send(`
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+
+<title>Dashboard de Listas</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+  margin:0;
+  background:#020817;
+  color:white;
+  font-family:Inter,sans-serif;
+}
+
+.container{
+  display:flex;
+}
+
+.sidebar{
+  width:240px;
+  min-height:100vh;
+  background:#031133;
+  padding:32px 20px;
+  border-right:1px solid rgba(255,255,255,0.05);
+}
+
+.logo{
+  font-size:42px;
+  font-weight:800;
+  margin-bottom:40px;
+}
+
+.menu-item{
+  padding:14px 16px;
+  border-radius:14px;
+  margin-bottom:10px;
+  background:#2563eb;
+  font-weight:700;
+}
+
+.content{
+  flex:1;
+  padding:40px;
+}
+
+.title{
+  font-size:52px;
+  font-weight:800;
+  margin-bottom:30px;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:20px;
+  margin-bottom:30px;
+}
+
+.card{
+  background:#071a44;
+  border:1px solid rgba(255,255,255,0.05);
+  border-radius:22px;
+  padding:24px;
+}
+
+.label{
+  color:#94a3b8;
+  font-size:14px;
+}
+
+.value{
+  font-size:42px;
+  font-weight:800;
+  margin-top:12px;
+}
+
+.big-card{
+  background:#071a44;
+  border-radius:22px;
+  padding:30px;
+  margin-bottom:30px;
+}
+
+.table-header,
+.table-row{
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr;
+  gap:16px;
+  align-items:center;
+}
+
+.table-header{
+  color:#94a3b8;
+  font-size:13px;
+  font-weight:700;
+  margin-bottom:20px;
+}
+
+.table-row{
+  background:#081428;
+  padding:18px;
+  border-radius:16px;
+  margin-bottom:12px;
+  border:1px solid #13203a;
+}
+
+.green{
+  color:#4ade80;
+  font-weight:700;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="sidebar">
+<div class="logo">📦</div>
+
+<div class="menu-item">
+Listas Exportadas
+</div>
+</div>
+
+<div class="content">
+
+<div class="title">
+Dashboard de Listas
+</div>
+
+<div class="stats">
+
+<div class="card">
+<div class="label">Listas</div>
+<div class="value">${totalListas}</div>
+</div>
+
+<div class="card">
+<div class="label">Leads</div>
+<div class="value">${totalLeads}</div>
+</div>
+
+<div class="card">
+<div class="label">Telefones</div>
+<div class="value">${totalTelefones}</div>
+</div>
+
+<div class="card">
+<div class="label">Revenue</div>
+<div class="value">
+R$ ${totalReceita.toLocaleString("pt-BR")}
+</div>
+</div>
+
+</div>
+
+<div class="big-card">
+
+<h2 style="margin-top:0;">
+Listas exportadas
+</h2>
+
+<div class="table-header">
+<div>Lista</div>
+<div>Segmento</div>
+<div>Leads</div>
+<div>Telefones</div>
+<div>Depósitos</div>
+<div>Revenue</div>
+</div>
+
+${rows.map(item => `
+<div class="table-row">
+
+<div>
+  <strong>${item.nome_lista || "-"}</strong>
+</div>
+
+<div>
+  ${item.segmento || "-"}
+</div>
+
+<div>
+  ${item.total_usuarios || 0}
+</div>
+
+<div>
+  ${item.total_com_telefone || 0}
+</div>
+
+<div>
+  ${item.depositos_total || 0}
+</div>
+
+<div class="green">
+  R$ ${Number(item.receita_total || 0).toLocaleString("pt-BR")}
+</div>
+
+</div>
+`).join("")}
+
+</div>
+
+</div>
+</div>
+
+</body>
+</html>
+    `);
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).send(error.message);
+
+  }
+});
+
 app.post("/crm/marcar-usuarios", express.json(), (req, res) => {
 
   try {
