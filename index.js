@@ -710,6 +710,25 @@ CREATE TABLE IF NOT EXISTS audience (
     data_exportacao TIMESTAMP DEFAULT NOW()
   );
 `);
+
+  await pool.query(`
+  CREATE TABLE IF NOT EXISTS crm_imported_leads (
+    id SERIAL PRIMARY KEY,
+    tenant_id INTEGER DEFAULT 1,
+    lista_id INTEGER,
+    cpf TEXT,
+    email TEXT,
+    telefone TEXT,
+    dias_sem_logar INTEGER DEFAULT 0,
+    status TEXT,
+    temperatura TEXT,
+    possui_cadastro BOOLEAN DEFAULT FALSE,
+    ja_depositou BOOLEAN DEFAULT FALSE,
+    ftd BOOLEAN DEFAULT FALSE,
+    receita NUMERIC DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW()
+  );
+`);
 }  
 
 app.post("/crm/nova-campanha", authMiddleware, express.json(), async (req, res) => {
@@ -932,6 +951,24 @@ app.post("/upload-lista", upload.single("file"), async (req, res) => {
       })
       .on("end", async () => {
 
+        const listaResult = await pool.query(`
+          INSERT INTO crm_export_logs (
+           nome_lista,
+           segmento,
+           total_usuarios,
+           total_com_telefone
+  )
+  VALUES ($1,$2,$3,$4)
+  RETURNING id
+`, [
+  req.file.originalname,
+  "importada",
+  resultados.length,
+  resultados.filter(item => item.telefone || item.phone).length
+]);
+
+const listaId = listaResult.rows[0].id;
+
         for(const item of resultados){
 
           const diasSemLogar = Number(item.dias_sem_logar || 0);
@@ -950,6 +987,7 @@ app.post("/upload-lista", upload.single("file"), async (req, res) => {
 
           await pool.query(`
             INSERT INTO crm_imported_leads (
+              lista_id,
               cpf,
               email,
               telefone,
@@ -957,14 +995,15 @@ app.post("/upload-lista", upload.single("file"), async (req, res) => {
               status,
               temperatura
             )
-            VALUES ($1,$2,$3,$4,$5,$6)
+            VALUES ($1,$2,$3,$4,$5,$6,$7)
           `,[
-            item.cpf || null,
-            item.email || null,
-            item.telefone || null,
-            diasSemLogar,
-            item.status || null,
-            temperatura
+              listaId,
+              item.cpf || null,
+              item.email || null,
+              item.telefone || item.phone || null,
+              diasSemLogar,
+              item.status || item.situacao || null,
+              temperatura
           ]);
 
         }
@@ -1397,39 +1436,6 @@ app.get("/dashboard-listas", async (req, res) => {
 <head>
 <meta charset="UTF-8">
 
-<div style="
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:30px;
-">
-
-<div class="title">
-Dashboard de Listas
-</div>
-
-<button onclick="document.getElementById('csvFile').click()" style="
-background:#2563eb;
-border:none;
-color:white;
-padding:14px 22px;
-border-radius:14px;
-font-weight:700;
-cursor:pointer;
-font-size:15px;
-">
-➕ Importar Lista
-</button>
-
-<input
-type="file"
-id="csvFile"
-accept=".csv"
-style="display:none;"
-/>
-
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -1555,8 +1561,37 @@ Listas Exportadas
 
 <div class="content">
 
-<div class="title">
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:30px;
+">
+
+<div class="title" style="margin-bottom:0;">
 Dashboard de Listas
+</div>
+
+<button onclick="document.getElementById('csvFile').click()" style="
+background:#2563eb;
+border:none;
+color:white;
+padding:14px 22px;
+border-radius:14px;
+font-weight:700;
+cursor:pointer;
+font-size:15px;
+">
+➕ Importar Lista
+</button>
+
+<input
+type="file"
+id="csvFile"
+accept=".csv"
+style="display:none;"
+/>
+
 </div>
 
 <div class="stats">
