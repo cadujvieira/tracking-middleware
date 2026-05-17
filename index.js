@@ -2714,7 +2714,7 @@ async function buscarDados(){
   if(dataInicio && dataFim){
     dados = dados.filter(item => {
       const [dia, mes, ano] = item.data.split("/");
-      const dataItem = new Date(`${ano}-${mes}-${dia}`);
+      const dataItem = new Date(ano + "-" + mes + "-" + dia);
 
       const inicio = new Date(dataInicio);
       const fim = new Date(dataFim);
