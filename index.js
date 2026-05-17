@@ -2636,7 +2636,6 @@ app.get("/dashboard-crm", async (req, res) => {
       "🔵 EM ANÁLISE"
     }
   </div>
-</div>
 
           <div class="crm-grid">
             <div class="mini-box">
