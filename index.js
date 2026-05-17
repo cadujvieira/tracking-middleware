@@ -2039,12 +2039,21 @@ async function carregarDashboard(){
 
     const feed = document.getElementById("liveFeed");
 
+const eventsResponse = await fetch("/sheets/events");
+const eventsJson = await eventsResponse.json();
+
+const ultimoDeposito = (eventsJson.events || [])
+  .filter(e => e.evento === "DEPOSITO_WH")
+  .slice(-1)[0];
+
+const feed = document.getElementById("liveFeed");
+
 feed.innerHTML =
   '<div style="background:#081428;border:1px solid #1e3a5f;padding:18px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;">' +
     '<div>' +
       '<div style="font-weight:700;">🔥 Novo depósito confirmado</div>' +
       '<div style="color:#94a3b8;font-size:14px;margin-top:4px;">' +
-        'Usuário realizou depósito de R$ ' + Number(dashboardJson.receita || 0).toLocaleString("pt-BR") +
+        'Usuário realizou depósito de R$ ' + Number(ultimoDeposito?.valor || 0).toLocaleString("pt-BR") +
       '</div>' +
     '</div>' +
     '<div style="background:#16a34a20;color:#4ade80;padding:8px 12px;border-radius:999px;font-size:13px;font-weight:700;">AGORA</div>' +
