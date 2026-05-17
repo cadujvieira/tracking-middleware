@@ -1070,6 +1070,26 @@ app.get("/dashboard-crm-performance", (req, res) => {
 
   }).join("");
 
+  const performance = crmCampaigns.map((c) => {
+  const conversao = c.enviados > 0
+    ? ((c.reativados / c.enviados) * 100).toFixed(2)
+    : 0;
+
+  return {
+    campaign: c.nome || "Sem campanha",
+    leads: c.enviados || 0,
+    depositos: c.reativados || 0,
+    ftd: c.reativados || 0,
+    conversao,
+    receita: Number(c.receita || 0)
+  };
+});
+
+const totalRevenue = performance.reduce((acc, item) => acc + Number(item.receita || 0), 0);
+const totalFtd = performance.reduce((acc, item) => acc + Number(item.ftd || 0), 0);
+const totalDepositos = performance.reduce((acc, item) => acc + Number(item.depositos || 0), 0);
+const totalLeads = performance.reduce((acc, item) => acc + Number(item.leads || 0), 0);
+
   res.send(`
     <html>
 
