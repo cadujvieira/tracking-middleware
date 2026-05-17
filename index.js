@@ -1349,35 +1349,18 @@ font-weight:800;
 
       </div>
 
-      ${performance.map(item => `
-  <div class="table-row">
-
-    <div class="campaign-name">
-      ${item.campaign}
-    </div>
-
-    <div>
-      ${item.leads}
-    </div>
-
-    <div>
-      ${item.depositos}
-    </div>
-
-    <div class="blue">
-      ${item.ftd}
-    </div>
-
-    <div>
-      ${item.conversao}%
-    </div>
-
-    <div class="green">
-      R$ ${Number(item.receita || 0).toLocaleString("pt-BR")}
-    </div>
-
-  </div>
-`).join("")}
+ ${performance.map(function(item) {
+  return (
+    '<div class="table-row">' +
+      '<div class="campaign-name">' + item.campaign + '</div>' +
+      '<div>' + item.leads + '</div>' +
+      '<div>' + item.depositos + '</div>' +
+      '<div class="blue">' + item.ftd + '</div>' +
+      '<div>' + item.conversao + '%</div>' +
+      '<div class="green">R$ ' + Number(item.receita || 0).toLocaleString("pt-BR") + '</div>' +
+    '</div>'
+  );
+}).join("")}
 
     </div>
 
