@@ -1349,37 +1349,35 @@ font-weight:800;
 
       </div>
 
-      \${performance.map(item => `
+      ${performance.map(item => `
+  <div class="table-row">
 
-        <div class="table-row">
+    <div class="campaign-name">
+      ${item.campaign}
+    </div>
 
-          <div class="campaign-name">
-            \${item.campaign}
-          </div>
+    <div>
+      ${item.leads}
+    </div>
 
-          <div>
-            \${item.leads}
-          </div>
+    <div>
+      ${item.depositos}
+    </div>
 
-          <div>
-            \${item.depositos}
-          </div>
+    <div class="blue">
+      ${item.ftd}
+    </div>
 
-          <div class="blue">
-            \${item.ftd}
-          </div>
+    <div>
+      ${item.conversao}%
+    </div>
 
-          <div>
-            \${item.conversao}%
-          </div>
+    <div class="green">
+      R$ ${Number(item.receita || 0).toLocaleString("pt-BR")}
+    </div>
 
-          <div class="green">
-            R$ \${Number(item.receita || 0).toLocaleString("pt-BR")}
-          </div>
-
-        </div>
-
-      `).join("")}
+  </div>
+`).join("")}
 
     </div>
 
