@@ -2598,10 +2598,45 @@ app.get("/dashboard-crm", async (req, res) => {
               <div class="crm-users">${item.total} usuários</div>
             </div>
 
-            <div class="crm-score">
-              Score ${item.scoreMedio.toFixed(0)}
-            </div>
-          </div>
+            <div>
+  <div class="crm-score">
+    Score ${item.scoreMedio.toFixed(0)}
+  </div>
+
+  <div style="
+    margin-top:10px;
+    padding:8px 12px;
+    border-radius:12px;
+    font-size:12px;
+    font-weight:800;
+    text-align:center;
+    background:${
+      key === "d0" ? "rgba(34,197,94,.15)" :
+      key === "d3" ? "rgba(234,179,8,.15)" :
+      key === "d7" ? "rgba(249,115,22,.15)" :
+      key === "d15" ? "rgba(239,68,68,.15)" :
+      key === "d30_plus" ? "rgba(168,85,247,.15)" :
+      "rgba(59,130,246,.15)"
+    };
+    color:${
+      key === "d0" ? "#22c55e" :
+      key === "d3" ? "#facc15" :
+      key === "d7" ? "#fb923c" :
+      key === "d15" ? "#ef4444" :
+      key === "d30_plus" ? "#c084fc" :
+      "#60a5fa"
+    };
+  ">
+    ${
+      key === "d0" ? "🟢 ATIVO HOJE" :
+      key === "d3" ? "🟡 RISCO MODERADO" :
+      key === "d7" ? "🟠 REATIVAÇÃO" :
+      key === "d15" ? "🔴 CHURN AVANÇADO" :
+      key === "d30_plus" ? "🟣 QUASE PERDIDO" :
+      "🔵 EM ANÁLISE"
+    }
+  </div>
+</div>
 
           <div class="crm-grid">
             <div class="mini-box">
