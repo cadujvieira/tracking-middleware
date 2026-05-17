@@ -2353,7 +2353,12 @@ app.get("/dashboard-daily", async (req, res) => {
       html += `
         <div style="margin-top:30px; display:flex; align-items:center; gap:15px;">
           <h2 style="margin:0;">📅 ${date}</h2>
-          <div style="background:#0f172a; border:1px solid #1f2937; padding:8px 12px; border-radius:8px; font-size:14px; color:#93c5fd;">
+          <div style="background:#0f172a; 
+          border:1px solid #1f2937; 
+          padding:8px 12px; 
+          border-radius:8px; 
+          font-size:14px; 
+          color:#93c5fd;">
             💰 Total depositado: <strong style="color:#22c55e;">R$ ${totalDepositoDia.toFixed(2)}</strong>
           </div>
         </div>
@@ -2442,11 +2447,261 @@ app.get("/dashboard-daily", async (req, res) => {
           .bom { color: #eab308; font-weight: bold; }
           .ruim { color: #ef4444; font-weight: bold; }
           .sem_ftd { color: #6b7280; font-weight: bold; }
-      </style></head><body>
-        <h1>📊 Dashboard por Data</h1>
-        ${filtroUI}
-        ${html}
-      </body></html>
+          .container{
+display:flex;
+min-height:100vh;
+}
+
+.sidebar{
+width:240px;
+background:#081225;
+border-right:1px solid #13203a;
+padding:32px 22px;
+}
+
+.logo{
+font-size:42px;
+font-weight:800;
+margin-bottom:50px;
+}
+
+.nav-item{
+display:block;
+padding:14px 18px;
+border-radius:12px;
+color:#94a3b8;
+text-decoration:none;
+margin-bottom:10px;
+font-weight:600;
+transition:.2s;
+}
+
+.nav-item:hover{
+background:#13203a;
+color:white;
+}
+
+.active{
+background:#2563eb;
+color:white;
+}
+
+.main{
+flex:1;
+padding:34px;
+}
+
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:32px;
+}
+
+.page-title{
+font-size:48px;
+font-weight:800;
+}
+
+.status-badge{
+background:#2563eb;
+padding:12px 22px;
+border-radius:14px;
+font-weight:700;
+}
+
+.filters-card{
+background:#081428;
+border:1px solid #13203a;
+padding:24px;
+border-radius:22px;
+display:flex;
+gap:20px;
+align-items:end;
+margin-bottom:24px;
+}
+
+.filter-group{
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.filter-group label{
+font-size:14px;
+color:#94a3b8;
+}
+
+.filter-group input{
+background:#0f172a;
+border:1px solid #1e293b;
+padding:14px;
+border-radius:12px;
+color:white;
+}
+
+.btn-primary{
+background:#2563eb;
+border:none;
+padding:14px 24px;
+border-radius:12px;
+font-weight:700;
+color:white;
+cursor:pointer;
+}
+
+.stats-grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:22px;
+margin-bottom:24px;
+}
+
+.stat-card{
+background:#081428;
+border:1px solid #13203a;
+padding:28px;
+border-radius:22px;
+}
+
+.stat-label{
+font-size:15px;
+color:#94a3b8;
+margin-bottom:12px;
+}
+
+.stat-value{
+font-size:42px;
+font-weight:800;
+}
+
+.big-card{
+background:#081428;
+border:1px solid #13203a;
+border-radius:24px;
+padding:28px;
+margin-bottom:24px;
+}
+
+.big-title{
+font-size:30px;
+font-weight:800;
+margin-bottom:24px;
+}
+      </style>
+      </head>
+      <body>
+
+<div class="container">
+
+  <div class="sidebar">
+
+    <div class="logo">
+      RetentionOS
+    </div>
+
+    <a href="/painel-auth" class="nav-item">📊 Painel</a>
+    <a href="/dashboard-daily" class="nav-item active">📅 Por Data</a>
+    <a href="/dashboard-crm" class="nav-item">🧠 CRM</a>
+
+  </div>
+
+  <div class="main">
+
+    <div class="topbar">
+
+      <div>
+        <div style="
+          color:var(--muted);
+          font-size:14px;
+          margin-bottom:6px;
+        ">
+          RetentionOS Platform
+        </div>
+
+        <div class="page-title">
+          Dashboard por Data
+        </div>
+      </div>
+
+      <div class="status-badge">
+        Dados em tempo real
+      </div>
+
+    </div>
+
+    <div class="filters-card">
+
+      <div class="filter-group">
+
+        <label>Data Inicial</label>
+
+        <input type="date" id="startDate">
+
+      </div>
+
+      <div class="filter-group">
+
+        <label>Data Final</label>
+
+        <input type="date" id="endDate">
+
+      </div>
+
+      <button onclick="buscarDados()" class="btn-primary">
+        Buscar Dados
+      </button>
+
+    </div>
+
+    <div class="stats-grid">
+
+      <div class="stat-card">
+        <div class="stat-label">Leads</div>
+        <div class="stat-value" id="totalLeads">0</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Pix Gerado</div>
+        <div class="stat-value" id="totalPix">0</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Depósitos</div>
+        <div class="stat-value" id="totalDepositos">0</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Revenue</div>
+        <div class="stat-value" id="totalRevenue">R$ 0</div>
+      </div>
+
+    </div>
+
+    <div class="big-card">
+
+      <div class="big-title">
+        Performance diária
+      </div>
+
+      <canvas id="dailyChart" height="90"></canvas>
+
+    </div>
+
+    <div class="big-card">
+
+      <div class="big-title">
+        Eventos registrados
+      </div>
+
+      <div id="eventsTable"></div>
+
+    </div>
+
+  </div>
+
+</div>
+      </html>
     `);
   } catch (error) {
     res.status(500).send("Erro ao gerar dashboard por data: " + error.message);
