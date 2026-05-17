@@ -2534,309 +2534,328 @@ app.get("/dashboard-audience", async (req, res) => {
 
 app.get("/dashboard-crm", async (req, res) => {
   try {
-
     const response = await fetch("https://tracking-middleware.onrender.com/sheets/audience");
     const json = await response.json();
 
     const audience = json.audience || [];
-
     const segmentos = {};
 
-    const mensagensSMS = {
-  lead_sem_deposito: "🎁 100% bônus liberado + sorteios de R$2.000. Ative agora.",
-  d0: "🔥 Sorteio R$1.500 às 22h + bônus de 100% ativo no seu perfil.",
-  d3: "👀 Seu bônus + sorteio de R$2.000 ainda estão disponíveis.",
-  d7: "⚡ R$2.000 no PIX + bônus liberado hoje.",
-  d15: "🚨 Reativamos seu bônus VIP hoje.",
-  d30_plus: "🔥 Última chance: bônus + R$2.000 disponíveis hoje.",
-  ativo: "✅ Usuário ativo recentemente."
-};
-
-const briefingImagem = {
-  lead_sem_deposito:
-    "Headline: 100% de bônus liberado | Oferta: Sorteios até R$2.000 + prêmios diários | CTA: Ativar bônus agora",
-
-  d0:
-    "Headline: Sorteio R$1.500 hoje às 22h | Oferta: 100% bônus ativo | CTA: Entrar agora",
-
-  d3:
-    "Headline: Sua condição especial ainda está ativa | Oferta: Sorteios + bônus de 100% | CTA: Voltar hoje",
-
-  d7:
-    "Headline: Você recebeu uma nova chance | Oferta: R$2.000 no PIX + bônus | CTA: Reativar agora",
-
-  d15:
-    "Headline: Reativação VIP liberada | Oferta: Sorteios especiais + bônus | CTA: Aproveitar hoje",
-
-  d30_plus:
-    "Headline: Última chance de reativação | Oferta: +50 mil em prêmios hoje | CTA: Voltar agora",
-
-  ativo:
-    "Headline: Usuário ativo | Oferta: Continuidade de campanhas e eventos"
-};
-
-    audience.forEach(user => {
-
+    audience.forEach((user) => {
       const segmento = user.segmentoCRM || "outros";
 
       if (!segmentos[segmento]) {
         segmentos[segmento] = {
           total: 0,
           receita: 0,
+          depositos: 0,
+          scoreMedio: 0,
           usuarios: [],
-          copySMS: "",
-          copyImagem: "",
+          copySMS: user.copySMS || "",
+          copyImagem: user.copyImagem || ""
         };
       }
 
       segmentos[segmento].total++;
       segmentos[segmento].receita += Number(user.receita || 0);
-
+      segmentos[segmento].depositos += Number(user.depositos || 0);
+      segmentos[segmento].scoreMedio += Number(user.score || 0);
       segmentos[segmento].usuarios.push(user);
 
       if (!segmentos[segmento].copySMS && user.copySMS) {
-     segmentos[segmento].copySMS = user.copySMS;
-     }
+        segmentos[segmento].copySMS = user.copySMS;
+      }
 
-     if (!segmentos[segmento].copyImagem && user.copyImagem) {
-    segmentos[segmento].copyImagem = user.copyImagem;
-     }
-
+      if (!segmentos[segmento].copyImagem && user.copyImagem) {
+        segmentos[segmento].copyImagem = user.copyImagem;
+      }
     });
 
-    const rows = Object.entries(segmentos)
-      .sort((a, b) => b[1].receita - a[1].receita)
-      .map(([segmento, dados]) => `
-        <tr>
-          <td>${segmento}</td>
-          <td>${dados.total}</td>
-          <td>R$ ${dados.receita.toFixed(2)}</td>
-          <td>
-            <button class="btn-exportar" data-segmento="${segmento}" 
-           style="background:#2563eb;
-           color:white;padding:8px 14px;
-           border-radius:8px;
-           border:none;
-           cursor:pointer;
-           font-weight:bold;">
-        Exportar CSV
-        </button>
+    Object.keys(segmentos).forEach((key) => {
+      const item = segmentos[key];
+      item.scoreMedio = item.total ? item.scoreMedio / item.total : 0;
+    });
 
-           <button class="btn-sms" data-segmento="${segmento}" 
-          style="background:#16a34a;
-          color:white;
-          padding:8px 14px;
-          border-radius:8px;
-          border:none;cursor:pointer;
-          font-weight:bold;
-          margin-left:8px;">
-        Copiar SMS
-        </button>
+    const ordem = [
+      "lead_sem_deposito",
+      "d0",
+      "d3",
+      "d7",
+      "d15",
+      "d30_plus",
+      "ativo",
+      "outros"
+    ];
 
-          <button class="btn-imagem" data-segmento="${segmento}" 
-          style="background:#9333ea;
-          color:white;padding:8px 14px;
-          border-radius:8px;
-          border:none;
-          cursor:pointer;
-          font-weight:bold;
-          margin-left:8px;">
-        Copiar Imagem
-        </button>
-          </td>
-        </tr>
-      `).join("");
+    const cardsHtml = ordem.map((key) => {
+      const item = segmentos[key];
+      if (!item) return "";
+
+      return `
+        <div class="crm-card">
+          <div class="crm-top">
+            <div>
+              <div class="crm-label">${key.replaceAll("_", " ").toUpperCase()}</div>
+              <div class="crm-users">${item.total} usuários</div>
+            </div>
+
+            <div class="crm-score">
+              Score ${item.scoreMedio.toFixed(0)}
+            </div>
+          </div>
+
+          <div class="crm-grid">
+            <div class="mini-box">
+              <span>Receita</span>
+              <strong>R$ ${item.receita.toLocaleString("pt-BR")}</strong>
+            </div>
+
+            <div class="mini-box">
+              <span>Depósitos</span>
+              <strong>${item.depositos}</strong>
+            </div>
+
+            <div class="mini-box">
+              <span>Usuários</span>
+              <strong>${item.total}</strong>
+            </div>
+          </div>
+
+          <div class="copy-box">
+            <div class="copy-title">COPY SMS</div>
+            <textarea readonly>${item.copySMS || "Sem copy cadastrada."}</textarea>
+          </div>
+
+          <div class="copy-box">
+            <div class="copy-title">COPY IMAGEM</div>
+            <textarea readonly>${item.copyImagem || "Sem copy cadastrada."}</textarea>
+          </div>
+
+          <div class="actions">
+            <a class="btn blue" href="/crm/export?segmento=${encodeURIComponent(key)}&senha=123456">Exportar CSV</a>
+            <button class="btn green" onclick="copiarTexto(\`${String(item.copySMS || "").replace(/`/g, "\\`")}\`)">Copiar SMS</button>
+            <button class="btn purple" onclick="copiarTexto(\`${String(item.copyImagem || "").replace(/`/g, "\\`")}\`)">Copiar Imagem</button>
+          </div>
+        </div>
+      `;
+    }).join("");
 
     res.send(`
-      <html>
-      <head>
-        <title>Dashboard CRM</title>
+<html>
+<head>
+<title>CRM Visual</title>
 
-        <style>
+<style>
+:root{
+  --bg:#081225;
+  --bg2:#0f172a;
+  --card:#111827;
+  --card2:#1e293b;
+  --border:#243041;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --primary:#3b82f6;
+  --green:#22c55e;
+  --purple:#9333ea;
+}
 
-          body {
-            font-family: Arial;
-            background:#0f172a;
-            color:#e5e7eb;
-            padding:30px;
-          }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
 
-          h1 {
-            margin-bottom:20px;
-          }
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter, Arial, sans-serif;
+  padding:32px;
+}
 
-          table {
-            width:100%;
-            border-collapse:collapse;
-            background:#111827;
-            border-radius:12px;
-            overflow:hidden;
-          }
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:32px;
+}
 
-          th, td {
-            padding:16px;
-            border-bottom:1px solid #1f2937;
-            text-align:left;
-          }
+.title{
+  font-size:42px;
+  font-weight:800;
+  margin-bottom:8px;
+}
 
-          th {
-            background:#1e293b;
-            color:#93c5fd;
-          }
+.subtitle{
+  color:var(--muted);
+}
 
-          tr:hover {
-            background:#172554;
-          }
+.back{
+  background:var(--card);
+  border:1px solid var(--border);
+  color:white;
+  text-decoration:none;
+  padding:12px 18px;
+  border-radius:14px;
+  font-weight:700;
+}
 
-        </style>
+.crm-container{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(420px,1fr));
+  gap:24px;
+}
 
-      </head>
+.crm-card{
+  background:rgba(17,24,39,.78);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:24px;
+  padding:24px;
+  box-shadow:0 20px 60px rgba(0,0,0,.18);
+}
 
-      <body>
+.crm-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:24px;
+}
 
-        <h1>📲 Dashboard CRM</h1>
+.crm-label{
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:6px;
+  letter-spacing:.06em;
+}
 
-        <table>
+.crm-users{
+  font-size:28px;
+  font-weight:800;
+}
 
-          <thead>
-            <tr>
-              <th>Segmento</th>
-              <th>Usuários</th>
-              <th>Receita</th>
-              <th>Ação</th>
-            </tr>
-          </thead>
+.crm-score{
+  background:rgba(59,130,246,.15);
+  color:#60a5fa;
+  padding:10px 16px;
+  border-radius:14px;
+  font-weight:700;
+}
 
-          <tbody>
-            ${rows}
-          </tbody>
+.crm-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  margin-bottom:24px;
+}
 
-        </table>
-      
-      <script>
-        function exportarCRM(segmento) {
-        const senha = prompt("Digite a senha para exportar:");
-  
-    if (!senha) return;
+.mini-box{
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.05);
+  border-radius:16px;
+  padding:16px;
+}
 
-    window.location.href =
-      "/crm/export?segmento=" +
-      encodeURIComponent(segmento) +
-      "&senha=" +
-      encodeURIComponent(senha);
-     }
-      <script>
-  const mensagensSMS = {
-    lead_sem_deposito: "🎁 100% bônus liberado + sorteios de R$2.000. Ative agora.",
-    d0: "🔥 Sorteio R$1.500 às 22h + bônus de 100% ativo no seu perfil.",
-    d3: "👀 Seu bônus + sorteio de R$2.000 ainda estão disponíveis.",
-    d7: "⚡ R$2.000 no PIX + bônus liberado hoje.",
-    d15: "🚨 Reativamos seu bônus VIP hoje.",
-    d30_plus: "🔥 Última chance: bônus + R$2.000 disponíveis hoje.",
-    ativo: "✅ Usuário ativo recentemente."
-  };
+.mini-box span{
+  display:block;
+  color:var(--muted);
+  font-size:13px;
+  margin-bottom:8px;
+}
 
-  const briefingImagem = {
-    lead_sem_deposito: "Headline: 100% de bônus liberado | Oferta: Sorteios até R$2.000 + prêmios diários | CTA: Ativar bônus agora",
-    d0: "Headline: Sorteio R$1.500 hoje às 22h | Oferta: 100% bônus ativo | CTA: Entrar agora",
-    d3: "Headline: Sua condição especial ainda está ativa | Oferta: Sorteios + bônus de 100% | CTA: Voltar hoje",
-    d7: "Headline: Você recebeu uma nova chance | Oferta: R$2.000 no PIX + bônus | CTA: Reativar agora",
-    d15: "Headline: Reativação VIP liberada | Oferta: Sorteios especiais + bônus | CTA: Aproveitar hoje",
-    d30_plus: "Headline: Última chance de reativação | Oferta: +50 mil em prêmios hoje | CTA: Voltar agora",
-    ativo: "Headline: Usuário ativo | Oferta: Continuidade de campanhas e eventos"
-  };
+.mini-box strong{
+  font-size:20px;
+}
 
-  function copiarTexto(texto) {
-    navigator.clipboard.writeText(texto || "");
-    alert("Texto copiado!");
-  }
+.copy-box{
+  margin-top:18px;
+}
 
-  document.querySelectorAll(".btn-exportar").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const segmento = btn.dataset.segmento;
-      const senha = prompt("Digite a senha para exportar:");
-      if (!senha) return;
-      window.location.href = "/crm/export?segmento=" + encodeURIComponent(segmento) + "&senha=" + encodeURIComponent(senha);
-    });
-  });
+.copy-title{
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:10px;
+  font-weight:700;
+}
 
-  document.querySelectorAll(".btn-sms").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      copiarTexto(mensagensSMS[btn.dataset.segmento]);
-    });
-  });
+textarea{
+  width:100%;
+  min-height:110px;
+  background:#0b1324;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:16px;
+  padding:16px;
+  color:white;
+  resize:none;
+  font-size:14px;
+  line-height:24px;
+}
 
-  document.querySelectorAll(".btn-imagem").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      copiarTexto(briefingImagem[btn.dataset.segmento]);
-    });
-  });
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:18px;
+}
 
-    <script>
+.btn{
+  border:none;
+  color:white;
+  padding:11px 14px;
+  border-radius:12px;
+  font-weight:800;
+  cursor:pointer;
+  text-decoration:none;
+  font-size:13px;
+}
 
+.blue{
+  background:var(--primary);
+}
+
+.green{
+  background:var(--green);
+}
+
+.purple{
+  background:var(--purple);
+}
+
+.empty{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:32px;
+  color:var(--muted);
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div>
+    <div class="title">CRM Inteligente</div>
+    <div class="subtitle">Segmentação automática baseada em comportamento, score e retenção.</div>
+  </div>
+
+  <a class="back" href="/painel-auth">Voltar ao painel</a>
+</div>
+
+<div class="crm-container">
+  ${cardsHtml || '<div class="empty">Nenhum segmento CRM encontrado ainda.</div>'}
+</div>
+
+<script>
 function copiarTexto(texto) {
   navigator.clipboard.writeText(texto || "");
   alert("Texto copiado!");
 }
-
-document.querySelectorAll(".btn-exportar").forEach((btn) => {
-
-  btn.addEventListener("click", () => {
-
-    const segmento = btn.dataset.segmento;
-
-    const senha = prompt("Digite a senha para exportar:");
-
-    if (!senha) return;
-
-    window.location.href =
-      "/crm/export?segmento=" +
-      encodeURIComponent(segmento) +
-      "&senha=" +
-      encodeURIComponent(senha);
-
-  });
-
-});
-
-document.querySelectorAll(".btn-sms").forEach((btn) => {
-
-  btn.addEventListener("click", () => {
-
-    const segmento = btn.dataset.segmento;
-
-    const item = segmentos[segmento];
-
-    copiarTexto(item?.copySMS || "");
-
-  });
-
-});
-
-document.querySelectorAll(".btn-imagem").forEach((btn) => {
-
-  btn.addEventListener("click", () => {
-
-    const segmento = btn.dataset.segmento;
-
-    const item = segmentos[segmento];
-
-    copiarTexto(item?.copyImagem || "");
-
-  });
-
-});
-
 </script>
 
-      </body>
-      </html>
+</body>
+</html>
     `);
 
   } catch (error) {
-
-    res.status(500).send(error.message);
-
+    res.status(500).send("Erro CRM: " + error.message);
   }
 });
 
