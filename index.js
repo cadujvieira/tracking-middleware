@@ -2733,37 +2733,26 @@ async function buscarDados(){
   document.getElementById("totalDepositos").innerText = totalDepositos.toLocaleString("pt-BR");
   document.getElementById("totalRevenue").innerText = "R$ " + totalRevenue.toLocaleString("pt-BR");
 
-  document.getElementById("eventsTable").innerHTML = dados.map(item => `
-    <div style="
-      background:#081428;
-      border:1px solid #13203a;
-      border-radius:16px;
-      padding:18px;
-      margin-bottom:12px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-    ">
-      <div>
-        <div style="font-weight:800;font-size:16px;">
-          ${item.data} — ${item.campaign}
-        </div>
-        <div style="color:#94a3b8;font-size:14px;margin-top:6px;">
-          Leads: ${item.leads} • Pix: ${item.pixGerado} • Depósitos: ${item.depositos} • FTD: ${item.ftd}
-        </div>
-      </div>
-
-      <div style="
-        background:#16a34a20;
-        color:#4ade80;
-        padding:8px 14px;
-        border-radius:999px;
-        font-weight:800;
-      ">
-        R$ ${Number(item.receita || 0).toLocaleString("pt-BR")}
-      </div>
-    </div>
-  `).join("");
+  document.getElementById("eventsTable").innerHTML = dados.map(function(item) {
+  return (
+    '<div style="background:#081428;border:1px solid #13203a;border-radius:16px;padding:18px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">' +
+      '<div>' +
+        '<div style="font-weight:800;font-size:16px;">' +
+          item.data + ' — ' + item.campaign +
+        '</div>' +
+        '<div style="color:#94a3b8;font-size:14px;margin-top:6px;">' +
+          'Leads: ' + item.leads +
+          ' • Pix: ' + item.pixGerado +
+          ' • Depósitos: ' + item.depositos +
+          ' • FTD: ' + item.ftd +
+        '</div>' +
+      '</div>' +
+      '<div style="background:#16a34a20;color:#4ade80;padding:8px 14px;border-radius:999px;font-weight:800;">' +
+        'R$ ' + Number(item.receita || 0).toLocaleString("pt-BR") +
+      '</div>' +
+    '</div>'
+  );
+}).join("");
 
   const ctx = document.getElementById("dailyChart");
 
