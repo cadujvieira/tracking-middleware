@@ -1456,8 +1456,39 @@ app.get("/dashboard-listas", async (req, res) => {
 <head>
 <meta charset="UTF-8">
 
-<title>Dashboard de Listas</title>
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:30px;
+">
 
+<div class="title">
+Dashboard de Listas
+</div>
+
+<button onclick="document.getElementById('csvFile').click()" style="
+background:#2563eb;
+border:none;
+color:white;
+padding:14px 22px;
+border-radius:14px;
+font-weight:700;
+cursor:pointer;
+font-size:15px;
+">
+➕ Importar Lista
+</button>
+
+<input
+type="file"
+id="csvFile"
+accept=".csv"
+style="display:none;"
+/>
+
+</div>
+      
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
