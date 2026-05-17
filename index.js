@@ -2587,55 +2587,86 @@ app.get("/dashboard-crm", async (req, res) => {
     ];
 
     const cardsHtml = ordem.map((key) => {
-      const item = segmentos[key];
-      if (!item) return "";
+  const item = segmentos[key];
+  if (!item) return "";
 
-      return `
-        <div class="crm-card">
-          <div class="crm-top">
-            <div>
-              <div class="crm-label">${key.replaceAll("_", " ").toUpperCase()}</div>
-              <div class="crm-users">${item.total} usuários</div>
-            </div>
+  const statusMap = {
+    lead_sem_deposito: ["🔵 EM ANÁLISE", "#60a5fa"],
+    d0: ["🟢 ATIVO HOJE", "#22c55e"],
+    d3: ["🟡 RISCO MODERADO", "#facc15"],
+    d7: ["🟠 REATIVAÇÃO", "#fb923c"],
+    d15: ["🔴 CHURN AVANÇADO", "#ef4444"],
+    d30_plus: ["🟣 QUASE PERDIDO", "#c084fc"],
+    ativo: ["🟢 ATIVO", "#22c55e"],
+    outros: ["🔵 EM ANÁLISE", "#60a5fa"]
+  };
 
-  <div class="crm-score">
-    Score ${item.scoreMedio.toFixed(0)}
-  </div>
+  const status = statusMap[key] || statusMap.outros;
 
-  <div style="
-    margin-top:10px;
-    padding:8px 12px;
-    border-radius:12px;
-    font-size:12px;
-    font-weight:800;
-    text-align:center;
-    background:${
-      key === "d0" ? "rgba(34,197,94,.15)" :
-      key === "d3" ? "rgba(234,179,8,.15)" :
-      key === "d7" ? "rgba(249,115,22,.15)" :
-      key === "d15" ? "rgba(239,68,68,.15)" :
-      key === "d30_plus" ? "rgba(168,85,247,.15)" :
-      "rgba(59,130,246,.15)"
-    };
-    color:${
-      key === "d0" ? "#22c55e" :
-      key === "d3" ? "#facc15" :
-      key === "d7" ? "#fb923c" :
-      key === "d15" ? "#ef4444" :
-      key === "d30_plus" ? "#c084fc" :
-      "#60a5fa"
-    };
-  ">
-    ${
-      key === "d0" ? "🟢 ATIVO HOJE" :
-      key === "d3" ? "🟡 RISCO MODERADO" :
-      key === "d7" ? "🟠 REATIVAÇÃO" :
-      key === "d15" ? "🔴 CHURN AVANÇADO" :
-      key === "d30_plus" ? "🟣 QUASE PERDIDO" :
-      "🔵 EM ANÁLISE"
-    }
-  </div>
+  return `
+    <div class="crm-card">
 
+      <div class="crm-top">
+        <div>
+          <div class="crm-label">${key.replaceAll("_", " ").toUpperCase()}</div>
+          <div class="crm-users">${item.total} usuários</div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px; align-items:flex-end;">
+          <div class="crm-score">Score ${item.scoreMedio.toFixed(0)}</div>
+
+          <div style="
+            color:${status[1]};
+            background:rgba(255,255,255,.05);
+            border:1px solid rgba(255,255,255,.08);
+            padding:8px 12px;
+            border-radius:12px;
+            font-size:12px;
+            font-weight:800;
+            white-space:nowrap;
+          ">
+            ${status[0]}
+          </div>
+        </div>
+      </div>
+
+      <div class="crm-grid">
+        <div class="mini-box">
+          <span>Receita</span>
+          <strong>R$ ${item.receita.toLocaleString("pt-BR")}</strong>
+        </div>
+
+        <div class="mini-box">
+          <span>Depósitos</span>
+          <strong>${item.depositos}</strong>
+        </div>
+
+        <div class="mini-box">
+          <span>Usuários</span>
+          <strong>${item.total}</strong>
+        </div>
+      </div>
+
+      <div class="copy-box">
+        <div class="copy-title">COPY SMS</div>
+        <textarea readonly>${item.copySMS || "Sem copy cadastrada."}</textarea>
+      </div>
+
+      <div class="copy-box">
+        <div class="copy-title">COPY IMAGEM</div>
+        <textarea readonly>${item.copyImagem || "Sem copy cadastrada."}</textarea>
+      </div>
+
+      <div class="actions">
+        <a class="btn blue" href="/crm/export?segmento=${encodeURIComponent(key)}&senha=123456">Exportar CSV</a>
+        <button class="btn green" onclick="copiarTexto(this.dataset.copy)" data-copy="${String(item.copySMS || "").replace(/"/g, "&quot;")}">Copiar SMS</button>
+        <button class="btn purple" onclick="copiarTexto(this.dataset.copy)" data-copy="${String(item.copyImagem || "").replace(/"/g, "&quot;")}">Copiar Imagem</button>
+      </div>
+
+    </div>
+  `;
+}).join("");
+    
           <div class="crm-grid">
             <div class="mini-box">
               <span>Receita</span>
