@@ -1325,28 +1325,28 @@ font-weight:800;
       <div class="stat-card">
         <div class="stat-label">Revenue Total</div>
         <div class="stat-value">
-          R$ \${totalRevenue.toLocaleString("pt-BR")}
+          R$ ${totalRevenue.toLocaleString("pt-BR")}
         </div>
       </div>
 
       <div class="stat-card">
         <div class="stat-label">FTD</div>
         <div class="stat-value">
-          \${totalFtd}
+          ${totalFtd}
         </div>
       </div>
 
       <div class="stat-card">
         <div class="stat-label">Depósitos</div>
         <div class="stat-value">
-          \${totalDepositos}
+          ${totalDepositos}
         </div>
       </div>
 
       <div class="stat-card">
         <div class="stat-label">Leads</div>
         <div class="stat-value">
-          \${totalLeads}
+          ${totalLeads}
         </div>
       </div>
 
