@@ -1113,30 +1113,279 @@ app.get("/dashboard-crm-performance", (req, res) => {
           background:#1f2937;
         }
 
+        .container{
+display:flex;
+min-height:100vh;
+}
+
+.sidebar{
+width:240px;
+background:#07101f;
+border-right:1px solid #13203a;
+padding:30px 22px;
+}
+
+.logo{
+font-size:38px;
+font-weight:800;
+margin-bottom:42px;
+}
+
+.nav-item{
+display:block;
+padding:14px 18px;
+border-radius:14px;
+color:#94a3b8;
+text-decoration:none;
+margin-bottom:10px;
+font-weight:700;
+}
+
+.nav-item:hover{
+background:#13203a;
+color:white;
+}
+
+.active{
+background:#2563eb;
+color:white;
+}
+
+.main{
+flex:1;
+padding:32px;
+}
+
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:30px;
+}
+
+.page-title{
+font-size:48px;
+font-weight:800;
+}
+
+.status-badge{
+background:#2563eb;
+padding:12px 18px;
+border-radius:14px;
+font-weight:700;
+}
+
+.stats-grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:20px;
+margin-bottom:24px;
+}
+
+.stat-card{
+background:#081428;
+border:1px solid #13203a;
+border-radius:22px;
+padding:24px;
+}
+
+.stat-label{
+color:#94a3b8;
+margin-bottom:10px;
+}
+
+.stat-value{
+font-size:42px;
+font-weight:800;
+}
+
+.big-card{
+background:#081428;
+border:1px solid #13203a;
+border-radius:24px;
+padding:24px;
+}
+
+.big-title{
+font-size:30px;
+font-weight:800;
+margin-bottom:24px;
+}
+
+.table-header{
+display:grid;
+grid-template-columns:2fr .8fr .8fr .8fr 1fr 1fr;
+gap:12px;
+background:#0f172a;
+border:1px solid #13203a;
+padding:16px;
+border-radius:14px;
+font-size:13px;
+font-weight:800;
+color:#94a3b8;
+margin-bottom:12px;
+}
+
+.table-row{
+display:grid;
+grid-template-columns:2fr .8fr .8fr .8fr 1fr 1fr;
+gap:12px;
+align-items:center;
+background:#081428;
+border:1px solid #13203a;
+padding:18px;
+border-radius:16px;
+margin-bottom:10px;
+}
+
+.campaign-name{
+font-weight:800;
+}
+
+.green{
+color:#4ade80;
+font-weight:800;
+}
+
+.blue{
+color:#60a5fa;
+font-weight:800;
+}
+
       </style>
 
     </head>
 
     <body>
 
-      <h1>📈 Dashboard CRM Performance</h1>
+      <div class="container">
 
-      <table>
+  <div class="sidebar">
 
-        <thead>
-          <tr>
-            <th>Campanha</th>
-            <th>Segmento</th>
-            <th>Canal</th>
-            <th>Oferta</th>
-            <th>Enviados</th>
-            <th>Reativados</th>
-            <th>Receita</th>
-            <th>Custo</th>
-            <th>ROI</th>
-            <th>Tx Reativação</th>
-          </tr>
-        </thead>
+    <div class="logo">
+      RetentionOS
+    </div>
+
+    <a href="/painel-auth" class="nav-item">📊 Painel</a>
+    <a href="/dashboard-view" class="nav-item">🚀 Campanhas</a>
+    <a href="/dashboard-daily" class="nav-item">📅 Por Data</a>
+    <a href="/dashboard-performance" class="nav-item active">📈 Performance</a>
+    <a href="/dashboard-crm" class="nav-item">📬 CRM</a>
+
+  </div>
+
+  <div class="main">
+
+    <div class="topbar">
+
+      <div>
+
+        <div style="
+          color:#94a3b8;
+          font-size:14px;
+          margin-bottom:6px;
+        ">
+          RetentionOS Platform
+        </div>
+
+        <div class="page-title">
+          Performance
+        </div>
+
+      </div>
+
+      <div class="status-badge">
+        Dados em tempo real
+      </div>
+
+    </div>
+
+    <div class="stats-grid">
+
+      <div class="stat-card">
+        <div class="stat-label">Revenue Total</div>
+        <div class="stat-value">
+          R$ \${totalRevenue.toLocaleString("pt-BR")}
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">FTD</div>
+        <div class="stat-value">
+          \${totalFtd}
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Depósitos</div>
+        <div class="stat-value">
+          \${totalDepositos}
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Leads</div>
+        <div class="stat-value">
+          \${totalLeads}
+        </div>
+      </div>
+
+    </div>
+
+    <div class="big-card">
+
+      <div class="big-title">
+        Ranking operacional
+      </div>
+
+      <div class="table-header">
+
+        <div>Campanha</div>
+        <div>Leads</div>
+        <div>Depósitos</div>
+        <div>FTD</div>
+        <div>Conversão</div>
+        <div>Revenue</div>
+
+      </div>
+
+      \${performance.map(item => `
+
+        <div class="table-row">
+
+          <div class="campaign-name">
+            \${item.campaign}
+          </div>
+
+          <div>
+            \${item.leads}
+          </div>
+
+          <div>
+            \${item.depositos}
+          </div>
+
+          <div class="blue">
+            \${item.ftd}
+          </div>
+
+          <div>
+            \${item.conversao}%
+          </div>
+
+          <div class="green">
+            R$ \${Number(item.receita || 0).toLocaleString("pt-BR")}
+          </div>
+
+        </div>
+
+      `).join("")}
+
+    </div>
+
+  </div>
+
+</div>
 
         <tbody>
           ${rows}
