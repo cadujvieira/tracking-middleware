@@ -4,6 +4,12 @@ const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
 const csv = require("csv-parser");
+const fs = require("fs");
+
+const upload = multer({
+  dest:"uploads/"
+});
+
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -11,8 +17,6 @@ const jwt = require("jsonwebtoken");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const { google } = require("googleapis");
-
-const upload = multer({ dest: "uploads/" });
 
 const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN;
 const META_AD_ACCOUNT_IDS = process.env.META_AD_ACCOUNT_IDS
@@ -913,142 +917,79 @@ app.post("/auth/login", express.json(), async (req, res) => {
   }
 });    
 
-app.post("/crm/upload-lista", authMiddleware, upload.single("file"), async (req, res) => {
-  try {
-    const fs = require("fs");
+app.post("/upload-lista", upload.single("file"), async (req, res) => {
 
-    const results = [];
+  try{
+
+    const resultados = [];
 
     fs.createReadStream(req.file.path)
       .pipe(csv())
       .on("data", (data) => {
-        const telefone = String(
-          data.telefone ||
-          data.phone ||
-          ""
-        ).replace(/\D/g, "");
 
-        const diasSemLogar = Number(
-          data.dias_sem_logar || 0
-        );
+        resultados.push(data);
 
-        let temperatura = "frio";
-
-        if (diasSemLogar <= 30) {
-          temperatura = "quente";
-        } else if (diasSemLogar <= 90) {
-          temperatura = "morno";
-        }
-
-        results.push({
-          telefone,
-          diasSemLogar,
-          temperatura,
-          tempoCadastro: data.tempo_cadastro || "",
-          status: data.status || ""
-        });
       })
       .on("end", async () => {
 
-        const audienceResponse = await fetch(
-  "https://tracking-middleware.onrender.com/sheets/audience",
-  {
-    headers: {
-      Authorization: req.headers.authorization
-    }
-  }
-);
+        for(const item of resultados){
 
-        const audienceJson = await audienceResponse.json();
+          const diasSemLogar = Number(item.dias_sem_logar || 0);
 
-        const audience = audienceJson.audience || [];
+          let temperatura = "FRIO";
 
-        const comparados = results.map((lead) => {
+          if(diasSemLogar <= 7){
+            temperatura = "QUENTE";
+          }
+          else if(diasSemLogar <= 30){
+            temperatura = "MORNO";
+          }
+          else if(diasSemLogar > 90){
+            temperatura = "MORTO";
+          }
 
-          const encontrado = audience.find((u) => {
-            const telefoneAudience = String(
-              u.telefone || u.phone || ""
-            ).replace(/\D/g, "");
+          await pool.query(`
+            INSERT INTO crm_imported_leads (
+              cpf,
+              email,
+              telefone,
+              dias_sem_logar,
+              status,
+              temperatura
+            )
+            VALUES ($1,$2,$3,$4,$5,$6)
+          `,[
+            item.cpf || null,
+            item.email || null,
+            item.telefone || null,
+            diasSemLogar,
+            item.status || null,
+            temperatura
+          ]);
 
-            return telefoneAudience.includes(lead.telefone)
-              || lead.telefone.includes(telefoneAudience);
-          });
+        }
 
-          return {
-            ...lead,
-
-            existeNaBola: !!encontrado,
-
-            depositou:
-              encontrado?.depositos > 0,
-
-            receita:
-              encontrado?.receita || 0,
-
-            depositos:
-              encontrado?.depositos || 0,
-
-            segmentoCRM:
-              encontrado?.segmentoCRM || null,
-
-            qualidade:
-              encontrado?.qualidade || null,
-
-            prioridade:
-              encontrado?.depositos > 0
-                ? "extrema"
-                : lead.temperatura === "quente"
-                ? "alta"
-                : lead.temperatura === "morno"
-                ? "media"
-                : "baixa"
-          };
-        });
-
-        const resumo = {
-          total: comparados.length,
-
-          cadastrados:
-            comparados.filter(x => x.existeNaBola).length,
-
-          naoCadastrados:
-            comparados.filter(x => !x.existeNaBola).length,
-
-          depositantes:
-            comparados.filter(x => x.depositou).length,
-
-          quentes:
-            comparados.filter(x => x.temperatura === "quente").length,
-
-          mornos:
-            comparados.filter(x => x.temperatura === "morno").length,
-
-          frios:
-            comparados.filter(x => x.temperatura === "frio").length
-        };
+        fs.unlinkSync(req.file.path);
 
         res.json({
-          ok: true,
-          resumo,
-          leads: comparados
+          success:true,
+          imported:resultados.length,
+          message:"Lista importada com sucesso"
         });
+
       });
 
-  } catch (error) {
-    res.status(500).json({
-      ok: false,
-      error: error.message
-    });
-  }
-});
+  }catch(error){
 
-app.get("/health", (req, res) => {
-  res.json({
-    ok: true,
-    status: "online",
-    service: "tracking-middleware",
-    time: new Date()
-  });
+    console.error(error);
+
+    res.status(500).json({
+      success:false,
+      error:error.message
+    });
+
+  }
+
 });
 
 app.get("/dashboard-performance", (req, res) => {
@@ -1488,7 +1429,7 @@ style="display:none;"
 />
 
 </div>
-      
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -1693,6 +1634,43 @@ ${rows.map(item => `
 
 </div>
 </div>
+
+<script>
+
+document.getElementById("csvFile").addEventListener("change", async function(e){
+
+  const file = e.target.files[0];
+
+  if(!file){
+    return;
+  }
+
+  const formData = new FormData();
+
+  formData.append("file", file);
+
+  try{
+
+    const response = await fetch("/upload-lista", {
+      method:"POST",
+      body:formData
+    });
+
+    const result = await response.json();
+
+    alert(result.message);
+
+    location.reload();
+
+  }catch(error){
+
+    alert("Erro ao importar lista");
+
+  }
+
+});
+
+</script>
 
 </body>
 </html>
