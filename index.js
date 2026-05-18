@@ -1761,11 +1761,29 @@ margin-bottom:28px;
     </div>
 
   <div style="
-display:flex;
-gap:12px;
-margin-top:22px;
-flex-wrap:wrap;
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
+margin-top:20px;
 ">
+
+<a href="/exportar-lista/${item.id}/QUENTE" target="_blank" style="background:#ff6b00;color:white;text-align:center;padding:10px;border-radius:12px;font-size:12px;font-weight:900;text-decoration:none;">
+🔥 Quente
+</a>
+
+<a href="/exportar-lista/${item.id}/MORNO" target="_blank" style="background:#eab308;color:white;text-align:center;padding:10px;border-radius:12px;font-size:12px;font-weight:900;text-decoration:none;">
+🌤 Morno
+</a>
+
+<a href="/exportar-lista/${item.id}/FRIO" target="_blank" style="background:#06b6d4;color:white;text-align:center;padding:10px;border-radius:12px;font-size:12px;font-weight:900;text-decoration:none;">
+❄ Frio
+</a>
+
+<a href="/exportar-lista/${item.id}/MORTO" target="_blank" style="background:#ef4444;color:white;text-align:center;padding:10px;border-radius:12px;font-size:12px;font-weight:900;text-decoration:none;">
+💀 Morto
+</a>
+
+</div>
 
 <button onclick="exportarSegmento('${item.nome}','quente')" style="
 background:#ff6b00;
@@ -1916,6 +1934,62 @@ app.post("/dashboard-listas/delete/:id", async (req, res) => {
       success:false,
       error:error.message
     });
+  }
+});
+
+app.get("/exportar-lista/:listaId/:temperatura", async (req, res) => {
+  try {
+    const { listaId, temperatura } = req.params;
+
+    const resultado = await pool.query(`
+      SELECT
+        cpf,
+        email,
+        telefone,
+        dias_sem_logar,
+        status,
+        temperatura,
+        prioridade_disparo
+      FROM crm_imported_leads
+      WHERE lista_id = $1
+      AND temperatura = $2
+      ORDER BY dias_sem_logar ASC
+    `, [listaId, temperatura]);
+
+    const header = [
+      "cpf",
+      "email",
+      "telefone",
+      "dias_sem_logar",
+      "status",
+      "temperatura",
+      "prioridade_disparo"
+    ];
+
+    const lines = resultado.rows.map(item => [
+      item.cpf || "",
+      item.email || "",
+      item.telefone || "",
+      item.dias_sem_logar || "",
+      item.status || "",
+      item.temperatura || "",
+      item.prioridade_disparo || ""
+    ]);
+
+    const csv = [
+      header.join(";"),
+      ...lines.map(line =>
+        line.map(value => `"${String(value).replace(/"/g, '""')}"`).join(";")
+      )
+    ].join("\n");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="lista_${temperatura}.csv"`);
+
+    res.send("\uFEFF" + csv);
+
+  } catch (error) {
+    res.status(500).send("Erro ao exportar lista: " + error.message);
   }
 });
 
