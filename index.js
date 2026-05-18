@@ -1767,13 +1767,73 @@ transition:0.2s ease;
   <div style="
 display:grid;
 grid-template-columns:repeat(4,1fr);
-gap:12px;
+gap:14px;
 margin-top:18px;
 ">
 
+<button 
+onclick="exportarSegmento('${item.id}','QUENTE')"
+style="
+background:#ff6b00;
+border:none;
+height:52px;
+border-radius:14px;
+color:white;
+font-weight:800;
+cursor:pointer;
+font-size:14px;
+">
+🔥 Exportar Quente
+</button>
+
+<button 
+onclick="exportarSegmento('${item.id}','MORNO')"
+style="
+background:#eab308;
+border:none;
+height:52px;
+border-radius:14px;
+color:white;
+font-weight:800;
+cursor:pointer;
+font-size:14px;
+">
+🌤️ Exportar Morno
+</button>
+
+<button 
+onclick="exportarSegmento('${item.id}','FRIO')"
+style="
+background:#06b6d4;
+border:none;
+height:52px;
+border-radius:14px;
+color:white;
+font-weight:800;
+cursor:pointer;
+font-size:14px;
+">
+❄️ Exportar Frio
+</button>
+
+<button 
+onclick="apagarLista(${item.id})"
+style="
+background:#ef4444;
+border:none;
+height:52px;
+border-radius:14px;
+color:white;
+font-weight:800;
+cursor:pointer;
+font-size:14px;
+">
+🗑️ Apagar Lista
+</button>
+
 </div>
 
-<button onclick="exportarSegmento('${item.nome}','QUENTE')" style="
+<button onclick="exportarSegmento('${item.id}','QUENTE')" style="
 background:#ff6b00;
 color:white;
 border:none;
@@ -1782,10 +1842,10 @@ border-radius:12px;
 font-weight:800;
 cursor:pointer;
 ">
-🔥 Quente
+🔥 EXTRAIR LISTA
 </button>
 
-<button onclick="exportarSegmento('${item.nome}','MORNO')" style="
+<button onclick="exportarSegmento('${item.id}','MORNO')" style="
 background:#eab308;
 color:white;
 border:none;
@@ -1794,10 +1854,10 @@ border-radius:12px;
 font-weight:800;
 cursor:pointer;
 ">
-🌤 Morno
+🌤 EXTRAIR LISTA
 </button>
 
-<button onclick="exportarSegmento('${item.nome}','FRIO')" style="
+<button onclick="exportarSegmento('${item.id}','FRIO')" style="
 background:#06b6d4;
 color:white;
 border:none;
@@ -1806,10 +1866,10 @@ border-radius:12px;
 font-weight:800;
 cursor:pointer;
 ">
-❄ Frio
+❄ EXTRAIR LISTA
 </button>
 
-<button onclick="exportarSegmento('${item.nome}','MORTO')" style="
+<button onclick="exportarSegmento('${item.id}','MORTO')" style="
 background:#ef4444;
 color:white;
 border:none;
@@ -1818,7 +1878,7 @@ border-radius:12px;
 font-weight:800;
 cursor:pointer;
 ">
-💀 Morto
+💀 EXTRAIR LISTA
 </button>
 
 </div>
@@ -1885,6 +1945,19 @@ async function apagarLista(id){
 
 function exportarSegmento(listaId, segmento) {
   window.open("/exportar-lista/" + listaId + "/" + segmento, "_blank");
+}
+
+async function apagarLista(id) {
+
+  const confirmar = confirm("Deseja apagar esta lista?");
+
+  if (!confirmar) return;
+
+  await fetch("/apagar-lista/" + id, {
+    method: "DELETE"
+  });
+
+  location.reload();
 }
 
 </script>
