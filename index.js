@@ -1841,7 +1841,7 @@ font-size:14px;
 </div>
 
 <button
-  onclick="apagarLista(${lista.id})"
+  onclick="apagarLista(${item.id})"
   style="
     background:#ff4d4f;
     border:none;
