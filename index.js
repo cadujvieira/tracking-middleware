@@ -1771,52 +1771,64 @@ gap:14px;
 margin-top:18px;
 ">
 
-<button onclick="exportarSegmento('${item.id}','QUENTE')" style="
+<button 
+onclick="exportarSegmento('${item.id}','QUENTE')"
+style="
 background:#ff6b00;
-color:white;
 border:none;
-padding:12px 18px;
-border-radius:12px;
+height:52px;
+border-radius:14px;
+color:white;
 font-weight:800;
 cursor:pointer;
+font-size:14px;
 ">
-🔥 EXTRAIR LISTA
+🔥 Exportar Quente
 </button>
 
-<button onclick="exportarSegmento('${item.id}','MORNO')" style="
+<button 
+onclick="exportarSegmento('${item.id}','MORNO')"
+style="
 background:#eab308;
-color:white;
 border:none;
-padding:12px 18px;
-border-radius:12px;
+height:52px;
+border-radius:14px;
+color:white;
 font-weight:800;
 cursor:pointer;
+font-size:14px;
 ">
-🌤 EXTRAIR LISTA
+🌤️ Exportar Morno
 </button>
 
-<button onclick="exportarSegmento('${item.id}','FRIO')" style="
+<button 
+onclick="exportarSegmento('${item.id}','FRIO')"
+style="
 background:#06b6d4;
-color:white;
 border:none;
-padding:12px 18px;
-border-radius:12px;
+height:52px;
+border-radius:14px;
+color:white;
 font-weight:800;
 cursor:pointer;
+font-size:14px;
 ">
-❄ EXTRAIR LISTA
+❄️ Exportar Frio
 </button>
 
-<button onclick="exportarSegmento('${item.id}','MORTO')" style="
+<button 
+onclick="apagarLista(${item.id})"
+style="
 background:#ef4444;
-color:white;
 border:none;
-padding:12px 18px;
-border-radius:12px;
+height:52px;
+border-radius:14px;
+color:white;
 font-weight:800;
 cursor:pointer;
+font-size:14px;
 ">
-💀 EXTRAIR LISTA
+🗑️ Apagar Lista
 </button>
 
 </div>
