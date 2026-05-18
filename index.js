@@ -1840,17 +1840,19 @@ font-size:14px;
 
 </div>
 
-<button onclick="apagarLista(${item.id})" style="
-background:#ef4444;
-border:none;
-height:48px;
-border-radius:12px;
-color:white;
-font-weight:800;
-cursor:pointer;
-font-size:12px;
-">
-Apagar<br>Lista
+<button
+  onclick="apagarLista(${lista.id})"
+  style="
+    background:#ff4d4f;
+    border:none;
+    border-radius:10px;
+    padding:12px;
+    color:white;
+    font-weight:700;
+    cursor:pointer;
+  "
+>
+ Apagar Lista
 </button>
 
 </div>
@@ -1919,17 +1921,23 @@ function exportarSegmento(listaId, segmento) {
   window.open("/exportar-lista/" + listaId + "/" + segmento, "_blank");
 }
 
-async function apagarLista(id) {
+async function apagarLista(id){
+  if(!confirm("Tem certeza que deseja apagar esta lista?")){
+    return;
+  }
 
-  const confirmar = confirm("Deseja apagar esta lista?");
-
-  if (!confirmar) return;
-
-  await fetch("/apagar-lista/" + id, {
-    method: "DELETE"
+  const response = await fetch("/dashboard-listas/delete/" + id, {
+    method:"POST"
   });
 
-  location.reload();
+  const result = await response.json();
+
+  if(result.success){
+    alert("Lista apagada com sucesso");
+    location.reload();
+  } else {
+    alert("Erro ao apagar lista: " + (result.error || ""));
+  }
 }
 
 </script>
@@ -1944,6 +1952,27 @@ async function apagarLista(id) {
 
     res.status(500).send(error.message);
 
+  }
+});
+
+app.delete("/apagar-lista/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await pool.query("DELETE FROM crm_leads WHERE lista_id = $1", [id]);
+
+    await pool.query("DELETE FROM crm_listas WHERE id = $1", [id]);
+
+    res.json({
+      success: true
+    });
+
+  } catch (error) {
+    console.error("Erro ao apagar lista:", error);
+
+    res.status(500).json({
+      error: "Erro ao apagar lista"
+    });
   }
 });
 
