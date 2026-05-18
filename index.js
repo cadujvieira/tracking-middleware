@@ -1812,6 +1812,19 @@ font-size:12px;
 ❄ Exportar<br>Frio
 </button>
 
+<button onclick="exportarSegmento('${item.id}','MORTO')" style="
+background:#7f1d1d;
+border:none;
+height:52px;
+border-radius:14px;
+color:white;
+font-weight:800;
+cursor:pointer;
+font-size:14px;
+">
+💀 Exportar Morto
+</button>  
+
 <button onclick="apagarLista(${item.id})" style="
 background:#ef4444;
 border:none;
