@@ -964,15 +964,30 @@ app.post("/upload-lista", upload.single("file"), async (req, res) => {
   req.file.originalname,
   "importada",
   resultados.length,
-  resultados.filter(item =>
-  item.telefone ||
-  item.phone ||
-  item.celular ||
-  item.whatsapp ||
-  item.numero ||
-  item.telefone_celular ||
-  item.mobile
-).length
+  resultados.filter(item => {
+  const telefone =
+    item.telefone ||
+    item.Telefone ||
+    item.TELEFONE ||
+    item.phone ||
+    item.Phone ||
+    item.celular ||
+    item.Celular ||
+    item.whatsapp ||
+    item.WhatsApp ||
+    item.numero ||
+    item.Numero ||
+    item["número"] ||
+    item["Número"] ||
+    item["telefone "] ||
+    item["Telefone "] ||
+    item.telefone_celular ||
+    item.mobile ||
+    item["Phone Number"] ||
+    item["Número de telefone"];
+
+  return telefone && String(telefone).replace(/\D/g, "").length >= 8;
+}).length
 ]);
 
 const listaId = listaResult.rows[0].id;
@@ -1008,7 +1023,7 @@ const listaId = listaResult.rows[0].id;
               listaId,
               item.cpf || null,
               item.email || null,
-              item.telefone || item.phone || item.celular || item.whatsapp || item.numero || item.telefone_celular || item.mobile || null,
+              item.telefone || item.Telefone || item.TELEFONE || item.phone || item.Phone || item.celular || item.Celular || item.whatsapp || item.WhatsApp || item.numero || item.Numero || item["número"] || item["Número"] || item["telefone "] || item["Telefone "] || item.telefone_celular || item.mobile || item["Phone Number"] || item["Número de telefone"] || null,
               diasSemLogar,
               item.status || item.situacao || null,
               temperatura
