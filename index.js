@@ -1682,19 +1682,22 @@ Listas exportadas
 
 <div style="
 display:grid;
-grid-template-columns:repeat(auto-fill,minmax(420px,1fr));
-gap:18px;
-margin-top:20px;
+grid-template-columns:repeat(auto-fit,minmax(520px,1fr));
+gap:24px;
+align-items:start;
 ">
 
 ${listas.rows.map(item => `
 
-<div style="
-background:#081428;
-border:1px solid #13203a;
+<div class="lista-card" style="
+background:linear-gradient(180deg,#081428,#091b3f);
+border:1px solid rgba(255,255,255,0.06);
 border-radius:24px;
 padding:32px;
 margin-bottom:28px;
+width:100%;
+box-shadow:0 20px 60px rgba(0,0,0,0.28);
+transition:0.2s ease;
 ">
 
   <div style="
@@ -1728,34 +1731,35 @@ margin-bottom:28px;
 
   <div style="
   display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:12px;
+  grid-template-columns:repeat(4,minmax(90px,1fr));
+  gap:14px;
+  margin-top:18px;
   ">
 
     <div style="background:#2563eb20;padding:16px;border-radius:16px;">
       <div style="color:#93c5fd;font-size:12px;font-weight:800;">🔥 QUENTE</div>
-      <div style="font-size:28px;font-weight:900;color:white;">
+      <div style="font-size:36px;line-height:36px;font-weight:900;color:white;">
         ${item.quente || 0}
       </div>
     </div>
 
     <div style="background:#f59e0b20;padding:16px;border-radius:16px;">
       <div style="color:#fcd34d;font-size:12px;font-weight:800;">🌤 MORNO</div>
-      <div style="font-size:28px;font-weight:900;color:white;">
+      <div style="font-size:36px;line-height:36px;font-weight:900;color:white;">
         ${item.morno || 0}
       </div>
     </div>
 
     <div style="background:#06b6d420;padding:16px;border-radius:16px;">
       <div style="color:#67e8f9;font-size:12px;font-weight:800;">❄ FRIO</div>
-      <div style="font-size:28px;font-weight:900;color:white;">
+      <div style="font-size:36px;line-height:36px;font-weight:900;color:white;">
         ${item.frio || 0}
       </div>
     </div>
 
     <div style="background:#ef444420;padding:16px;border-radius:16px;">
       <div style="color:#fca5a5;font-size:12px;font-weight:800;">💀 MORTO</div>
-      <div style="font-size:28px;font-weight:900;color:white;">
+      <div style="font-size:36px;line-height:36px;font-weight:900;color:white;">
         ${item.morto || 0}
       </div>
     </div>
@@ -1763,23 +1767,23 @@ margin-bottom:28px;
   <div style="
 display:grid;
 grid-template-columns:repeat(4,1fr);
-gap:10px;
-margin-top:20px;
+gap:12px;
+margin-top:18px;
 ">
 
-<a href="/exportar-lista/${item.id}/QUENTE" target="_blank" style="background:#ff6b00;color:white;text-align:center;padding:10px;border-radius:12px;font-size:12px;font-weight:900;text-decoration:none;">
+<a href="/exportar-lista/${item.id}/QUENTE" target="_blank" style="background:#ff6b00;color:white;text-align:center;padding:14px 16px;;border-radius:12px;font-size:14px;font-weight:700;text-decoration:none;">
 🔥 Quente
 </a>
 
-<a href="/exportar-lista/${item.id}/MORNO" target="_blank" style="background:#eab308;color:white;text-align:center;padding:10px;border-radius:12px;font-size:12px;font-weight:900;text-decoration:none;">
+<a href="/exportar-lista/${item.id}/MORNO" target="_blank" style="background:#eab308;color:white;text-align:center;padding:14px 16px;;border-radius:12px;font-size:14px;font-weight:700;text-decoration:none;">
 🌤 Morno
 </a>
 
-<a href="/exportar-lista/${item.id}/FRIO" target="_blank" style="background:#06b6d4;color:white;text-align:center;padding:10px;border-radius:12px;font-size:12px;font-weight:900;text-decoration:none;">
+<a href="/exportar-lista/${item.id}/FRIO" target="_blank" style="background:#06b6d4;color:white;text-align:center;padding:14px 16px;;border-radius:12px;font-size:14px;font-weight:700;text-decoration:none;">
 ❄ Frio
 </a>
 
-<a href="/exportar-lista/${item.id}/MORTO" target="_blank" style="background:#ef4444;color:white;text-align:center;padding:10px;border-radius:12px;font-size:12px;font-weight:900;text-decoration:none;">
+<a href="/exportar-lista/${item.id}/MORTO" target="_blank" style="background:#ef4444;color:white;text-align:center;padding:14px 16px;;border-radius:12px;font-size:14px;font-weight:700;text-decoration:none;">
 💀 Morto
 </a>
 
@@ -1830,7 +1834,7 @@ border-radius:12px;
 font-weight:800;
 cursor:pointer;
 ">
-💀 Exportar Morto
+💀 Morto
 </button>
 
 </div>
