@@ -1768,7 +1768,7 @@ transition:0.2s ease;
 
   <div style="
 display:grid;
-grid-template-columns:repeat(4,1fr);
+grid-template-columns:repeat(5,1fr);
 gap:12px;
 margin-top:18px;
 ">
