@@ -32,6 +32,7 @@ app.use(express.urlencoded({ extended: true }));
 const crmCampaigns = [];
 
 const PORT = process.env.PORT || 3000;
+const EXPORT_PASSWORD = process.env.EXPORT_PASSWORD || "123456";
 const FINAL_DESTINATION_URL = process.env.FINAL_DESTINATION_URL || "https://seudestino.com";
 const DATABASE_URL = process.env.DATABASE_URL;
 
@@ -1917,8 +1918,18 @@ async function apagarLista(id){
   location.reload();
 }
 
-function exportarSegmento(listaId, segmento) {
-  window.open("/exportar-lista/" + listaId + "/" + segmento, "_blank");
+function exportarSegmento(listaId, segmento){
+
+  const senha = prompt("Digite a senha para exportar:");
+
+  if(!senha){
+    return;
+  }
+
+  window.open(
+    `/exportar-lista/${listaId}/${segmento}?senha=${encodeURIComponent(senha)}`,
+    "_blank"
+  );
 }
 
 async function apagarLista(id){
@@ -2005,6 +2016,13 @@ app.post("/dashboard-listas/delete/:id", async (req, res) => {
 
 app.get("/exportar-lista/:listaId/:temperatura", async (req, res) => {
   try {
+
+    const { senha } = req.query;
+
+if (senha !== EXPORT_PASSWORD) {
+  return res.status(401).send("Senha inválida");
+}
+
     const { listaId, temperatura } = req.params;
 
     const resultado = await pool.query(`
