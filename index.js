@@ -1764,6 +1764,8 @@ transition:0.2s ease;
       </div>
     </div>
 
+  </div>
+
   <div style="
 display:grid;
 grid-template-columns:repeat(4,1fr);
