@@ -1825,6 +1825,10 @@ font-size:14px;
 💀 Exportar Morto
 </button>  
 
+</div>
+
+</div>
+
 <button onclick="apagarLista(${item.id})" style="
 background:#ef4444;
 border:none;
