@@ -1438,11 +1438,23 @@ app.get("/dashboard-listas", async (req, res) => {
   try {
 
     const listas = await pool.query(`
-      SELECT *
-      FROM crm_export_logs
-      ORDER BY data_exportacao DESC
-      LIMIT 100
-    `);
+  SELECT
+    l.*,
+    COUNT(i.id)::int AS total_importados,
+    COUNT(i.id) FILTER (WHERE i.temperatura = 'QUENTE')::int AS quente,
+    COUNT(i.id) FILTER (WHERE i.temperatura = 'MORNO')::int AS morno,
+    COUNT(i.id) FILTER (WHERE i.temperatura = 'FRIO')::int AS frio,
+    COUNT(i.id) FILTER (WHERE i.temperatura = 'MORTO')::int AS morto,
+    COUNT(i.id) FILTER (WHERE i.prioridade_disparo = 'ALTA')::int AS prioridade_alta,
+    COUNT(i.id) FILTER (WHERE i.prioridade_disparo = 'MEDIA')::int AS prioridade_media,
+    COUNT(i.id) FILTER (WHERE i.prioridade_disparo = 'BAIXA')::int AS prioridade_baixa,
+    COUNT(i.id) FILTER (WHERE i.prioridade_disparo = 'REATIVACAO_PESADA')::int AS prioridade_reativacao
+  FROM crm_export_logs l
+  LEFT JOIN crm_imported_leads i ON i.lista_id = l.id
+  GROUP BY l.id
+  ORDER BY l.data_exportacao DESC
+  LIMIT 100
+`);
 
     const rows = listas.rows;
 
@@ -1746,7 +1758,97 @@ Segmento: ${item.segmento || "importada"}
 display:grid;
 grid-template-columns:repeat(2,1fr);
 gap:14px;
+margin-top:20px;
 ">
+
+<div style="
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
+margin-top:18px;
+">
+
+  <div style="
+  background:#3b82f620;
+  border:1px solid #1d4ed8;
+  border-radius:14px;
+  padding:14px;
+  ">
+    <div style="font-size:12px;color:#93c5fd;">
+      🔥 QUENTE
+    </div>
+
+    <div style="
+    font-size:28px;
+    font-weight:800;
+    color:#60a5fa;
+    margin-top:6px;
+    ">
+      ${item.quente || 0}
+    </div>
+  </div>
+
+  <div style="
+  background:#facc1520;
+  border:1px solid #ca8a04;
+  border-radius:14px;
+  padding:14px;
+  ">
+    <div style="font-size:12px;color:#fde68a;">
+      🟡 MORNO
+    </div>
+
+    <div style="
+    font-size:28px;
+    font-weight:800;
+    color:#facc15;
+    margin-top:6px;
+    ">
+      ${item.morno || 0}
+    </div>
+  </div>
+
+  <div style="
+  background:#38bdf820;
+  border:1px solid #0891b2;
+  border-radius:14px;
+  padding:14px;
+  ">
+    <div style="font-size:12px;color:#bae6fd;">
+      ❄️ FRIO
+    </div>
+
+    <div style="
+    font-size:28px;
+    font-weight:800;
+    color:#38bdf8;
+    margin-top:6px;
+    ">
+      ${item.frio || 0}
+    </div>
+  </div>
+
+  <div style="
+  background:#ef444420;
+  border:1px solid #991b1b;
+  border-radius:14px;
+  padding:14px;
+  ">
+    <div style="font-size:12px;color:#fecaca;">
+      ☠️ MORTO
+    </div>
+
+    <div style="
+    font-size:28px;
+    font-weight:800;
+    color:#ef4444;
+    margin-top:6px;
+    ">
+      ${item.morto || 0}
+    </div>
+  </div>
+
+</div>  
 
 <div style="
 background:#0b1730;
