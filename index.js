@@ -1693,258 +1693,74 @@ ${listas.rows.map(item => `
 background:#081428;
 border:1px solid #13203a;
 border-radius:24px;
-padding:30px;
-max-width:760px;
-width:100%;
-box-shadow:0 20px 60px rgba(0,0,0,0.28);
-">
-
-<div style="
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:18px;
-">
-
-<div>
-<div style="
-font-size:18px;
-font-weight:800;
-color:white;
-">
-📦 ${item.nome_lista}
-</div>
-
-<div style="
-font-size:13px;
-color:#94a3b8;
-margin-top:4px;
-">
-Segmento: ${item.segmento || "importada"}
-</div>
-</div>
-
-<div style="display:flex;gap:8px;align-items:center;">
-
-  <div style="
-  background:#16a34a20;
-  color:#4ade80;
-  padding:8px 14px;
-  border-radius:999px;
-  font-size:13px;
-  font-weight:700;
-  ">
-  R$ ${Number(item.receita_total || 0).toLocaleString("pt-BR")}
-  </div>
-
-  <button onclick="apagarLista(${item.id})" style="
-  background:#7f1d1d;
-  color:#fecaca;
-  border:none;
-  padding:8px 12px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:800;
-  cursor:pointer;
-  ">
-  Apagar
-  </button>
-
-</div>
-
-</div>
-
-<div style="
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:14px;
-margin-top:20px;
-">
-
-<div style="
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:10px;
-margin-top:18px;
+padding:26px;
+margin-bottom:20px;
 ">
 
   <div style="
-  background:#3b82f620;
-  border:1px solid #1d4ed8;
-  border-radius:14px;
-  padding:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
   ">
-    <div style="font-size:12px;color:#93c5fd;">
-      🔥 QUENTE
+
+    <div>
+      <div style="font-size:20px;font-weight:900;color:white;">
+        📦 ${item.nome_lista}
+      </div>
+
+      <div style="font-size:13px;color:#94a3b8;margin-top:4px;">
+        Segmento: ${item.segmento || "importada"}
+      </div>
     </div>
 
     <div style="
-    font-size:28px;
-    font-weight:800;
-    color:#60a5fa;
-    margin-top:6px;
+    background:#16a34a20;
+    color:#4ade80;
+    padding:10px 16px;
+    border-radius:999px;
+    font-weight:900;
     ">
-      ${item.quente || 0}
+      R$ ${Number(item.receita_total || 0).toLocaleString("pt-BR")}
     </div>
+
   </div>
 
   <div style="
-  background:#facc1520;
-  border:1px solid #ca8a04;
-  border-radius:14px;
-  padding:14px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
   ">
-    <div style="font-size:12px;color:#fde68a;">
-      🟡 MORNO
+
+    <div style="background:#2563eb20;padding:16px;border-radius:16px;">
+      <div style="color:#93c5fd;font-size:12px;font-weight:800;">🔥 QUENTE</div>
+      <div style="font-size:28px;font-weight:900;color:white;">
+        ${item.quente || 0}
+      </div>
     </div>
 
-    <div style="
-    font-size:28px;
-    font-weight:800;
-    color:#facc15;
-    margin-top:6px;
-    ">
-      ${item.morno || 0}
+    <div style="background:#f59e0b20;padding:16px;border-radius:16px;">
+      <div style="color:#fcd34d;font-size:12px;font-weight:800;">🌤 MORNO</div>
+      <div style="font-size:28px;font-weight:900;color:white;">
+        ${item.morno || 0}
+      </div>
     </div>
+
+    <div style="background:#06b6d420;padding:16px;border-radius:16px;">
+      <div style="color:#67e8f9;font-size:12px;font-weight:800;">❄ FRIO</div>
+      <div style="font-size:28px;font-weight:900;color:white;">
+        ${item.frio || 0}
+      </div>
+    </div>
+
+    <div style="background:#ef444420;padding:16px;border-radius:16px;">
+      <div style="color:#fca5a5;font-size:12px;font-weight:800;">💀 MORTO</div>
+      <div style="font-size:28px;font-weight:900;color:white;">
+        ${item.morto || 0}
+      </div>
+    </div>
+
   </div>
-
-  <div style="
-  background:#38bdf820;
-  border:1px solid #0891b2;
-  border-radius:14px;
-  padding:14px;
-  ">
-    <div style="font-size:12px;color:#bae6fd;">
-      ❄️ FRIO
-    </div>
-
-    <div style="
-    font-size:28px;
-    font-weight:800;
-    color:#38bdf8;
-    margin-top:6px;
-    ">
-      ${item.frio || 0}
-    </div>
-  </div>
-
-  <div style="
-  background:#ef444420;
-  border:1px solid #991b1b;
-  border-radius:14px;
-  padding:14px;
-  ">
-    <div style="font-size:12px;color:#fecaca;">
-      ☠️ MORTO
-    </div>
-
-    <div style="
-    font-size:28px;
-    font-weight:800;
-    color:#ef4444;
-    margin-top:6px;
-    ">
-      ${item.morto || 0}
-    </div>
-  </div>
-
-</div>  
-
-<div style="
-background:#0b1730;
-padding:14px;
-border-radius:14px;
-">
-<div style="color:#94a3b8;font-size:12px;">
-👥 Leads
-</div>
-
-<div style="
-font-size:24px;
-font-weight:800;
-margin-top:6px;
-">
-${item.total_usuarios || 0}
-</div>
-</div>
-
-<div style="
-background:#0b1730;
-padding:14px;
-border-radius:14px;
-">
-<div style="color:#94a3b8;font-size:12px;">
-📲 Telefones
-</div>
-
-<div style="
-font-size:24px;
-font-weight:800;
-margin-top:6px;
-">
-${item.total_com_telefone || 0}
-</div>
-</div>
-
-<div style="
-background:#0b1730;
-padding:14px;
-border-radius:14px;
-">
-<div style="color:#94a3b8;font-size:12px;">
-✅ Cadastrados
-</div>
-
-<div style="
-font-size:24px;
-font-weight:800;
-margin-top:6px;
-color:#38bdf8;
-">
-${item.cadastrados || 0}
-</div>
-</div>
-
-<div style="
-background:#0b1730;
-padding:14px;
-border-radius:14px;
-">
-<div style="color:#94a3b8;font-size:12px;">
-💰 Depositaram
-</div>
-
-<div style="
-font-size:24px;
-font-weight:800;
-margin-top:6px;
-color:#facc15;
-">
-${item.depositaram || 0}
-</div>
-</div>
-
-<div style="
-background:#0b1730;
-padding:14px;
-border-radius:14px;
-grid-column:span 2;
-">
-<div style="color:#94a3b8;font-size:12px;">
-🚀 FTD
-</div>
-
-<div style="
-font-size:28px;
-font-weight:900;
-margin-top:8px;
-color:#4ade80;
-">
-${item.ftd || 0}
-</div>
-</div>
-
-</div>
 
 </div>
 
