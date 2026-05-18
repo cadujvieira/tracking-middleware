@@ -1767,68 +1767,60 @@ transition:0.2s ease;
   <div style="
 display:grid;
 grid-template-columns:repeat(4,1fr);
-gap:14px;
+gap:12px;
 margin-top:18px;
 ">
 
-<button 
-onclick="exportarSegmento('${item.id}','QUENTE')"
-style="
+<button onclick="exportarSegmento('${item.id}','QUENTE')" style="
 background:#ff6b00;
 border:none;
-height:52px;
-border-radius:14px;
+height:48px;
+border-radius:12px;
 color:white;
 font-weight:800;
 cursor:pointer;
-font-size:14px;
+font-size:12px;
 ">
-🔥 Exportar Quente
+🔥 Exportar<br>Quente
 </button>
 
-<button 
-onclick="exportarSegmento('${item.id}','MORNO')"
-style="
+<button onclick="exportarSegmento('${item.id}','MORNO')" style="
 background:#eab308;
 border:none;
-height:52px;
-border-radius:14px;
+height:48px;
+border-radius:12px;
 color:white;
 font-weight:800;
 cursor:pointer;
-font-size:14px;
+font-size:12px;
 ">
-🌤️ Exportar Morno
+🌤 Exportar<br>Morno
 </button>
 
-<button 
-onclick="exportarSegmento('${item.id}','FRIO')"
-style="
+<button onclick="exportarSegmento('${item.id}','FRIO')" style="
 background:#06b6d4;
 border:none;
-height:52px;
-border-radius:14px;
+height:48px;
+border-radius:12px;
 color:white;
 font-weight:800;
 cursor:pointer;
-font-size:14px;
+font-size:12px;
 ">
-❄️ Exportar Frio
+❄ Exportar<br>Frio
 </button>
 
-<button 
-onclick="apagarLista(${item.id})"
-style="
+<button onclick="apagarLista(${item.id})" style="
 background:#ef4444;
 border:none;
-height:52px;
-border-radius:14px;
+height:48px;
+border-radius:12px;
 color:white;
 font-weight:800;
 cursor:pointer;
-font-size:14px;
+font-size:12px;
 ">
-🗑️ Apagar Lista
+🗑 Apagar<br>Lista
 </button>
 
 </div>
