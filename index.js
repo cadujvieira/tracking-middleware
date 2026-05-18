@@ -1771,68 +1771,6 @@ gap:14px;
 margin-top:18px;
 ">
 
-<button 
-onclick="exportarSegmento('${item.id}','QUENTE')"
-style="
-background:#ff6b00;
-border:none;
-height:52px;
-border-radius:14px;
-color:white;
-font-weight:800;
-cursor:pointer;
-font-size:14px;
-">
-🔥 Exportar Quente
-</button>
-
-<button 
-onclick="exportarSegmento('${item.id}','MORNO')"
-style="
-background:#eab308;
-border:none;
-height:52px;
-border-radius:14px;
-color:white;
-font-weight:800;
-cursor:pointer;
-font-size:14px;
-">
-🌤️ Exportar Morno
-</button>
-
-<button 
-onclick="exportarSegmento('${item.id}','FRIO')"
-style="
-background:#06b6d4;
-border:none;
-height:52px;
-border-radius:14px;
-color:white;
-font-weight:800;
-cursor:pointer;
-font-size:14px;
-">
-❄️ Exportar Frio
-</button>
-
-<button 
-onclick="apagarLista(${item.id})"
-style="
-background:#ef4444;
-border:none;
-height:52px;
-border-radius:14px;
-color:white;
-font-weight:800;
-cursor:pointer;
-font-size:14px;
-">
-🗑️ Apagar Lista
-</button>
-
-</div>
-
 <button onclick="exportarSegmento('${item.id}','QUENTE')" style="
 background:#ff6b00;
 color:white;
