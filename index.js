@@ -1771,23 +1771,55 @@ gap:12px;
 margin-top:18px;
 ">
 
-<a href="/exportar-lista/${item.id}/QUENTE" target="_blank" style="background:#ff6b00;color:white;text-align:center;padding:14px 16px;;border-radius:12px;font-size:14px;font-weight:700;text-decoration:none;">
-🔥 Quente
-</a>
-
-<a href="/exportar-lista/${item.id}/MORNO" target="_blank" style="background:#eab308;color:white;text-align:center;padding:14px 16px;;border-radius:12px;font-size:14px;font-weight:700;text-decoration:none;">
-🌤 Morno
-</a>
-
-<a href="/exportar-lista/${item.id}/FRIO" target="_blank" style="background:#06b6d4;color:white;text-align:center;padding:14px 16px;;border-radius:12px;font-size:14px;font-weight:700;text-decoration:none;">
-❄ Frio
-</a>
-
-<a href="/exportar-lista/${item.id}/MORTO" target="_blank" style="background:#ef4444;color:white;text-align:center;padding:14px 16px;;border-radius:12px;font-size:14px;font-weight:700;text-decoration:none;">
-💀 Morto
-</a>
-
 </div>
+
+<button onclick="exportarSegmento('${item.nome}','quente')" style="
+background:#ff6b00;
+color:white;
+border:none;
+padding:12px 18px;
+border-radius:12px;
+font-weight:800;
+cursor:pointer;
+">
+🔥 Exportar Quente
+</button>
+
+<button onclick="exportarSegmento('${item.nome}','morno')" style="
+background:#eab308;
+color:white;
+border:none;
+padding:12px 18px;
+border-radius:12px;
+font-weight:800;
+cursor:pointer;
+">
+🌤 Exportar Morno
+</button>
+
+<button onclick="exportarSegmento('${item.nome}','frio')" style="
+background:#06b6d4;
+color:white;
+border:none;
+padding:12px 18px;
+border-radius:12px;
+font-weight:800;
+cursor:pointer;
+">
+❄ Exportar Frio
+</button>
+
+<button onclick="exportarSegmento('${item.nome}','morto')" style="
+background:#ef4444;
+color:white;
+border:none;
+padding:12px 18px;
+border-radius:12px;
+font-weight:800;
+cursor:pointer;
+">
+💀 Morto
+</button>
 
 </div>
 
@@ -1849,6 +1881,10 @@ async function apagarLista(id){
   alert(result.message || "Lista apagada");
 
   location.reload();
+}
+
+function exportarSegmento(listaId, segmento) {
+  window.open(`/exportar-lista/${listaId}/${segmento}`, "_blank");
 }
 
 </script>
