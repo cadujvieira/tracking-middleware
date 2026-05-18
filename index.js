@@ -729,6 +729,11 @@ CREATE TABLE IF NOT EXISTS audience (
     created_at TIMESTAMP DEFAULT NOW()
   );
 `);
+
+  await pool.query(`
+  ALTER TABLE crm_imported_leads
+  ADD COLUMN IF NOT EXISTS prioridade_disparo TEXT;
+`);
 }  
 
 app.post("/crm/nova-campanha", authMiddleware, express.json(), async (req, res) => {
@@ -997,16 +1002,24 @@ const listaId = listaResult.rows[0].id;
           const diasSemLogar = Number(item.dias_sem_logar || 0);
 
           let temperatura = "FRIO";
+let prioridadeDisparo = "BAIXA";
 
-          if(diasSemLogar <= 7){
-            temperatura = "QUENTE";
-          }
-          else if(diasSemLogar <= 30){
-            temperatura = "MORNO";
-          }
-          else if(diasSemLogar > 90){
-            temperatura = "MORTO";
-          }
+if(diasSemLogar <= 7){
+  temperatura = "QUENTE";
+  prioridadeDisparo = "ALTA";
+}
+else if(diasSemLogar <= 30){
+  temperatura = "MORNO";
+  prioridadeDisparo = "MEDIA";
+}
+else if(diasSemLogar <= 90){
+  temperatura = "FRIO";
+  prioridadeDisparo = "BAIXA";
+}
+else{
+  temperatura = "MORTO";
+  prioridadeDisparo = "REATIVACAO_PESADA";
+}
 
           await pool.query(`
             INSERT INTO crm_imported_leads (
@@ -1016,9 +1029,10 @@ const listaId = listaResult.rows[0].id;
               telefone,
               dias_sem_logar,
               status,
-              temperatura
+              temperatura,
+              prioridade_disparo
             )
-            VALUES ($1,$2,$3,$4,$5,$6,$7)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
           `,[
               listaId,
               item.cpf || null,
@@ -1026,7 +1040,8 @@ const listaId = listaResult.rows[0].id;
               item.telefone || item.Telefone || item.TELEFONE || item.phone || item.Phone || item.celular || item.Celular || item.whatsapp || item.WhatsApp || item.numero || item.Numero || item["número"] || item["Número"] || item["telefone "] || item["Telefone "] || item.telefone_celular || item.mobile || item["Phone Number"] || item["Número de telefone"] || null,
               diasSemLogar,
               item.status || item.situacao || null,
-              temperatura
+              temperatura,
+              prioridadeDisparo
           ]);
 
         }
