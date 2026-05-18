@@ -999,7 +999,20 @@ const listaId = listaResult.rows[0].id;
 
         for(const item of resultados){
 
-          const diasSemLogar = Number(item.dias_sem_logar || 0);
+          const diasSemLogar = Number(
+  item.dias_sem_logar ||
+  item.diasSemLogar ||
+  item["dias sem logar"] ||
+  item["Dias sem logar"] ||
+  item["DIAS SEM LOGAR"] ||
+  item["dias_sem_login"] ||
+  item["dias sem login"] ||
+  item["Dias sem login"] ||
+  item["ultimo_login_dias"] ||
+  item["dias_inativo"] ||
+  item["Dias Inativo"] ||
+  0
+);
 
           let temperatura = "FRIO";
 let prioridadeDisparo = "BAIXA";
