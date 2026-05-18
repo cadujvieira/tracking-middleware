@@ -1448,6 +1448,10 @@ app.get("/dashboard-listas", async (req, res) => {
 
 <style>
 
+*{
+  box-sizing:border-box;
+}      
+
 body{
   margin:0;
   background:#020817;
@@ -1636,7 +1640,7 @@ Listas exportadas
 
 <div style="
 display:grid;
-grid-template-columns:repeat(auto-fill,minmax(520px,1fr));
+grid-template-columns:repeat(auto-fill,minmax(420px,1fr));
 gap:18px;
 margin-top:20px;
 ">
@@ -1678,15 +1682,32 @@ Segmento: ${item.segmento || "importada"}
 </div>
 </div>
 
-<div style="
-background:#16a34a20;
-color:#4ade80;
-padding:8px 14px;
-border-radius:999px;
-font-size:13px;
-font-weight:700;
-">
-R$ ${Number(item.receita_total || 0).toLocaleString("pt-BR")}
+<div style="display:flex;gap:8px;align-items:center;">
+
+  <div style="
+  background:#16a34a20;
+  color:#4ade80;
+  padding:8px 14px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:700;
+  ">
+  R$ ${Number(item.receita_total || 0).toLocaleString("pt-BR")}
+  </div>
+
+  <button onclick="apagarLista(${item.id})" style="
+  background:#7f1d1d;
+  color:#fecaca;
+  border:none;
+  padding:8px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  cursor:pointer;
+  ">
+  Apagar
+  </button>
+
 </div>
 
 </div>
@@ -1837,6 +1858,22 @@ document.getElementById("csvFile").addEventListener("change", async function(e){
 
 });
 
+async function apagarLista(id){
+  if(!confirm("Tem certeza que deseja apagar esta lista?")){
+    return;
+  }
+
+  const response = await fetch("/dashboard-listas/delete/" + id, {
+    method:"POST"
+  });
+
+  const result = await response.json();
+
+  alert(result.message || "Lista apagada");
+
+  location.reload();
+}
+
 </script>
 
 </body>
@@ -1849,6 +1886,33 @@ document.getElementById("csvFile").addEventListener("change", async function(e){
 
     res.status(500).send(error.message);
 
+  }
+});
+
+app.post("/dashboard-listas/delete/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    await pool.query(`
+      DELETE FROM crm_imported_leads
+      WHERE lista_id = $1
+    `, [id]);
+
+    await pool.query(`
+      DELETE FROM crm_export_logs
+      WHERE id = $1
+    `, [id]);
+
+    res.json({
+      success:true,
+      message:"Lista apagada com sucesso"
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success:false,
+      error:error.message
+    });
   }
 });
 
