@@ -1540,7 +1540,7 @@ body{
 
 .stats{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
   gap:20px;
   margin-bottom:30px;
 }
@@ -1693,8 +1693,8 @@ ${listas.rows.map(item => `
 background:#081428;
 border:1px solid #13203a;
 border-radius:24px;
-padding:26px;
-margin-bottom:20px;
+padding:32px;
+margin-bottom:28px;
 ">
 
   <div style="
@@ -1760,7 +1760,62 @@ margin-bottom:20px;
       </div>
     </div>
 
-  </div>
+  <div style="
+display:flex;
+gap:12px;
+margin-top:22px;
+flex-wrap:wrap;
+">
+
+<button onclick="exportarSegmento('${item.nome}','quente')" style="
+background:#ff6b00;
+color:white;
+border:none;
+padding:12px 18px;
+border-radius:12px;
+font-weight:800;
+cursor:pointer;
+">
+🔥 Exportar Quente
+</button>
+
+<button onclick="exportarSegmento('${item.nome}','morno')" style="
+background:#eab308;
+color:white;
+border:none;
+padding:12px 18px;
+border-radius:12px;
+font-weight:800;
+cursor:pointer;
+">
+🌤 Exportar Morno
+</button>
+
+<button onclick="exportarSegmento('${item.nome}','frio')" style="
+background:#06b6d4;
+color:white;
+border:none;
+padding:12px 18px;
+border-radius:12px;
+font-weight:800;
+cursor:pointer;
+">
+❄ Exportar Frio
+</button>
+
+<button onclick="exportarSegmento('${item.nome}','morto')" style="
+background:#ef4444;
+color:white;
+border:none;
+padding:12px 18px;
+border-radius:12px;
+font-weight:800;
+cursor:pointer;
+">
+💀 Exportar Morto
+</button>
+
+</div>
 
 </div>
 
