@@ -1638,7 +1638,7 @@ gap:18px;
 margin-top:20px;
 ">
 
-${listas.map(item => `
+${listas.rows.map(item => `
 
 <div style="
 background:#081428;
