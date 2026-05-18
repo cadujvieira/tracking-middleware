@@ -2076,6 +2076,7 @@ app.get("/", (req, res) => {
       "/dashboard-daily",
       "/dashboard-audience",
       "/dashboard-crm",
+      "/dashboard-listas"
       "/meta/send-valued-audience",
       "/meta/sent-audience-status",
       "/dashboard/summary",
@@ -2750,12 +2751,13 @@ RetentionOS
 </div>
 
 <div class="menu">
-<a href="/dashboard-campaigns">📊 Campanhas</a>
-<a href="/dashboard-daily">📅 Por Data</a>
-<a href="/dashboard-audience">🧠 Público</a>
-<a href="/dashboard-crm">📬 CRM</a>
-<a href="/dashboard-performance">📈 Performance</a>
-<a href="/dashboard-status">⚙️ Status</a>
+<a href="/dashboard-campaigns">CAMPANHAS</a>
+<a href="/dashboard-daily">POR DATA</a>
+<a href="/dashboard-audience">PÚBLICO</a>
+<a href="/dashboard-crm">CRM</a>
+<a href=";dashboard-listas">IMPORTE LEADS</a>    
+<a href="/dashboard-performance">PERFORMANCE</a>
+<a href="/dashboard-status">STATUS</a>
 </div>
 
 </div>
