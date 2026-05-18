@@ -1837,7 +1837,7 @@ font-weight:800;
 cursor:pointer;
 font-size:12px;
 ">
-🗑 Apagar<br>Lista
+Apagar<br>Lista
 </button>
 
 </div>
