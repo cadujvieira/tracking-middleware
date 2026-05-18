@@ -1633,7 +1633,7 @@ Listas exportadas
 
 <div style="
 display:grid;
-grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+grid-template-columns:repeat(auto-fill,minmax(520px,1fr));
 gap:18px;
 margin-top:20px;
 ">
@@ -1644,7 +1644,7 @@ ${listas.rows.map(item => `
 background:#081428;
 border:1px solid #13203a;
 border-radius:20px;
-padding:22px;
+padding:28px;
 ">
 
 <div style="
@@ -1687,7 +1687,7 @@ R$ ${Number(item.receita || 0).toLocaleString("pt-BR")}
 
 <div style="
 display:grid;
-grid-template-columns:repeat(2,1fr);
+grid-template-columns:repeat(3,1fr);
 gap:14px;
 ">
 
@@ -1769,7 +1769,7 @@ ${item.depositaram || 0}
 background:#0b1730;
 padding:14px;
 border-radius:14px;
-grid-column:span 2;
+grid-column:span 3;
 ">
 <div style="color:#94a3b8;font-size:12px;">
 🚀 FTD
