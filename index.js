@@ -964,7 +964,12 @@ app.post("/upload-lista", upload.single("file"), async (req, res) => {
   req.file.originalname,
   "importada",
   resultados.length,
-  resultados.filter(item => item.telefone || item.phone).length
+  resultados.filter(item =>
+  item.telefone ||
+  item.phone ||
+  item.celular ||
+  item.whatsapp
+).length
 ]);
 
 const listaId = listaResult.rows[0].id;
@@ -1626,43 +1631,164 @@ R$ ${totalReceita.toLocaleString("pt-BR")}
 Listas exportadas
 </h2>
 
-<div class="table-header">
-<div>Lista</div>
-<div>Segmento</div>
-<div>Leads</div>
-<div>Telefones</div>
-<div>Depósitos</div>
-<div>Revenue</div>
-</div>
+<div style="
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+gap:18px;
+margin-top:20px;
+">
 
-${rows.map(item => `
-<div class="table-row">
+${listas.map(item => `
 
-<div>
-  <strong>${item.nome_lista || "-"}</strong>
-</div>
+<div style="
+background:#081428;
+border:1px solid #13203a;
+border-radius:20px;
+padding:22px;
+">
 
-<div>
-  ${item.segmento || "-"}
-</div>
-
-<div>
-  ${item.total_usuarios || 0}
-</div>
-
-<div>
-  ${item.total_com_telefone || 0}
-</div>
+<div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:18px;
+">
 
 <div>
-  ${item.depositos_total || 0}
+<div style="
+font-size:18px;
+font-weight:800;
+color:white;
+">
+📦 ${item.nome_lista}
 </div>
 
-<div class="green">
-  R$ ${Number(item.receita_total || 0).toLocaleString("pt-BR")}
+<div style="
+font-size:13px;
+color:#94a3b8;
+margin-top:4px;
+">
+Segmento: ${item.segmento || "importada"}
+</div>
+</div>
+
+<div style="
+background:#16a34a20;
+color:#4ade80;
+padding:8px 14px;
+border-radius:999px;
+font-size:13px;
+font-weight:700;
+">
+R$ ${Number(item.receita || 0).toLocaleString("pt-BR")}
 </div>
 
 </div>
+
+<div style="
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:14px;
+">
+
+<div style="
+background:#0b1730;
+padding:14px;
+border-radius:14px;
+">
+<div style="color:#94a3b8;font-size:12px;">
+👥 Leads
+</div>
+
+<div style="
+font-size:24px;
+font-weight:800;
+margin-top:6px;
+">
+${item.total_usuarios || 0}
+</div>
+</div>
+
+<div style="
+background:#0b1730;
+padding:14px;
+border-radius:14px;
+">
+<div style="color:#94a3b8;font-size:12px;">
+📲 Telefones
+</div>
+
+<div style="
+font-size:24px;
+font-weight:800;
+margin-top:6px;
+">
+${item.total_com_telefone || 0}
+</div>
+</div>
+
+<div style="
+background:#0b1730;
+padding:14px;
+border-radius:14px;
+">
+<div style="color:#94a3b8;font-size:12px;">
+✅ Cadastrados
+</div>
+
+<div style="
+font-size:24px;
+font-weight:800;
+margin-top:6px;
+color:#38bdf8;
+">
+${item.cadastrados || 0}
+</div>
+</div>
+
+<div style="
+background:#0b1730;
+padding:14px;
+border-radius:14px;
+">
+<div style="color:#94a3b8;font-size:12px;">
+💰 Depositaram
+</div>
+
+<div style="
+font-size:24px;
+font-weight:800;
+margin-top:6px;
+color:#facc15;
+">
+${item.depositaram || 0}
+</div>
+</div>
+
+<div style="
+background:#0b1730;
+padding:14px;
+border-radius:14px;
+grid-column:span 2;
+">
+<div style="color:#94a3b8;font-size:12px;">
+🚀 FTD
+</div>
+
+<div style="
+font-size:28px;
+font-weight:900;
+margin-top:8px;
+color:#4ade80;
+">
+${item.ftd || 0}
+</div>
+</div>
+
+</div>
+
+</div>
+
 `).join("")}
 
 </div>
