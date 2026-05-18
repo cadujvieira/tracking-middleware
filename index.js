@@ -1773,7 +1773,7 @@ margin-top:18px;
 
 </div>
 
-<button onclick="exportarSegmento('${item.nome}','quente')" style="
+<button onclick="exportarSegmento('${item.nome}','QUENTE')" style="
 background:#ff6b00;
 color:white;
 border:none;
@@ -1782,10 +1782,10 @@ border-radius:12px;
 font-weight:800;
 cursor:pointer;
 ">
-🔥 Exportar Quente
+🔥 Quente
 </button>
 
-<button onclick="exportarSegmento('${item.nome}','morno')" style="
+<button onclick="exportarSegmento('${item.nome}','MORNO')" style="
 background:#eab308;
 color:white;
 border:none;
@@ -1794,10 +1794,10 @@ border-radius:12px;
 font-weight:800;
 cursor:pointer;
 ">
-🌤 Exportar Morno
+🌤 Morno
 </button>
 
-<button onclick="exportarSegmento('${item.nome}','frio')" style="
+<button onclick="exportarSegmento('${item.nome}','FRIO')" style="
 background:#06b6d4;
 color:white;
 border:none;
@@ -1806,10 +1806,10 @@ border-radius:12px;
 font-weight:800;
 cursor:pointer;
 ">
-❄ Exportar Frio
+❄ Frio
 </button>
 
-<button onclick="exportarSegmento('${item.nome}','morto')" style="
+<button onclick="exportarSegmento('${item.nome}','MORTO')" style="
 background:#ef4444;
 color:white;
 border:none;
@@ -1884,7 +1884,7 @@ async function apagarLista(id){
 }
 
 function exportarSegmento(listaId, segmento) {
-  window.open(`/exportar-lista/${listaId}/${segmento}`, "_blank");
+  window.open("/exportar-lista/" + listaId + "/" + segmento, "_blank");
 }
 
 </script>
