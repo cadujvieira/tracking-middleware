@@ -968,7 +968,10 @@ app.post("/upload-lista", upload.single("file"), async (req, res) => {
   item.telefone ||
   item.phone ||
   item.celular ||
-  item.whatsapp
+  item.whatsapp ||
+  item.numero ||
+  item.telefone_celular ||
+  item.mobile
 ).length
 ]);
 
@@ -1005,7 +1008,7 @@ const listaId = listaResult.rows[0].id;
               listaId,
               item.cpf || null,
               item.email || null,
-              item.telefone || item.phone || null,
+              item.telefone || item.phone || item.celular || item.whatsapp || item.numero || item.telefone_celular || item.mobile || null,
               diasSemLogar,
               item.status || item.situacao || null,
               temperatura
@@ -1643,8 +1646,11 @@ ${listas.rows.map(item => `
 <div style="
 background:#081428;
 border:1px solid #13203a;
-border-radius:20px;
-padding:28px;
+border-radius:24px;
+padding:30px;
+max-width:760px;
+width:100%;
+box-shadow:0 20px 60px rgba(0,0,0,0.28);
 ">
 
 <div style="
@@ -1680,14 +1686,14 @@ border-radius:999px;
 font-size:13px;
 font-weight:700;
 ">
-R$ ${Number(item.receita || 0).toLocaleString("pt-BR")}
+R$ ${Number(item.receita_total || 0).toLocaleString("pt-BR")}
 </div>
 
 </div>
 
 <div style="
 display:grid;
-grid-template-columns:repeat(3,1fr);
+grid-template-columns:repeat(2,1fr);
 gap:14px;
 ">
 
@@ -1769,7 +1775,7 @@ ${item.depositaram || 0}
 background:#0b1730;
 padding:14px;
 border-radius:14px;
-grid-column:span 3;
+grid-column:span 2;
 ">
 <div style="color:#94a3b8;font-size:12px;">
 🚀 FTD
