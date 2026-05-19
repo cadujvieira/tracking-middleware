@@ -1931,6 +1931,84 @@ font-size:14px;
 
 </div>
 
+<div style="
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+margin-top:18px;
+">
+
+<div style="
+background:#1e293b;
+padding:14px;
+border-radius:14px;
+">
+  <div style="
+  font-size:12px;
+  color:#94a3b8;
+  font-weight:700;
+  ">
+    NOVOS
+  </div>
+
+  <div style="
+  font-size:28px;
+  font-weight:900;
+  color:white;
+  margin-top:4px;
+  ">
+    ${item.novos || 0}
+  </div>
+</div>
+
+<div style="
+background:#065f46;
+padding:14px;
+border-radius:14px;
+">
+  <div style="
+  font-size:12px;
+  color:#6ee7b7;
+  font-weight:700;
+  ">
+    EXPORTADOS
+  </div>
+
+  <div style="
+  font-size:28px;
+  font-weight:900;
+  color:white;
+  margin-top:4px;
+  ">
+    ${item.exportados || 0}
+  </div>
+</div>
+
+<div style="
+background:#7c2d12;
+padding:14px;
+border-radius:14px;
+">
+  <div style="
+  font-size:12px;
+  color:#fdba74;
+  font-weight:700;
+  ">
+    TENTATIVAS
+  </div>
+
+  <div style="
+  font-size:28px;
+  font-weight:900;
+  color:white;
+  margin-top:4px;
+  ">
+    ${item.tentativas_total || 0}
+  </div>
+</div>
+
+</div>  
+
 <button
   onclick="apagarLista(${item.id})"
   style="
