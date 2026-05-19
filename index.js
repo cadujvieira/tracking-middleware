@@ -735,6 +735,21 @@ CREATE TABLE IF NOT EXISTS audience (
   ALTER TABLE crm_imported_leads
   ADD COLUMN IF NOT EXISTS prioridade_disparo TEXT;
 `);
+
+  await pool.query(`
+  ALTER TABLE crm_imported_leads
+  ADD COLUMN IF NOT EXISTS status_disparo TEXT DEFAULT 'novo';
+`);
+
+await pool.query(`
+  ALTER TABLE crm_imported_leads
+  ADD COLUMN IF NOT EXISTS data_disparo TIMESTAMP;
+`);
+
+await pool.query(`
+  ALTER TABLE crm_imported_leads
+  ADD COLUMN IF NOT EXISTS tentativas INTEGER DEFAULT 0;
+`);
 }  
 
 app.post("/crm/nova-campanha", authMiddleware, express.json(), async (req, res) => {
@@ -2037,6 +2052,7 @@ if (senha !== EXPORT_PASSWORD) {
       FROM crm_imported_leads
       WHERE lista_id = $1
       AND temperatura = $2
+      AND COALESCE(status_disparo, 'novo') = 'novo'
       ORDER BY dias_sem_logar ASC
     `, [listaId, temperatura]);
 
@@ -2069,6 +2085,17 @@ if (senha !== EXPORT_PASSWORD) {
 
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="lista_${temperatura}.csv"`);
+
+    await pool.query(`
+  UPDATE crm_imported_leads
+  SET
+    status_disparo = 'exportado',
+    data_disparo = NOW(),
+    tentativas = COALESCE(tentativas, 0) + 1
+  WHERE lista_id = $1
+  AND temperatura = $2
+  AND COALESCE(status_disparo, 'novo') = 'novo'
+`, [listaId, temperatura]);
 
     res.send("\uFEFF" + csv);
 
