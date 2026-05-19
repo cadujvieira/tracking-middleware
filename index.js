@@ -1927,7 +1927,7 @@ function exportarSegmento(listaId, segmento){
   }
 
   window.open(
-    `/exportar-lista/${listaId}/${segmento}?senha=${encodeURIComponent(senha)}`,
+    "/exportar-lista/" + listaId + "/" + segmento + "?senha=" + encodeURIComponent(senha),
     "_blank"
   );
 }
