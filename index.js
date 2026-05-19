@@ -1805,174 +1805,58 @@ transition:0.2s ease;
     </div>
 
     <div style="
+</div>
+
+<div style="
 display:grid;
 grid-template-columns:repeat(3,1fr);
 gap:12px;
 margin-top:18px;
 ">
 
+<div style="background:#1e293b;padding:14px;border-radius:14px;">
+  <div style="font-size:12px;color:#94a3b8;font-weight:700;">NOVOS</div>
+  <div style="font-size:28px;font-weight:900;color:white;margin-top:4px;">${item.novos || 0}</div>
+</div>
+
+<div style="background:#065f46;padding:14px;border-radius:14px;">
+  <div style="font-size:12px;color:#6ee7b7;font-weight:700;">EXPORTADOS</div>
+  <div style="font-size:28px;font-weight:900;color:white;margin-top:4px;">${item.exportados || 0}</div>
+</div>
+
+<div style="background:#7c2d12;padding:14px;border-radius:14px;">
+  <div style="font-size:12px;color:#fdba74;font-weight:700;">TENTATIVAS</div>
+  <div style="font-size:28px;font-weight:900;color:white;margin-top:4px;">${item.tentativas_total || 0}</div>
+</div>
+
+</div>
+
 <div style="
-background:#1e293b;
-padding:14px;
-border-radius:14px;
-">
-
-  </div>
-
-  <div style="
 display:grid;
 grid-template-columns:repeat(5,1fr);
 gap:12px;
 margin-top:18px;
 ">
 
-<button onclick="exportarSegmento('${item.id}','QUENTE')" style="
-background:#ff6b00;
-border:none;
-height:48px;
-border-radius:12px;
-color:white;
-font-weight:800;
-cursor:pointer;
-font-size:12px;
-">
+<button onclick="exportarSegmento('${item.id}','QUENTE')" style="background:#ff6b00;border:none;height:52px;border-radius:12px;color:white;font-weight:800;cursor:pointer;font-size:12px;">
 🔥 Exportar<br>Quente
 </button>
 
-<button onclick="exportarSegmento('${item.id}','MORNO')" style="
-background:#eab308;
-border:none;
-height:48px;
-border-radius:12px;
-color:white;
-font-weight:800;
-cursor:pointer;
-font-size:12px;
-">
+<button onclick="exportarSegmento('${item.id}','MORNO')" style="background:#eab308;border:none;height:52px;border-radius:12px;color:white;font-weight:800;cursor:pointer;font-size:12px;">
 🌤 Exportar<br>Morno
 </button>
 
-<button onclick="exportarSegmento('${item.id}','FRIO')" style="
-background:#06b6d4;
-border:none;
-height:48px;
-border-radius:12px;
-color:white;
-font-weight:800;
-cursor:pointer;
-font-size:12px;
-">
+<button onclick="exportarSegmento('${item.id}','FRIO')" style="background:#06b6d4;border:none;height:52px;border-radius:12px;color:white;font-weight:800;cursor:pointer;font-size:12px;">
 ❄ Exportar<br>Frio
 </button>
 
-<button onclick="exportarSegmento('${item.id}','MORTO')" style="
-background:#7f1d1d;
-border:none;
-height:52px;
-border-radius:14px;
-color:white;
-font-weight:800;
-cursor:pointer;
-font-size:14px;
-">
-💀 Exportar Morto
-</button>  
-
-</div>
-
-<div style="
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:12px;
-margin-top:18px;
-">
-
-<div style="
-background:#1e293b;
-padding:14px;
-border-radius:14px;
-">
-  <div style="
-  font-size:12px;
-  color:#94a3b8;
-  font-weight:700;
-  ">
-    NOVOS
-  </div>
-
-  <div style="
-  font-size:28px;
-  font-weight:900;
-  color:white;
-  margin-top:4px;
-  ">
-    ${item.novos || 0}
-  </div>
-</div>
-
-<div style="
-background:#065f46;
-padding:14px;
-border-radius:14px;
-">
-  <div style="
-  font-size:12px;
-  color:#6ee7b7;
-  font-weight:700;
-  ">
-    EXPORTADOS
-  </div>
-
-  <div style="
-  font-size:28px;
-  font-weight:900;
-  color:white;
-  margin-top:4px;
-  ">
-    ${item.exportados || 0}
-  </div>
-</div>
-
-<div style="
-background:#7c2d12;
-padding:14px;
-border-radius:14px;
-">
-  <div style="
-  font-size:12px;
-  color:#fdba74;
-  font-weight:700;
-  ">
-    TENTATIVAS
-  </div>
-
-  <div style="
-  font-size:28px;
-  font-weight:900;
-  color:white;
-  margin-top:4px;
-  ">
-    ${item.tentativas_total || 0}
-  </div>
-</div>
-
-</div>  
-
-<button
-  onclick="apagarLista(${item.id})"
-  style="
-    background:#ff4d4f;
-    border:none;
-    border-radius:10px;
-    padding:0 18px;
-    color:white;
-    font-weight:700;
-    cursor:pointer;
-">
- Apagar Lista
+<button onclick="exportarSegmento('${item.id}','MORTO')" style="background:#7f1d1d;border:none;height:52px;border-radius:12px;color:white;font-weight:800;cursor:pointer;font-size:12px;">
+💀 Exportar<br>Morto
 </button>
 
-</div>
+<button onclick="apagarLista(${item.id})" style="background:#ef4444;border:none;height:52px;border-radius:12px;color:white;font-weight:800;cursor:pointer;font-size:12px;">
+🗑 Apagar<br>Lista
+</button>
 
 </div>
 
