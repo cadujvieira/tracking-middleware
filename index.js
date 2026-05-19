@@ -1477,7 +1477,18 @@ app.get("/dashboard-listas", async (req, res) => {
     COUNT(i.id) FILTER (WHERE i.prioridade_disparo = 'ALTA')::int AS prioridade_alta,
     COUNT(i.id) FILTER (WHERE i.prioridade_disparo = 'MEDIA')::int AS prioridade_media,
     COUNT(i.id) FILTER (WHERE i.prioridade_disparo = 'BAIXA')::int AS prioridade_baixa,
-    COUNT(i.id) FILTER (WHERE i.prioridade_disparo = 'REATIVACAO_PESADA')::int AS prioridade_reativacao
+    COUNT(i.id) FILTER (WHERE i.prioridade_disparo = 'REATIVACAO_PESADA')::int AS prioridade_reativacao, 
+
+    COUNT(i.id) FILTER (
+  WHERE COALESCE(i.status_disparo, 'novo') = 'novo'
+)::int AS novos,
+
+COUNT(i.id) FILTER (
+  WHERE i.status_disparo = 'exportado'
+)::int AS exportados,
+
+SUM(COALESCE(i.tentativas,0))::int AS tentativas_total
+
   FROM crm_export_logs l
   LEFT JOIN crm_imported_leads i ON i.lista_id = l.id
   GROUP BY l.id
@@ -1792,6 +1803,70 @@ transition:0.2s ease;
         ${item.morto || 0}
       </div>
     </div>
+
+    <div style="
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+margin-top:18px;
+">
+
+<div style="
+background:#1e293b;
+padding:14px;
+border-radius:14px;
+">
+  <div style="font-size:12px;color:#94a3b8;">
+    NOVOS
+  </div>
+
+  <div style="
+  font-size:28px;
+  font-weight:900;
+  color:white;
+  margin-top:4px;
+  ">
+    ${item.novos || 0}
+  </div>
+</div>
+
+<div style="
+background:#0f766e;
+padding:14px;
+border-radius:14px;
+">
+  <div style="font-size:12px;color:#99f6e4;">
+    EXPORTADOS
+  </div>
+
+  <div style="
+  font-size:28px;
+  font-weight:900;
+  color:white;
+  margin-top:4px;
+  ">
+    ${item.exportados || 0}
+  </div>
+</div>
+
+<div style="
+background:#7c2d12;
+padding:14px;
+border-radius:14px;
+">
+  <div style="font-size:12px;color:#fdba74;">
+    TENTATIVAS
+  </div>
+
+  <div style="
+  font-size:28px;
+  font-weight:900;
+  color:white;
+  margin-top:4px;
+  ">
+    ${item.tentativas_total || 0}
+  </div>
+</div>
 
   </div>
 
