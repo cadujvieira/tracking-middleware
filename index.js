@@ -1259,7 +1259,7 @@ font-weight:700;
 
 .stats-grid{
 display:grid;
-grid-template-columns:repeat(4,1fr);
+grid-template-columns: repeat(auto-fit,minmax(140px,1fr));
 gap:20px;
 margin-bottom:24px;
 }
@@ -1816,57 +1816,6 @@ background:#1e293b;
 padding:14px;
 border-radius:14px;
 ">
-  <div style="font-size:12px;color:#94a3b8;">
-    NOVOS
-  </div>
-
-  <div style="
-  font-size:28px;
-  font-weight:900;
-  color:white;
-  margin-top:4px;
-  ">
-    ${item.novos || 0}
-  </div>
-</div>
-
-<div style="
-background:#0f766e;
-padding:14px;
-border-radius:14px;
-">
-  <div style="font-size:12px;color:#99f6e4;">
-    EXPORTADOS
-  </div>
-
-  <div style="
-  font-size:28px;
-  font-weight:900;
-  color:white;
-  margin-top:4px;
-  ">
-    ${item.exportados || 0}
-  </div>
-</div>
-
-<div style="
-background:#7c2d12;
-padding:14px;
-border-radius:14px;
-">
-  <div style="font-size:12px;color:#fdba74;">
-    TENTATIVAS
-  </div>
-
-  <div style="
-  font-size:28px;
-  font-weight:900;
-  color:white;
-  margin-top:4px;
-  ">
-    ${item.tentativas_total || 0}
-  </div>
-</div>
 
   </div>
 
@@ -2015,12 +1964,11 @@ border-radius:14px;
     background:#ff4d4f;
     border:none;
     border-radius:10px;
-    padding:12px;
+    padding:0 18px;
     color:white;
     font-weight:700;
     cursor:pointer;
-  "
->
+">
  Apagar Lista
 </button>
 
