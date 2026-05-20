@@ -1824,23 +1824,40 @@ transition:0.2s ease;
 
 </div>
 
-<button onclick="exportarSegmento('${item.id}','QUENTE')" style="background:#ff6b00;border:none;height:52px;border-radius:12px;color:white;font-weight:800;cursor:pointer;font-size:12px;">
+<div style="
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:14px;
+margin-top:18px;
+width:100%;
+">  
+
+<button onclick="exportarSegmento('${item.id}','QUENTE')" style="background:#ff6b00;border:none;padding:16px;
+min-height:58px;border-radius:12px;color:white;font-weight:800;cursor:pointer;font-size:12px;">
 🔥 Exportar<br>Quente
 </button>
 
-<button onclick="exportarSegmento('${item.id}','MORNO')" style="background:#eab308;border:none;height:52px;border-radius:12px;color:white;font-weight:800;cursor:pointer;font-size:12px;">
+<button onclick="exportarSegmento('${item.id}','MORNO')" style="background:#eab308;border:none;padding:16px;
+min-height:58px;border-radius:12px;color:white;font-size:14px;
+font-weight:800;cursor:pointer;">
 🌤 Exportar<br>Morno
 </button>
 
-<button onclick="exportarSegmento('${item.id}','FRIO')" style="background:#06b6d4;border:none;height:52px;border-radius:12px;color:white;font-weight:800;cursor:pointer;font-size:12px;">
+<button onclick="exportarSegmento('${item.id}','FRIO')" style="background:#06b6d4;border:none;padding:16px;
+min-height:58px;border-radius:12px;color:white;font-size:14px;
+font-weight:800;cursor:pointer;">
 ❄ Exportar<br>Frio
 </button>
 
-<button onclick="exportarSegmento('${item.id}','MORTO')" style="background:#7f1d1d;border:none;height:52px;border-radius:12px;color:white;font-weight:800;cursor:pointer;font-size:12px;">
+<button onclick="exportarSegmento('${item.id}','MORTO')" style="background:#7f1d1d;border:none;padding:16px;
+min-height:58px;border-radius:12px;color:whitefont-size:14px;
+font-weight:800;cursor:pointer;">
 💀 Exportar<br>Morto
 </button>
 
-<button onclick="apagarLista(${item.id})" style="background:#ef4444;border:none;height:52px;border-radius:12px;color:white;font-weight:800;cursor:pointer;font-size:12px;">
+<button onclick="apagarLista(${item.id})" style="background:#ef4444;border:none;padding:16px;
+min-height:58px;border-radius:12px;color:white;font-size:14px;
+font-weight:800;cursor:pointer;">
 🗑 Apagar<br>Lista
 </button>
 
