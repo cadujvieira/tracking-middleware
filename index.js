@@ -1807,15 +1807,6 @@ transition:0.2s ease;
     <div style="
 </div>
 
-<div style="
-<div style="
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:12px;
-margin-top:18px;
-width:100%;
-">
-
 <div style="background:#1e293b;padding:14px;border-radius:14px;">
   <div style="font-size:12px;color:#94a3b8;font-weight:700;">NOVOS</div>
   <div style="font-size:28px;font-weight:900;color:white;margin-top:4px;">${item.novos || 0}</div>
@@ -1832,14 +1823,6 @@ width:100%;
 </div>
 
 </div>
-
-<div style="
-display:grid;
-grid-template-columns:repeat(5,1fr);
-gap:12px;
-margin-top:18px;
-width:100%;
-">
 
 <button onclick="exportarSegmento('${item.id}','QUENTE')" style="background:#ff6b00;border:none;height:52px;border-radius:12px;color:white;font-weight:800;cursor:pointer;font-size:12px;">
 🔥 Exportar<br>Quente
