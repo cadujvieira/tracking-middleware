@@ -1838,6 +1838,7 @@ display:grid;
 grid-template-columns:repeat(5,1fr);
 gap:12px;
 margin-top:18px;
+width:100%;
 ">
 
 <button onclick="exportarSegmento('${item.id}','QUENTE')" style="background:#ff6b00;border:none;height:52px;border-radius:12px;color:white;font-weight:800;cursor:pointer;font-size:12px;">
