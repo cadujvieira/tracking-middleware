@@ -1808,10 +1808,12 @@ transition:0.2s ease;
 </div>
 
 <div style="
+<div style="
 display:grid;
 grid-template-columns:repeat(3,1fr);
 gap:12px;
 margin-top:18px;
+width:100%;
 ">
 
 <div style="background:#1e293b;padding:14px;border-radius:14px;">
