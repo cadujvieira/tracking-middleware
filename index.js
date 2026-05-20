@@ -537,7 +537,7 @@ async function initDb() {
 `);
 
   await pool.query(`
-CREATE TABLE IF NOT EXISTS users (
+  CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   tenant_id INTEGER REFERENCES tenants(id),
   nome TEXT,
@@ -749,6 +749,21 @@ await pool.query(`
 await pool.query(`
   ALTER TABLE crm_imported_leads
   ADD COLUMN IF NOT EXISTS tentativas INTEGER DEFAULT 0;
+`);
+
+await pool.query(`
+  ALTER TABLE crm_imported_leads
+  ADD COLUMN IF NOT EXISTS exportado BOOLEAN DEFAULT false;
+`);
+
+await pool.query(`
+  ALTER TABLE crm_imported_leads
+  ADD COLUMN IF NOT EXISTS data_exportacao TIMESTAMP;
+`);
+
+await pool.query(`
+  ALTER TABLE crm_imported_leads
+  ADD COLUMN IF NOT EXISTS usuario_exportou TEXT;
 `);
 }  
 
