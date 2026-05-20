@@ -4463,26 +4463,28 @@ textarea{
 
 <div class="crm-container">
   ${cardsHtml || '<div class="empty">Nenhum segmento CRM encontrado ainda.</div>'}
-</div>
+</div>     
 
+<script>
 function exportarCRM(segmento) {
   const senha = prompt("Digite a senha para exportar:");
 
-  if (!senha) return;
+  if (!senha) {
+    return;
+  }
 
   window.open(
     "/crm/export?segmento=" + segmento + "&senha=" + encodeURIComponent(senha),
     "_blank"
   );
-}      
+}
 
-<script>
 function copiarTexto(texto) {
   navigator.clipboard.writeText(texto || "");
   alert("Texto copiado!");
 }
 </script>
-
+      
 </body>
 </html>
     `);
