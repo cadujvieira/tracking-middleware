@@ -4252,7 +4252,7 @@ app.get("/dashboard-crm", async (req, res) => {
       </div>
 
       <div class="actions">
-        <a class="btn blue" href="/crm/export?segmento=${encodeURIComponent(key)}&senha=123456">Exportar CSV</a>
+        <button class="btn blue" onclick="exportarCRM('${encodeURIComponent(key)}')">Exportar CSV</button>
         <button class="btn green" onclick="copiarTexto(this.dataset.copy)" data-copy="${String(item.copySMS || "").replace(/"/g, "&quot;")}">Copiar SMS</button>
         <button class="btn purple" onclick="copiarTexto(this.dataset.copy)" data-copy="${String(item.copyImagem || "").replace(/"/g, "&quot;")}">Copiar Imagem</button>
       </div>
@@ -4464,6 +4464,17 @@ textarea{
 <div class="crm-container">
   ${cardsHtml || '<div class="empty">Nenhum segmento CRM encontrado ainda.</div>'}
 </div>
+
+function exportarCRM(segmento) {
+  const senha = prompt("Digite a senha para exportar:");
+
+  if (!senha) return;
+
+  window.open(
+    "/crm/export?segmento=" + segmento + "&senha=" + encodeURIComponent(senha),
+    "_blank"
+  );
+}      
 
 <script>
 function copiarTexto(texto) {
