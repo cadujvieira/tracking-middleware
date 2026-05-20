@@ -4484,7 +4484,7 @@ function copiarTexto(texto) {
 app.get("/crm/export", async (req, res) => {
   try {
     const senha = req.query.senha || "";
-    const senhaCorreta = process.env.CRM_EXPORT_PASSWORD || "123456";
+    const senhaCorreta = process.env.CRM_EXPORT_PASSWORD || process.env.EXPORT_PASSWORD || "bola@sorte26!";
 
  if (senha !== senhaCorreta) {
    return res.status(401).send("Senha inválida para exportação.");
