@@ -4951,8 +4951,9 @@ margin-bottom:30px;
 
 .grid{
 display:grid;
-grid-template-columns:repeat(4,1fr);
+grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
 gap:20px;
+margin-top:30px;
 }
 
 .card{
@@ -4960,6 +4961,11 @@ padding:24px;
 border-radius:18px;
 background:#0f172a;
 border:1px solid #1e293b;
+transition:0.2s;
+min-height:120px;
+display:flex;
+flex-direction:column;
+justify-content:center;
 }
 
 .label{
