@@ -5009,12 +5009,6 @@ background:#2b102b;
 QUENTE
 </div>
 
-<div class="card quente">
-
-<div class="label">
-QUENTE
-</div>
-
 <div class="value">
 ${dados.quente}
 </div>
@@ -5093,33 +5087,6 @@ color:#f9a8d4;
 ${((dados.morto / dados.total) * 100).toFixed(1)}% do total
 </div>
 
-</div>
-
-<div class="value">${dados.prioridade_alta}</div>
-
-<div style="
-margin-top:10px;
-font-size:14px;
-opacity:0.7;
-">
-</div>
-
-<div class="value">${dados.prioridade_media}</div>
-
-<div style="
-margin-top:10px;
-font-size:14px;
-opacity:0.7;
-">
-</div>
-
-<div class="value">${dados.prioridade_baixa}</div>
-
-<div style="
-margin-top:10px;
-font-size:14px;
-opacity:0.7;
-">
 </div>
 
 <div class="card">
