@@ -4852,6 +4852,51 @@ app.get("/dashboard/creatives", async (req, res) => {
   }
 });
 
+app.get("/processar-reativacao", async (req, res) => {
+  try {
+
+    // MORNO
+    await pool.query(`
+      UPDATE crm_imported_leads
+      SET
+        temperatura = 'MORNO',
+        exportado = false,
+        status_disparo = 'novo'
+      WHERE exportado = true
+      AND temperatura = 'QUENTE'
+      AND data_exportacao < NOW() - INTERVAL '1 day'
+    `);
+
+    // FRIO
+    await pool.query(`
+      UPDATE crm_imported_leads
+      SET
+        temperatura = 'FRIO',
+        exportado = false,
+        status_disparo = 'novo'
+      WHERE exportado = true
+      AND temperatura IN ('QUENTE', 'MORNO')
+      AND data_exportacao < NOW() - INTERVAL '3 day'
+    `);
+
+    // MORTO
+    await pool.query(`
+      UPDATE crm_imported_leads
+      SET
+        temperatura = 'MORTO',
+        exportado = false,
+        status_disparo = 'novo'
+      WHERE exportado = true
+      AND data_exportacao < NOW() - INTERVAL '7 day'
+    `);
+
+    res.send("Reativacao processada com sucesso");
+
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
 initDb()
   .then(() => {
     app.listen(PORT, () => {
