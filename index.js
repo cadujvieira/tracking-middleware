@@ -4922,7 +4922,7 @@ COUNT(*) FILTER (
 WHERE prioridade_disparo = 'BAIXA'
 )::int AS prioridade_baixa,
 
-COALESCE(SUM(valor_total),0)::numeric AS receita
+COALESCE(SUM(receita),0)::numeric AS receita
 
 FROM crm_imported_leads
 `);
