@@ -5009,10 +5009,6 @@ background:#2b102b;
 <div class="value">${dados.total}</div>
 </div>
 
-</div>  
-
-</div>  
-
 <div class="card quente">
 
 <div class="label">
