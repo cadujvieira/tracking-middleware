@@ -5009,6 +5009,12 @@ background:#2b102b;
 QUENTE
 </div>
 
+<div class="card quente">
+
+<div class="label">
+QUENTE
+</div>
+
 <div class="value">
 ${dados.quente}
 </div>
@@ -5017,44 +5023,76 @@ ${dados.quente}
 margin-top:10px;
 font-size:14px;
 opacity:0.7;
+color:#facc15;
 ">
-${((dados.quente / dados.total) * 100).toFixed(1)}%
-do total
+${((dados.quente / dados.total) * 100).toFixed(1)}% do total
 </div>
 
 </div>
 
-<div class="value">${dados.morno}</div>
+</div>
+
+<div class="card morno">
+
+<div class="label">
+MORNO
+</div>
+
+<div class="value">
+${dados.morno}
+</div>
 
 <div style="
 margin-top:10px;
 font-size:14px;
 opacity:0.7;
+color:#fde047;
 ">
-${((dados.morno / dados.total) * 100).toFixed(1)}%
-do total
+${((dados.morno / dados.total) * 100).toFixed(1)}% do total
 </div>
 
-<div class="value">${dados.frio}</div>
+</div>
+
+<div class="card frio">
+
+<div class="label">
+FRIO
+</div>
+
+<div class="value">
+${dados.frio}
+</div>
 
 <div style="
 margin-top:10px;
 font-size:14px;
 opacity:0.7;
+color:#67e8f9;
 ">
-${((dados.frio / dados.total) * 100).toFixed(1)}%
-do total
+${((dados.frio / dados.total) * 100).toFixed(1)}% do total
 </div>
 
-<div class="value">${dados.morto}</div>
+</div>
+
+<div class="card morto">
+
+<div class="label">
+MORTO
+</div>
+
+<div class="value">
+${dados.morto}
+</div>
 
 <div style="
 margin-top:10px;
 font-size:14px;
 opacity:0.7;
+color:#f9a8d4;
 ">
-${((dados.morto / dados.total) * 100).toFixed(1)}%
-do total
+${((dados.morto / dados.total) * 100).toFixed(1)}% do total
+</div>
+
 </div>
 
 <div class="value">${dados.prioridade_alta}</div>
@@ -5064,8 +5102,6 @@ margin-top:10px;
 font-size:14px;
 opacity:0.7;
 ">
-${((dados.prioridade_alta / dados.total) * 100).toFixed(1)}%
-do total
 </div>
 
 <div class="value">${dados.prioridade_media}</div>
@@ -5075,8 +5111,6 @@ margin-top:10px;
 font-size:14px;
 opacity:0.7;
 ">
-${((dados.prioridade_media / dados.total) * 100).toFixed(1)}%
-do total
 </div>
 
 <div class="value">${dados.prioridade_baixa}</div>
@@ -5086,8 +5120,6 @@ margin-top:10px;
 font-size:14px;
 opacity:0.7;
 ">
-${((dados.prioridade_baixa / dados.total) * 100).toFixed(1)}%
-do total
 </div>
 
 <div class="card">
