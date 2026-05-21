@@ -4890,7 +4890,166 @@ app.get("/processar-reativacao", async (req, res) => {
       AND data_exportacao < NOW() - INTERVAL '7 day'
     `);
 
-    res.send("Reativacao processada com sucesso");
+    const resumo = await pool.query(`
+SELECT
+COUNT(*)::int AS total,
+
+COUNT(*) FILTER (
+WHERE temperatura = 'QUENTE'
+)::int AS quente,
+
+COUNT(*) FILTER (
+WHERE temperatura = 'MORNO'
+)::int AS morno,
+
+COUNT(*) FILTER (
+WHERE temperatura = 'FRIO'
+)::int AS frio,
+
+COUNT(*) FILTER (
+WHERE temperatura = 'MORTO'
+)::int AS morto,
+
+COUNT(*) FILTER (
+WHERE prioridade_disparo = 'ALTA'
+)::int AS prioridade_alta,
+
+COUNT(*) FILTER (
+WHERE prioridade_disparo = 'MEDIA'
+)::int AS prioridade_media,
+
+COUNT(*) FILTER (
+WHERE prioridade_disparo = 'BAIXA'
+)::int AS prioridade_baixa,
+
+COALESCE(SUM(valor_total),0)::numeric AS receita
+
+FROM crm_imported_leads
+`);
+
+const dados = resumo.rows[0];
+
+res.send(`
+<html>
+
+<head>
+<title>Dashboard Reativação</title>
+
+<style>
+
+body{
+background:#020617;
+font-family:Arial;
+padding:40px;
+color:white;
+}
+
+h1{
+font-size:42px;
+margin-bottom:30px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:20px;
+}
+
+.card{
+padding:24px;
+border-radius:18px;
+background:#0f172a;
+border:1px solid #1e293b;
+}
+
+.label{
+font-size:14px;
+opacity:0.7;
+margin-bottom:12px;
+}
+
+.value{
+font-size:38px;
+font-weight:900;
+}
+
+.quente{
+background:#3b1d06;
+}
+
+.morno{
+background:#3b3206;
+}
+
+.frio{
+background:#062b3b;
+}
+
+.morto{
+background:#2b102b;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🔥 Dashboard de Reativação</h1>
+
+<div class="grid">
+
+<div class="card">
+<div class="label">TOTAL PROCESSADOS</div>
+<div class="value">${dados.total}</div>
+</div>
+
+<div class="card quente">
+<div class="label">QUENTE</div>
+<div class="value">${dados.quente}</div>
+</div>
+
+<div class="card morno">
+<div class="label">MORNO</div>
+<div class="value">${dados.morno}</div>
+</div>
+
+<div class="card frio">
+<div class="label">FRIO</div>
+<div class="value">${dados.frio}</div>
+</div>
+
+<div class="card morto">
+<div class="label">MORTO</div>
+<div class="value">${dados.morto}</div>
+</div>
+
+<div class="card">
+<div class="label">PRIORIDADE ALTA</div>
+<div class="value">${dados.prioridade_alta}</div>
+</div>
+
+<div class="card">
+<div class="label">PRIORIDADE MÉDIA</div>
+<div class="value">${dados.prioridade_media}</div>
+</div>
+
+<div class="card">
+<div class="label">PRIORIDADE BAIXA</div>
+<div class="value">${dados.prioridade_baixa}</div>
+</div>
+
+<div class="card">
+<div class="label">RECEITA TOTAL</div>
+<div class="value">
+R$ ${Number(dados.receita).toLocaleString('pt-BR')}
+</div>
+</div>
+
+</div>
+
+</body>
+</html>
+`);
 
   } catch (error) {
     res.status(500).send(error.message);
