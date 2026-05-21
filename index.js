@@ -2090,6 +2090,24 @@ if (senha !== EXPORT_PASSWORD) {
       ORDER BY dias_sem_logar ASC
     `, [listaId, temperatura]);
 
+    const novoDisparo = await pool.query(`
+  INSERT INTO crm_disparos (
+    nome_lista,
+    lista_id,
+    temperatura,
+    quantidade
+  )
+  VALUES ($1,$2,$3,$4)
+  RETURNING id
+`, [
+  `lista_${listaId}_${segmento}`,
+  listaId,
+  segmento,
+  leads.rows.length
+]);
+
+const disparoId = novoDisparo.rows[0].id;
+
     const header = [
       "cpf",
       "email",
@@ -2138,6 +2156,29 @@ AND COALESCE(exportado, false) = false
   temperatura,
   senha
 ]);
+
+   for (const lead of leads.rows) {
+
+  await pool.query(`
+    INSERT INTO crm_disparo_leads (
+      disparo_id,
+      lista_id,
+      telefone,
+      cpf,
+      email,
+      temperatura
+    )
+    VALUES ($1,$2,$3,$4,$5,$6)
+  `, [
+    disparoId,
+    listaId,
+    lead.telefone || '',
+    lead.cpf || '',
+    lead.email || '',
+    segmento
+  ]);
+
+} 
 
     res.send("\uFEFF" + csv);
 
