@@ -5004,38 +5004,90 @@ background:#2b102b;
 </div>
 
 <div class="card quente">
-<div class="label">QUENTE</div>
-<div class="value">${dados.quente}</div>
+
+<div class="label">
+QUENTE
 </div>
 
-<div class="card morno">
-<div class="label">MORNO</div>
+<div class="value">
+${dados.quente}
+</div>
+
+<div style="
+margin-top:10px;
+font-size:14px;
+opacity:0.7;
+">
+${((dados.quente / dados.total) * 100).toFixed(1)}%
+do total
+</div>
+
+</div>
+
 <div class="value">${dados.morno}</div>
+
+<div style="
+margin-top:10px;
+font-size:14px;
+opacity:0.7;
+">
+${((dados.morno / dados.total) * 100).toFixed(1)}%
+do total
 </div>
 
-<div class="card frio">
-<div class="label">FRIO</div>
 <div class="value">${dados.frio}</div>
+
+<div style="
+margin-top:10px;
+font-size:14px;
+opacity:0.7;
+">
+${((dados.frio / dados.total) * 100).toFixed(1)}%
+do total
 </div>
 
-<div class="card morto">
-<div class="label">MORTO</div>
 <div class="value">${dados.morto}</div>
+
+<div style="
+margin-top:10px;
+font-size:14px;
+opacity:0.7;
+">
+${((dados.morto / dados.total) * 100).toFixed(1)}%
+do total
 </div>
 
-<div class="card">
-<div class="label">PRIORIDADE ALTA</div>
 <div class="value">${dados.prioridade_alta}</div>
+
+<div style="
+margin-top:10px;
+font-size:14px;
+opacity:0.7;
+">
+${((dados.prioridade_alta / dados.total) * 100).toFixed(1)}%
+do total
 </div>
 
-<div class="card">
-<div class="label">PRIORIDADE MÉDIA</div>
 <div class="value">${dados.prioridade_media}</div>
+
+<div style="
+margin-top:10px;
+font-size:14px;
+opacity:0.7;
+">
+${((dados.prioridade_media / dados.total) * 100).toFixed(1)}%
+do total
 </div>
 
-<div class="card">
-<div class="label">PRIORIDADE BAIXA</div>
 <div class="value">${dados.prioridade_baixa}</div>
+
+<div style="
+margin-top:10px;
+font-size:14px;
+opacity:0.7;
+">
+${((dados.prioridade_baixa / dados.total) * 100).toFixed(1)}%
+do total
 </div>
 
 <div class="card">
