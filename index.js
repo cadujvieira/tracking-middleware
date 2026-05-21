@@ -5007,7 +5007,9 @@ background:#2b102b;
 <div class="card">
 <div class="label">TOTAL PROCESSADOS</div>
 <div class="value">${dados.total}</div>
-</div>
+</div> 
+
+</div>  
 
 <div class="card quente">
 
