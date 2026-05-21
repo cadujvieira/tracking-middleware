@@ -1143,7 +1143,7 @@ else{
 
 });
 
-app.get("/dashboard-performance", (req, res) => {
+app.get("/dashboard-crm-performance", async (req, res) => {
   res.redirect("/dashboard-crm-performance");
 });
 
@@ -1192,10 +1192,57 @@ app.get("/dashboard-crm-performance", (req, res) => {
   };
 });
 
-const totalRevenue = performance.reduce((acc, item) => acc + Number(item.receita || 0), 0);
-const totalFtd = performance.reduce((acc, item) => acc + Number(item.ftd || 0), 0);
-const totalDepositos = performance.reduce((acc, item) => acc + Number(item.depositos || 0), 0);
-const totalLeads = performance.reduce((acc, item) => acc + Number(item.leads || 0), 0);
+const disparos = await pool.query(`
+  SELECT
+    d.id,
+    d.nome_lista,
+    d.temperatura,
+    d.quantidade,
+    d.custo,
+    d.data_disparo,
+
+    COUNT(l.id) as leads,
+
+    COUNT(
+      CASE
+        WHEN l.cadastrou = true
+        THEN 1
+      END
+    ) as cadastros,
+
+    COUNT(
+      CASE
+        WHEN l.depositou = true
+        THEN 1
+      END
+    ) as depositos,
+
+    COUNT(
+  CASE
+    WHEN l.depositou = true
+    AND l.valor_deposito > 0
+    THEN 1
+  END
+) as ftd,
+
+    COALESCE(SUM(l.valor_deposito),0) as receita
+
+  FROM crm_disparos d
+
+  LEFT JOIN crm_disparo_leads l
+  ON l.disparo_id = d.id
+
+  GROUP BY d.id
+
+  ORDER BY d.data_disparo DESC
+`);
+
+const disparosRows = disparos.rows;
+
+const totalRevenue = disparosRows.reduce((acc, item) => acc + Number(item.receita || 0), 0);
+const totalFtd = disparosRows.reduce((acc, item) => acc + Number(item.ftd || 0), 0);
+const totalDepositos = disparosRows.reduce((acc, item) => acc + Number(item.depositos || 0), 0);
+const totalLeads = disparosRows.reduce((acc, item) => acc + Number(item.leads || 0), 0);
 
   res.send(`
     <html>
@@ -1476,14 +1523,14 @@ font-weight:800;
 
       </div>
 
- ${performance.map(function(item) {
+ ${disparosRows.map(function(item) {
   return (
     '<div class="table-row">' +
-      '<div class="campaign-name">' + item.campaign + '</div>' +
+      '<div class="campaign-name">' + item.nome_lista + '</div>' +
       '<div>' + item.leads + '</div>' +
       '<div>' + item.depositos + '</div>' +
       '<div class="blue">' + item.ftd + '</div>' +
-      '<div>' + item.conversao + '%</div>' +
+      '<div>' + (item.leads > 0 ? ((Number(item.depositos || 0) / Number(item.leads || 1)) * 100).toFixed(2) : 0) + '%</div>' +
       '<div class="green">R$ ' + Number(item.receita || 0).toLocaleString("pt-BR") + '</div>' +
     '</div>'
   );
@@ -2102,8 +2149,9 @@ if (senha !== EXPORT_PASSWORD) {
 `, [
   `lista_${listaId}_${segmento}`,
   listaId,
-  segmento,
-  leads.rows.length
+  temperatura
+  resultado.rows.length
+  resultado.rows
 ]);
 
 const disparoId = novoDisparo.rows[0].id;
