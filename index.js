@@ -765,6 +765,36 @@ await pool.query(`
   ALTER TABLE crm_imported_leads
   ADD COLUMN IF NOT EXISTS usuario_exportou TEXT;
 `);
+
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS crm_disparos (
+    id SERIAL PRIMARY KEY,
+    nome_lista TEXT,
+    lista_id INTEGER,
+    temperatura TEXT,
+    quantidade INTEGER DEFAULT 0,
+    custo NUMERIC DEFAULT 0,
+    data_disparo TIMESTAMP DEFAULT NOW()
+  );
+`);
+
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS crm_disparo_leads (
+    id SERIAL PRIMARY KEY,
+    disparo_id INTEGER REFERENCES crm_disparos(id) ON DELETE CASCADE,
+    lista_id INTEGER,
+    telefone TEXT,
+    cpf TEXT,
+    email TEXT,
+    temperatura TEXT,
+    cadastrou BOOLEAN DEFAULT false,
+    depositou BOOLEAN DEFAULT false,
+    valor_deposito NUMERIC DEFAULT 0,
+    data_cadastro TIMESTAMP,
+    data_deposito TIMESTAMP,
+    criado_em TIMESTAMP DEFAULT NOW()
+  );
+`);
 }  
 
 app.post("/crm/nova-campanha", authMiddleware, express.json(), async (req, res) => {
