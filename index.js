@@ -4643,6 +4643,24 @@ app.get("/crm/export", async (req, res) => {
 
     users = users.filter((user) => user.phone);
 
+    const novoDisparo = await pool.query(`
+  INSERT INTO crm_disparos (
+    nome_lista,
+    lista_id,
+    temperatura,
+    quantidade
+  )
+  VALUES ($1,$2,$3,$4)
+  RETURNING id
+`, [
+  `crm_${segmento || "todos"}`,
+  null,
+  segmento || "todos",
+  users.length
+]);
+
+const disparoId = novoDisparo.rows[0].id;
+
     const header = [
       "usuario",
       "telefone",
@@ -4666,6 +4684,33 @@ app.get("/crm/export", async (req, res) => {
       Number(user.receita || 0).toFixed(2),
       user.campanhaOrigem || ""
     ]);
+
+    for (const user of users) {
+  await pool.query(`
+    INSERT INTO crm_disparo_leads (
+      disparo_id,
+      lista_id,
+      telefone,
+      cpf,
+      email,
+      temperatura,
+      cadastrou,
+      depositou,
+      valor_deposito
+    )
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+  `, [
+    disparoId,
+    null,
+    user.phone || "",
+    "",
+    user.email || "",
+    segmento || "",
+    Number(user.leads || 0) > 0,
+    Number(user.depositos || 0) > 0,
+    Number(user.receita || 0)
+  ]);
+}
 
     const csv = [
       header.join(";"),
