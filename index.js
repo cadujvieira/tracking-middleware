@@ -2056,6 +2056,7 @@ if (senha !== EXPORT_PASSWORD) {
       WHERE lista_id = $1
       AND temperatura = $2
       AND COALESCE(status_disparo, 'novo') = 'novo'
+      AND COALESCE(exportado, false) = false
       ORDER BY dias_sem_logar ASC
     `, [listaId, temperatura]);
 
@@ -2090,15 +2091,23 @@ if (senha !== EXPORT_PASSWORD) {
     res.setHeader("Content-Disposition", `attachment; filename="lista_${temperatura}.csv"`);
 
     await pool.query(`
-  UPDATE crm_imported_leads
-  SET
-    status_disparo = 'exportado',
-    data_disparo = NOW(),
-    tentativas = COALESCE(tentativas, 0) + 1
-  WHERE lista_id = $1
-  AND temperatura = $2
-  AND COALESCE(status_disparo, 'novo') = 'novo'
-`, [listaId, temperatura]);
+UPDATE crm_imported_leads
+SET
+  status_disparo = 'exportado',
+  exportado = true,
+  data_disparo = NOW(),
+  data_exportacao = NOW(),
+  tentativas = COALESCE(tentativas, 0) + 1,
+  usuario_exportou = $3
+WHERE lista_id = $1
+AND temperatura = $2
+AND COALESCE(status_disparo, 'novo') = 'novo'
+AND COALESCE(exportado, false) = false
+`, [
+  listaId,
+  temperatura,
+  senha
+]);
 
     res.send("\uFEFF" + csv);
 
@@ -4484,7 +4493,7 @@ function copiarTexto(texto) {
   alert("Texto copiado!");
 }
 </script>
-      
+
 </body>
 </html>
     `);
