@@ -2147,11 +2147,10 @@ if (senha !== EXPORT_PASSWORD) {
   VALUES ($1,$2,$3,$4)
   RETURNING id
 `, [
-  `lista_${listaId}_${segmento}`,
+  `lista_${listaId}_${temperatura}`,
   listaId,
-  temperatura
+  temperatura,
   resultado.rows.length
-  resultado.rows
 ]);
 
 const disparoId = novoDisparo.rows[0].id;
@@ -2205,7 +2204,7 @@ AND COALESCE(exportado, false) = false
   senha
 ]);
 
-   for (const lead of leads.rows) {
+  for (const lead of resultado.rows) {
 
   await pool.query(`
     INSERT INTO crm_disparo_leads (
@@ -2223,7 +2222,7 @@ AND COALESCE(exportado, false) = false
     lead.telefone || '',
     lead.cpf || '',
     lead.email || '',
-    segmento
+    temperatura
   ]);
 
 } 
