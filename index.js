@@ -1545,8 +1545,8 @@ font-weight:800;
       'style="background:#7f1d1d;color:white;padding:7px 9px;border-radius:8px;text-decoration:none;font-weight:800;font-size:11px;">Sem cadastro</a>' +
 
       '</div>' +
-  );
-}).join("")}
+      
+      }).join("")}
 
     </div>
 
