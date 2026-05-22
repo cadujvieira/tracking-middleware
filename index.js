@@ -1143,6 +1143,10 @@ else{
 
 });
 
+app.get("/dashboard-performance", (req, res) => {
+  res.redirect("/dashboard-crm-performance");
+});
+
 app.get("/dashboard-crm-performance", async (req, res) => {
 
   const rows = crmCampaigns.map((c) => {
