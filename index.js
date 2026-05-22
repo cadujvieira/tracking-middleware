@@ -795,6 +795,14 @@ await pool.query(`
     criado_em TIMESTAMP DEFAULT NOW()
   );
 `);
+
+await pool.query(`
+  DELETE FROM crm_disparo_leads;
+`);
+
+await pool.query(`
+  DELETE FROM crm_disparos;
+`);
 }  
 
 app.post("/crm/nova-campanha", authMiddleware, express.json(), async (req, res) => {
@@ -4706,9 +4714,9 @@ const disparoId = novoDisparo.rows[0].id;
     "",
     user.email || "",
     segmento || "",
-    Number(user.leads || 0) > 0,
-    Number(user.depositos || 0) > 0,
-    Number(user.receita || 0)
+    false,
+    false,
+    0
   ]);
 }
 
