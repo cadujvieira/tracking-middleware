@@ -1384,7 +1384,7 @@ margin-bottom:24px;
 
 .table-header{
 display:grid;
-grid-template-columns:2fr .7fr .7fr .7fr .9fr .9fr 1.4fr;
+grid-template-columns:2fr .7fr .7fr .7fr .9fr .9fr 2fr;
 gap:12px;
 background:#0f172a;
 border:1px solid #13203a;
@@ -1398,7 +1398,7 @@ margin-bottom:12px;
 
 .table-row{
 display:grid;
-grid-template-columns:2fr .7fr .7fr .7fr .9fr .9fr 1.4fr;
+grid-template-columns:2fr .7fr .7fr .7fr .9fr .9fr 2fr;
 gap:12px;
 align-items:center;
 background:#081428;
@@ -1530,22 +1530,14 @@ font-weight:800;
       '<div>' + (item.leads > 0 ? ((Number(item.depositos || 0) / Number(item.leads || 1)) * 100).toFixed(2) : 0) + '%</div>' +
       '<div class="green">R$ ' + Number(item.receita || 0).toLocaleString("pt-BR") + '</div>' +
 
-      '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
-
-      '<a href="/performance/export/' + item.id + '/depositou" ' +
-      'style="background:#16a34a;color:white;padding:7px 9px;border-radius:8px;text-decoration:none;font-weight:800;font-size:11px;">Depositou</a>' +
-
-      '<a href="/performance/export/' + item.id + '/nao_depositou" ' +
-      'style="background:#334155;color:white;padding:7px 9px;border-radius:8px;text-decoration:none;font-weight:800;font-size:11px;">Não depositou</a>' +
-
-      '<a href="/performance/export/' + item.id + '/so_cadastro" ' +
-      'style="background:#2563eb;color:white;padding:7px 9px;border-radius:8px;text-decoration:none;font-weight:800;font-size:11px;">Só cadastro</a>' +
-
-      '<a href="/performance/export/' + item.id + '/sem_cadastro" ' +
-      'style="background:#7f1d1d;color:white;padding:7px 9px;border-radius:8px;text-decoration:none;font-weight:800;font-size:11px;">Sem cadastro</a>' +
-
-      '</div>'
-);
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' +
+        '<a href="/performance/export/' + item.id + '/depositou" style="background:#16a34a;color:white;padding:6px 8px;border-radius:8px;text-decoration:none;font-weight:800;font-size:10px;white-space:nowrap;">Depositou</a>' +
+        '<a href="/performance/export/' + item.id + '/nao_depositou" style="background:#334155;color:white;padding:6px 8px;border-radius:8px;text-decoration:none;font-weight:800;font-size:10px;white-space:nowrap;">Não depositou</a>' +
+        '<a href="/performance/export/' + item.id + '/so_cadastro" style="background:#2563eb;color:white;padding:6px 8px;border-radius:8px;text-decoration:none;font-weight:800;font-size:10px;white-space:nowrap;">Só cadastro</a>' +
+        '<a href="/performance/export/' + item.id + '/sem_cadastro" style="background:#7f1d1d;color:white;padding:6px 8px;border-radius:8px;text-decoration:none;font-weight:800;font-size:10px;white-space:nowrap;">Sem cadastro</a>' +
+      '</div>' +
+    '</div>'
+  );
 }).join("")}
 
     </div>
