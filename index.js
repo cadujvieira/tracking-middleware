@@ -1544,8 +1544,9 @@ font-weight:800;
       '<a href="/performance/export/' + item.id + '/sem_cadastro" ' +
       'style="background:#7f1d1d;color:white;padding:7px 9px;border-radius:8px;text-decoration:none;font-weight:800;font-size:11px;">Sem cadastro</a>' +
 
-      '</div>' +
-      }).join("")}
+      '</div>'
+);
+}).join("")}
 
     </div>
 
