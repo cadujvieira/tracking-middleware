@@ -1384,7 +1384,7 @@ margin-bottom:24px;
 
 .table-header{
 display:grid;
-grid-template-columns:2fr .8fr .8fr .8fr 1fr 1fr;
+grid-template-columns:2fr .7fr .7fr .7fr .9fr .9fr 1.4fr;
 gap:12px;
 background:#0f172a;
 border:1px solid #13203a;
@@ -1398,7 +1398,7 @@ margin-bottom:12px;
 
 .table-row{
 display:grid;
-grid-template-columns:2fr .8fr .8fr .8fr 1fr 1fr;
+grid-template-columns:2fr .7fr .7fr .7fr .9fr .9fr 1.4fr;
 gap:12px;
 align-items:center;
 background:#081428;
@@ -1516,6 +1516,7 @@ font-weight:800;
         <div>FTD</div>
         <div>Conversão</div>
         <div>Revenue</div>
+        <div>Relatórios</div>
 
       </div>
 
@@ -1528,7 +1529,22 @@ font-weight:800;
       '<div class="blue">' + item.ftd + '</div>' +
       '<div>' + (item.leads > 0 ? ((Number(item.depositos || 0) / Number(item.leads || 1)) * 100).toFixed(2) : 0) + '%</div>' +
       '<div class="green">R$ ' + Number(item.receita || 0).toLocaleString("pt-BR") + '</div>' +
-    '</div>'
+
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+
+      '<a href="/performance/export/' + item.id + '/depositou" ' +
+      'style="background:#16a34a;color:white;padding:7px 9px;border-radius:8px;text-decoration:none;font-weight:800;font-size:11px;">Depositou</a>' +
+
+      '<a href="/performance/export/' + item.id + '/nao_depositou" ' +
+      'style="background:#334155;color:white;padding:7px 9px;border-radius:8px;text-decoration:none;font-weight:800;font-size:11px;">Não depositou</a>' +
+
+      '<a href="/performance/export/' + item.id + '/so_cadastro" ' +
+      'style="background:#2563eb;color:white;padding:7px 9px;border-radius:8px;text-decoration:none;font-weight:800;font-size:11px;">Só cadastro</a>' +
+
+      '<a href="/performance/export/' + item.id + '/sem_cadastro" ' +
+      'style="background:#7f1d1d;color:white;padding:7px 9px;border-radius:8px;text-decoration:none;font-weight:800;font-size:11px;">Sem cadastro</a>' +
+
+      '</div>' +
   );
 }).join("")}
 
@@ -2054,6 +2070,92 @@ async function apagarLista(id){
 
     res.status(500).send(error.message);
 
+  }
+});
+
+app.get("/performance/export/:disparoId/:tipo", async (req, res) => {
+  try {
+    const { disparoId, tipo } = req.params;
+
+    let filtro = "";
+
+    if (tipo === "depositou") {
+      filtro = "AND depositou = true";
+    }
+
+    if (tipo === "nao_depositou") {
+      filtro = "AND COALESCE(depositou,false) = false";
+    }
+
+    if (tipo === "so_cadastro") {
+      filtro = "AND cadastrou = true AND COALESCE(depositou,false) = false";
+    }
+
+    if (tipo === "sem_cadastro") {
+      filtro = "AND COALESCE(cadastrou,false) = false";
+    }
+
+    const result = await pool.query(`
+      SELECT
+        telefone,
+        cpf,
+        email,
+        temperatura,
+        cadastrou,
+        depositou,
+        valor_deposito,
+        data_cadastro,
+        data_deposito,
+        criado_em
+      FROM crm_disparo_leads
+      WHERE disparo_id = $1
+      ${filtro}
+      ORDER BY criado_em DESC
+    `, [disparoId]);
+
+    const header = [
+      "telefone",
+      "cpf",
+      "email",
+      "temperatura",
+      "cadastrou",
+      "depositou",
+      "valor_deposito",
+      "data_cadastro",
+      "data_deposito",
+      "criado_em"
+    ];
+
+    const lines = result.rows.map(item => [
+      item.telefone || "",
+      item.cpf || "",
+      item.email || "",
+      item.temperatura || "",
+      item.cadastrou ? "sim" : "nao",
+      item.depositou ? "sim" : "nao",
+      item.valor_deposito || 0,
+      item.data_cadastro || "",
+      item.data_deposito || "",
+      item.criado_em || ""
+    ]);
+
+    const csv = [
+      header.join(";"),
+      ...lines.map(line =>
+        line.map(value => `"${String(value).replace(/"/g, '""')}"`).join(";")
+      )
+    ].join("\n");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="disparo_${disparoId}_${tipo}.csv"`
+    );
+
+    res.send("\uFEFF" + csv);
+
+  } catch (error) {
+    res.status(500).send("Erro ao exportar relatório: " + error.message);
   }
 });
 
