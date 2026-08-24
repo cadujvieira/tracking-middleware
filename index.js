@@ -36,6 +36,12 @@ const EXPORT_PASSWORD = process.env.EXPORT_PASSWORD || "123456";
 const FINAL_DESTINATION_URL = process.env.FINAL_DESTINATION_URL || "https://seudestino.com";
 const DATABASE_URL = process.env.DATABASE_URL;
 
+const SLPRIME_SEXLOG_IG_URL =
+  process.env.SLPRIME_SEXLOG_IG_URL;
+
+const SLPRIME_SEXLOG_FB_URL =
+  process.env.SLPRIME_SEXLOG_FB_URL;
+
 const pool = new Pool({
   connectionString: DATABASE_URL,
   ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
@@ -795,6 +801,53 @@ await pool.query(`
     criado_em TIMESTAMP DEFAULT NOW()
   );
 `);
+
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS affiliate_clicks (
+    id SERIAL PRIMARY KEY,
+
+    click_id TEXT UNIQUE NOT NULL,
+
+    network TEXT DEFAULT 'slprime',
+    offer TEXT DEFAULT 'sexlog',
+
+    source TEXT,
+    placement TEXT,
+
+    campaign_id TEXT,
+    adset_id TEXT,
+    ad_id TEXT,
+
+    utm_source TEXT,
+    utm_medium TEXT,
+    utm_campaign TEXT,
+    utm_term TEXT,
+    utm_content TEXT,
+
+    fbclid TEXT,
+    fbc TEXT,
+
+    client_ip TEXT,
+    ip_hash TEXT,
+    user_agent TEXT,
+    referrer TEXT,
+
+    raw_payload JSONB,
+
+    created_at TIMESTAMP DEFAULT NOW()
+  );
+`);
+
+await pool.query(`
+  CREATE INDEX IF NOT EXISTS idx_affiliate_clicks_campaign_id
+  ON affiliate_clicks(campaign_id);
+`);
+
+await pool.query(`
+  CREATE INDEX IF NOT EXISTS idx_affiliate_clicks_ad_id
+  ON affiliate_clicks(ad_id);
+`);
+  
 }  
 
 app.post("/crm/nova-campanha", authMiddleware, express.json(), async (req, res) => {
@@ -4927,6 +4980,162 @@ app.get("/meta/send-valued-audience", async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+// ==========================================
+// SEXLOG / SLPRIME - TRACKING DE CLIQUE
+// ==========================================
+
+app.get("/affiliate/sexlog/click", async (req, res) => {
+  try {
+
+    const click_id =
+      `slx_${Date.now()}_${uuidv4().replace(/-/g, "").slice(0, 12)}`;
+
+    const campaign_id = String(req.query.campaign_id || "");
+    const adset_id = String(req.query.adset_id || "");
+    const ad_id = String(req.query.ad_id || "");
+
+    const placement = String(req.query.placement || "");
+    const source = String(req.query.source || "").toLowerCase();
+
+    const fbclid = String(req.query.fbclid || "");
+
+    const client_ip = getClientIp(req);
+    const ip_hash = hashIp(client_ip);
+
+    const user_agent =
+      req.headers["user-agent"] || "";
+
+    const referrer =
+      req.headers.referer ||
+      req.headers.referrer ||
+      "";
+
+    const timestampMs = Date.now();
+
+    const fbc = fbclid
+      ? `fb.1.${timestampMs}.${fbclid}`
+      : "";
+
+    let slprimeUrl = null;
+
+    if (source === "ig" || source === "instagram") {
+      slprimeUrl = SLPRIME_SEXLOG_IG_URL;
+    }
+
+    if (source === "fb" || source === "facebook") {
+      slprimeUrl = SLPRIME_SEXLOG_FB_URL;
+    }
+
+    if (!slprimeUrl) {
+      console.error(
+        "[SEXLOG CLICK] Fonte não suportada ou URL não configurada:",
+        source
+      );
+
+      return res.status(400).json({
+        ok: false,
+        error: "Fonte de tráfego não suportada ou URL do SLPrime não configurada",
+        source
+      });
+    }
+
+    await pool.query(
+      `
+      INSERT INTO affiliate_clicks (
+        click_id,
+        source,
+        placement,
+        campaign_id,
+        adset_id,
+        ad_id,
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        utm_term,
+        utm_content,
+        fbclid,
+        fbc,
+        client_ip,
+        ip_hash,
+        user_agent,
+        referrer,
+        raw_payload
+      )
+
+      VALUES (
+        $1,$2,$3,
+        $4,$5,$6,
+        $7,$8,$9,$10,$11,
+        $12,$13,
+        $14,$15,$16,$17,
+        $18
+      )
+      `,
+      [
+        click_id,
+        source,
+        placement,
+
+        campaign_id,
+        adset_id,
+        ad_id,
+
+        source,
+        "paid_social",
+        campaign_id,
+        adset_id,
+        ad_id,
+
+        fbclid,
+        fbc,
+
+        client_ip,
+        ip_hash,
+        user_agent,
+        referrer,
+
+        req.query
+      ]
+    );
+
+    const destination = buildUrlWithParams(
+      slprimeUrl,
+      {
+        subid: click_id,
+        subid2: ad_id,
+        subid3: adset_id,
+        subid4: campaign_id,
+
+        utm_source: source,
+        utm_medium: "paid_social",
+        utm_campaign: campaign_id,
+        utm_term: adset_id,
+        utm_content: ad_id
+      }
+    );
+
+    console.log(
+      `[SEXLOG CLICK] ${click_id} | ${source} | campaign=${campaign_id} | ad=${ad_id}`
+    );
+
+    res.set("Cache-Control", "no-store");
+
+    return res.redirect(302, destination);
+
+  } catch (error) {
+
+    console.error(
+      "[SEXLOG CLICK ERROR]",
+      error
+    );
+
+    return res.status(500).json({
+      ok: false,
+      error: "Erro no tracking do clique"
+    });
   }
 });
 
